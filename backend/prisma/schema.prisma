@@ -1,0 +1,788 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AttendanceRecord {
+  id                 String            @id
+  sessionId          String
+  studentId          String
+  status             AttendanceStatus?
+  recordedLatitude   Float?
+  recordedLongitude  Float?
+  distanceFromSchool Float?
+  recordedAt         DateTime          @default(now())
+  session            AttendanceSession @relation(fields: [sessionId], references: [id])
+  student            Student           @relation(fields: [studentId], references: [id])
+
+  @@map("AttendanceRecord")
+}
+
+model AttendanceSession {
+  id           String             @id
+  classId      String
+  date         DateTime
+  latitude     Float?
+  longitude    Float?
+  radiusMeters Int?
+  records      AttendanceRecord[]
+  klass        Class              @relation(fields: [classId], references: [id])
+
+  @@map("AttendanceSession")
+}
+
+model GroupStudy {
+  id          String   @id
+  schoolId    String
+  creatorId   String
+  subjectId   String?
+  title       String
+  description String?
+  date        DateTime
+  creator     User     @relation(fields: [creatorId], references: [id])
+  school      School   @relation(fields: [schoolId], references: [id])
+  subject     Subject? @relation(fields: [subjectId], references: [id])
+
+  @@map("GroupStudy")
+}
+
+model ClassNote {
+  id        String   @id
+  schoolId  String
+  subjectId String
+  classId   String?
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  klass     Class?   @relation(fields: [classId], references: [id])
+  school    School   @relation(fields: [schoolId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+
+  @@map("ClassNote")
+}
+
+model Class {
+  id                 String              @id
+  schoolId           String
+  name               String
+  attendanceSessions AttendanceSession[]
+  school             School              @relation(fields: [schoolId], references: [id])
+  classNotes         ClassNote[]
+  classSubjects      ClassSubject[]
+  classWorks         ClassWork[]
+  dateSheets         DateSheet[]
+  homeworks          Homework[]
+  students           Student[]
+  activities         SubjectActivity[]
+  galleries          SubjectGallery[]
+  syllabi            Syllabus[]
+  timeTable          TimeTablePeriod[]
+
+  @@map("Class")
+}
+
+model ClassSubject {
+  id        String   @id
+  classId   String
+  subjectId String
+  teacherId String?
+  klass     Class    @relation(fields: [classId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@map("ClassSubject")
+}
+
+model Conversation {
+  id           String                    @id
+  schoolId     String
+  createdAt    DateTime                  @default(now())
+  school       School                    @relation(fields: [schoolId], references: [id])
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@map("Conversation")
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         String
+  lastReadAt     DateTime?    @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+
+  @@id([conversationId, userId])
+  @@map("ConversationParticipant")
+}
+
+model Exam {
+  id       String       @id
+  schoolId String
+  name     String?
+  term     String?
+  year     Int?
+  school   School       @relation(fields: [schoolId], references: [id])
+  papers   ExamPaper[]
+  results  ExamResult[]
+
+  @@map("Exam")
+}
+
+model ExamPaper {
+  id           String  @id
+  examId       String
+  subjectId    String
+  teacherId    String?
+  questions    Json?
+  duration     Int     @default(60)
+  totalMarks   Float   @default(100)
+  instructions String?
+  status       String  @default("draft")
+  exam         Exam    @relation(fields: [examId], references: [id])
+  subject      Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([examId, subjectId])
+  @@map("ExamPaper")
+}
+
+model ExamResult {
+  id          String    @id
+  examId      String
+  studentId   String
+  subjectId   String?
+  score       Float?
+  answers     Json?
+  submittedAt DateTime?
+  exam        Exam      @relation(fields: [examId], references: [id])
+  student     Student   @relation(fields: [studentId], references: [id])
+  subject     Subject?  @relation(fields: [subjectId], references: [id])
+
+  @@map("ExamResult")
+}
+
+model Message {
+  id             String       @id
+  conversationId String
+  senderId       String
+  content        String?
+  sentAt         DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@map("Message")
+}
+
+model Parent {
+  id       String           @id
+  userId   String           @unique
+  user     User             @relation(fields: [userId], references: [id])
+  children ParentStudents[]
+
+  @@map("Parent")
+}
+
+model ParentStudents {
+  parentId     String
+  studentId    String
+  isPrimary    Boolean @default(false)
+  relationship String?
+  parent       Parent  @relation(fields: [parentId], references: [id])
+  student      Student @relation(fields: [studentId], references: [id])
+
+  @@id([parentId, studentId])
+  @@map("ParentStudents")
+}
+
+model Payment {
+  id        String        @id
+  studentId String
+  amount    Float
+  method    PaymentMethod
+  reference String?
+  paidAt    DateTime      @default(now())
+  student   Student       @relation(fields: [studentId], references: [id])
+
+  @@map("Payment")
+}
+
+model School {
+  id            String            @id
+  name          String
+  code          String            @unique
+  latitude      Float?
+  longitude     Float?
+  attendanceRadiusMeters Int       @default(3)
+  createdAt     DateTime          @default(now())
+  certificates  Certificate[]
+  classes       Class[]
+  classNotes    ClassNote[]
+  classWorks    ClassWork[]
+  conversations Conversation[]
+  dateSheets    DateSheet[]
+  exams         Exam[]
+  Gallery       Gallery[]
+  groupStudies  GroupStudy[]
+  homeworks     Homework[]
+  leaveRequests LeaveRequest[]
+  newsletters   Newsletter[]
+  students      Student[]
+  subjects      Subject[]
+  activities    SubjectActivity[]
+  galleries     SubjectGallery[]
+  syllabi       Syllabus[]
+  timeTable     TimeTablePeriod[]
+  users         User[]
+  hostels       Hostel[]
+  books         Book[]
+  notices       Notice[]
+  sports        Sport[]
+  sportEvents   SportEvent[]
+  inventoryItems InventoryItem[]
+
+  @@map("School")
+}
+
+model Gallery {
+  id          String   @id @default(uuid())
+  schoolId    String
+  title       String
+  description String?
+  imageUrl    String
+  date        DateTime @default(now())
+  category    String?
+  createdAt   DateTime @default(now())
+  
+  school      School   @relation(fields: [schoolId], references: [id])
+  
+  @@map("Gallery")
+}
+
+model Book {
+  id          String      @id
+  schoolId    String
+  title       String
+  author      String
+  isbn        String?
+  quantity    Int         @default(1)
+  available   Int         @default(1)
+  category    String?
+  createdAt   DateTime    @default(now())
+  school      School      @relation(fields: [schoolId], references: [id])
+  issues      BookIssue[]
+
+  @@map("Book")
+}
+
+model BookIssue {
+  id          String    @id
+  bookId      String
+  studentId   String
+  issuedAt    DateTime  @default(now())
+  dueDate     DateTime
+  returnedAt  DateTime?
+  status      IssueStatus @default(ISSUED)
+  book        Book      @relation(fields: [bookId], references: [id])
+  student     Student   @relation(fields: [studentId], references: [id])
+
+  @@map("BookIssue")
+}
+
+enum IssueStatus {
+  ISSUED
+  RETURNED
+  OVERDUE
+}
+
+model Hostel {
+  id          String       @id
+  schoolId    String
+  name        String
+  type        HostelType   // BOYS, GIRLS, MIXED
+  address     String?
+  warden      String?      // Could be a userId or just a name
+  capacity    Int          @default(0) // Total capacity
+  rooms       HostelRoom[]
+  createdAt   DateTime     @default(now())
+
+  school      School       @relation(fields: [schoolId], references: [id])
+
+  @@map("Hostel")
+}
+
+model HostelRoom {
+  id          String       @id
+  hostelId    String
+  roomNumber  String
+  floor       Int?
+  capacity    Int          // Number of beds
+  type        String?      // e.g. "AC", "Non-AC", "Single", "Double"
+  allocations HostelAllocation[]
+  hostel      Hostel       @relation(fields: [hostelId], references: [id])
+
+  @@map("HostelRoom")
+}
+
+model HostelAllocation {
+  id          String       @id
+  roomId      String
+  studentId   String
+  startDate   DateTime
+  endDate     DateTime?
+  status      AllocationStatus @default(ACTIVE)
+  room        HostelRoom   @relation(fields: [roomId], references: [id])
+  student     Student      @relation(fields: [studentId], references: [id])
+
+  @@map("HostelAllocation")
+}
+
+enum HostelType {
+  BOYS
+  GIRLS
+  MIXED
+}
+
+enum AllocationStatus {
+  ACTIVE
+  VACATED
+}
+
+model LeaveRequest {
+  id             String      @id
+  schoolId       String
+  studentId      String
+  reason         String
+  type           LeaveType
+  startDate      DateTime
+  endDate        DateTime
+  status         LeaveStatus @default(pending_parent)
+  parentApproved Boolean     @default(false)
+  adminComment   String?
+  gatePassCode   String?
+  createdAt      DateTime    @default(now())
+  school         School      @relation(fields: [schoolId], references: [id])
+  student        Student     @relation(fields: [studentId], references: [id])
+
+  @@map("LeaveRequest")
+}
+
+model TimeTablePeriod {
+  id        String   @id
+  schoolId  String
+  classId   String
+  subjectId String
+  teacherId String?
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  klass     Class    @relation(fields: [classId], references: [id])
+  school    School   @relation(fields: [schoolId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@map("TimeTablePeriod")
+}
+
+model Certificate {
+  id              String          @id
+  schoolId        String
+  studentId       String
+  type            CertificateType
+  issuedAt        DateTime        @default(now())
+  issuedBy        String
+  referenceNumber String?
+  metadata        Json?
+  issuer          User            @relation(fields: [issuedBy], references: [id])
+  school          School          @relation(fields: [schoolId], references: [id])
+  student         Student         @relation(fields: [studentId], references: [id])
+
+  @@map("Certificate")
+}
+
+model Newsletter {
+  id          String   @id
+  schoolId    String
+  title       String
+  content     String
+  publishedAt DateTime @default(now())
+  school      School   @relation(fields: [schoolId], references: [id])
+
+  @@map("Newsletter")
+}
+
+model Student {
+  id                String             @id
+  schoolId          String
+  userId            String             @unique
+  classId           String?
+  section           String?
+  bloodGroup        String?
+  dateOfBirth       DateTime?
+  grade             String?
+  healthCondition   String?
+  religion          String?
+  attendanceRecords AttendanceRecord[]
+  certificates      Certificate[]
+  examResults       ExamResult[]
+  leaveRequests     LeaveRequest[]
+  parents           ParentStudents[]
+  payments          Payment[]
+  hostelAllocations HostelAllocation[]
+  bookIssues        BookIssue[]
+  sportTeams        SportTeamMember[]
+  klass             Class?             @relation(fields: [classId], references: [id])
+  school            School             @relation(fields: [schoolId], references: [id])
+  user              User               @relation(fields: [userId], references: [id])
+
+  @@map("Student")
+}
+
+model Subject {
+  id            String            @id
+  schoolId      String
+  name          String
+  classNotes    ClassNote[]
+  classSubjects ClassSubject[]
+  classWorks    ClassWork[]
+  dateSheets    DateSheet[]
+  examPapers    ExamPaper[]
+  examResults   ExamResult[]
+  groupStudies  GroupStudy[]
+  homeworks     Homework[]
+  school        School            @relation(fields: [schoolId], references: [id])
+  activities    SubjectActivity[]
+  galleries     SubjectGallery[]
+  syllabi       Syllabus[]
+  timeTable     TimeTablePeriod[]
+
+  @@map("Subject")
+}
+
+model Teacher {
+  id             String            @id
+  userId         String            @unique
+  employeeNumber String?
+  classSubjects  ClassSubject[]
+  classWorks     ClassWork[]
+  homeworks      Homework[]
+  user           User              @relation(fields: [userId], references: [id])
+  timeTable      TimeTablePeriod[]
+
+  @@map("Teacher")
+}
+
+model User {
+  id                  String                    @id
+  schoolId            String
+  firstName           String
+  lastName            String
+  email               String?                   @unique
+  phone               String?
+  password            String
+  role                UserRole
+  isActive            Boolean                   @default(true)
+  createdAt           DateTime                  @default(now())
+  gender              Gender?
+  issuedCertificates  Certificate[]
+  conversations       ConversationParticipant[]
+  createdGroupStudies GroupStudy[]
+  coachedTeams        SportTeam[]
+  sentMessages        Message[]
+  notifications       Notification[]
+  inventoryTransactions InventoryTransaction[]
+  parent              Parent?
+  student             Student?
+  teacher             Teacher?
+  school              School                    @relation(fields: [schoolId], references: [id])
+
+  @@map("User")
+}
+
+model Notification {
+  id           String   @id @default(uuid())
+  userId       String
+  activityId   String
+  activityType String   // "MESSAGE", "HOMEWORK", "LEAVE_REQUEST", "GENERAL"
+  message      String
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  
+  @@map("Notification")
+}
+
+model Homework {
+  id          String   @id
+  schoolId    String
+  subjectId   String
+  classId     String?
+  teacherId   String?
+  title       String
+  description String?
+  dueDate     DateTime
+  attachments Json?
+  createdAt   DateTime @default(now())
+  questions   Json?
+  klass       Class?   @relation(fields: [classId], references: [id])
+  school      School   @relation(fields: [schoolId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  teacher     Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@map("Homework")
+}
+
+model ClassWork {
+  id          String   @id
+  schoolId    String
+  subjectId   String
+  classId     String?
+  teacherId   String?
+  title       String
+  description String?
+  date        DateTime @default(now())
+  attachments Json?
+  createdAt   DateTime @default(now())
+  questions   Json?
+  klass       Class?   @relation(fields: [classId], references: [id])
+  school      School   @relation(fields: [schoolId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  teacher     Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@map("ClassWork")
+}
+
+model Syllabus {
+  id        String   @id
+  schoolId  String
+  subjectId String
+  classId   String?
+  title     String
+  content   String?
+  fileUrl   String?
+  term      String?
+  createdAt DateTime @default(now())
+  klass     Class?   @relation(fields: [classId], references: [id])
+  school    School   @relation(fields: [schoolId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+
+  @@map("Syllabus")
+}
+
+model SubjectGallery {
+  id        String   @id
+  schoolId  String
+  subjectId String
+  classId   String?
+  title     String?
+  imageUrl  String
+  createdAt DateTime @default(now())
+  klass     Class?   @relation(fields: [classId], references: [id])
+  school    School   @relation(fields: [schoolId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+
+  @@map("SubjectGallery")
+}
+
+model SubjectActivity {
+  id          String   @id
+  schoolId    String
+  subjectId   String
+  classId     String?
+  title       String
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+  klass       Class?   @relation(fields: [classId], references: [id])
+  school      School   @relation(fields: [schoolId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+
+  @@map("SubjectActivity")
+}
+
+model DateSheet {
+  id          String   @id
+  schoolId    String
+  subjectId   String
+  classId     String?
+  title       String
+  date        DateTime
+  description String?
+  createdAt   DateTime @default(now())
+  klass       Class?   @relation(fields: [classId], references: [id])
+  school      School   @relation(fields: [schoolId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+
+  @@map("DateSheet")
+}
+
+model Notice {
+  id          String   @id @default(uuid())
+  schoolId    String
+  title       String
+  content     String
+  audience    NoticeAudience @default(ALL)
+  createdAt   DateTime @default(now())
+  school      School   @relation(fields: [schoolId], references: [id])
+
+  @@map("Notice")
+}
+
+model Sport {
+  id          String   @id @default(uuid())
+  schoolId    String
+  name        String
+  category    String?
+  createdAt   DateTime @default(now())
+  school      School   @relation(fields: [schoolId], references: [id])
+  teams       SportTeam[]
+  events      SportEvent[]
+
+  @@map("Sport")
+}
+
+model SportTeam {
+  id          String   @id @default(uuid())
+  sportId     String
+  name        String
+  coachId     String?
+  createdAt   DateTime @default(now())
+  sport       Sport    @relation(fields: [sportId], references: [id])
+  coach       User?    @relation(fields: [coachId], references: [id])
+  players     SportTeamMember[]
+  matches     SportMatch[]
+
+  @@map("SportTeam")
+}
+
+model InventoryItem {
+  id          String   @id @default(uuid())
+  schoolId    String
+  name        String
+  category    String?
+  quantity    Int      @default(0)
+  unit        String?
+  minStock    Int      @default(0)
+  location    String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  school      School   @relation(fields: [schoolId], references: [id])
+  transactions InventoryTransaction[]
+
+  @@map("InventoryItem")
+}
+
+model InventoryTransaction {
+  id          String   @id @default(uuid())
+  itemId      String
+  userId      String
+  type        InventoryTransactionType
+  quantity    Int
+  notes       String?
+  date        DateTime @default(now())
+  item        InventoryItem @relation(fields: [itemId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("InventoryTransaction")
+}
+
+model SportTeamMember {
+  id          String   @id @default(uuid())
+  teamId      String
+  studentId   String
+  role        String?
+  joinedAt    DateTime @default(now())
+  team        SportTeam @relation(fields: [teamId], references: [id])
+  student     Student   @relation(fields: [studentId], references: [id])
+
+  @@map("SportTeamMember")
+}
+
+model SportEvent {
+  id          String   @id @default(uuid())
+  schoolId    String
+  sportId     String?
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  school      School   @relation(fields: [schoolId], references: [id])
+  sport       Sport?   @relation(fields: [sportId], references: [id])
+  
+  @@map("SportEvent")
+}
+
+model SportMatch {
+  id          String   @id @default(uuid())
+  teamId      String
+  opponent    String
+  date        DateTime
+  result      String?
+  location    String?
+  team        SportTeam @relation(fields: [teamId], references: [id])
+
+  @@map("SportMatch")
+}
+
+enum LeaveType {
+  full_day
+  half_day
+  sick
+  casual
+}
+
+enum LeaveStatus {
+  pending_parent
+  pending_school
+  approved
+  rejected
+}
+
+enum CertificateType {
+  TC
+  PROGRESS_CARD
+  MEDICAL
+  MIGRATION
+  REPORT_CARD
+}
+
+enum AttendanceStatus {
+  present
+  absent
+}
+
+enum PaymentMethod {
+  cash
+  mobile_money
+  bank
+}
+
+enum UserRole {
+  student
+  teacher
+  parent
+  admin
+  driver
+  staff
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum NoticeAudience {
+  ALL
+  STUDENTS
+  TEACHERS
+  PARENTS
+}
+
+enum InventoryTransactionType {
+  IN
+  OUT
+  ADJUSTMENT
+}

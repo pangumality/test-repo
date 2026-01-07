@@ -1,0 +1,188 @@
+export const ROLES = {
+  SUPER_ADMIN: 'admin',
+  SCHOOL_ADMIN: 'staff',
+  TEACHER: 'teacher',
+  STUDENT: 'student',
+  PARENT: 'parent',
+};
+
+export const PERMISSIONS = {
+  // Global
+  SCHOOL_MANAGE: 'school:manage',
+  USER_MANAGE: 'user:manage',
+  
+  // Classes
+  CLASS_CREATE: 'class:create',
+  CLASS_READ: 'class:read',
+  CLASS_UPDATE: 'class:update',
+  CLASS_DELETE: 'class:delete',
+  CLASS_VIEW_SELF: 'class:view_self',
+  
+  // Teachers
+  TEACHER_MANAGE: 'teacher:manage',
+  
+  // Students
+  STUDENT_MANAGE: 'student:manage',
+  STUDENT_VIEW_ASSIGNED: 'student:view_assigned',
+  
+  // Parents
+  PARENT_MANAGE: 'parent:manage',
+
+  // Subjects
+  SUBJECT_MANAGE: 'subject:manage',
+
+  // Group Studies
+  GROUP_STUDY_MANAGE: 'group_study:manage',
+
+  // Messages
+  MESSAGE_MANAGE: 'message:manage',
+  MESSAGE_SEND_PARENTS: 'message:send_parents',
+  MESSAGE_SEND_STUDENT: 'message:send_student',
+  MESSAGE_SEND_ADMIN: 'message:send_admin',
+  MESSAGE_CONTACT_TEACHER: 'message:contact_teacher',
+  
+  // Finance
+  FINANCE_MANAGE: 'finance:manage',
+  FINANCE_VIEW_CHILD: 'finance:view_child',
+  
+  // Inventory
+  INVENTORY_MANAGE: 'inventory:manage',
+  
+  // Exams
+  EXAM_MANAGE: 'exam:manage',
+  EXAM_MANAGE_RESULTS: 'exam:manage_results',
+  EXAM_TAKE: 'exam:take',
+  
+  // Library
+  LIBRARY_MANAGE: 'library:manage',
+  LIBRARY_BORROW: 'library:borrow',
+  
+  // Hostel
+  HOSTEL_MANAGE: 'hostel:manage',
+  HOSTEL_APPLY: 'hostel:apply',
+  
+  // Transport
+  TRANSPORT_MANAGE: 'transport:manage',
+  
+  // E-Learning
+  ELEARNING_MANAGE: 'elearning:manage',
+  ELEARNING_VIEW: 'elearning:view',
+  
+  // Attendance
+  ATTENDANCE_MANAGE_CLASS: 'attendance:manage_class',
+  ATTENDANCE_VIEW_SELF: 'attendance:view_self',
+  
+  // Child
+  CHILD_VIEW_ALL: 'child:view_all',
+  CHILD_VIEW_ACADEMIC: 'child:view_academic',
+  CHILD_VIEW_ATTENDANCE: 'child:view_attendance',
+  CHILD_VIEW_RESULTS: 'child:view_results',
+  CHILD_VIEW_FEES: 'child:view_fees',
+
+  // Newsletter
+  NEWSLETTER_MANAGE: 'newsletter:manage',
+  NEWSLETTER_VIEW: 'newsletter:view',
+
+  // Leaves
+  LEAVE_APPLY: 'leave:apply',
+  LEAVE_APPROVE_PARENT: 'leave:approve_parent',
+  LEAVE_APPROVE_ADMIN: 'leave:approve_admin',
+  LEAVE_VIEW_ALL: 'leave:view_all',
+  
+  // Timetable
+  TIMETABLE_MANAGE: 'timetable:manage',
+  TIMETABLE_VIEW: 'timetable:view',
+  
+  // Certificates
+  CERTIFICATE_MANAGE: 'certificate:manage',
+  CERTIFICATE_VIEW: 'certificate:view',
+  
+  // Stats
+  STATS_VIEW_ALL: 'stats:view_all',
+
+  // Gallery
+  GALLERY_MANAGE: 'gallery:manage',
+  GALLERY_VIEW: 'gallery:view',
+};
+
+export const ROLE_PERMISSIONS = {
+  [ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS),
+  
+  [ROLES.SCHOOL_ADMIN]: [ // This now maps to 'staff'
+    PERMISSIONS.GALLERY_MANAGE,
+    PERMISSIONS.GALLERY_VIEW,
+    PERMISSIONS.CLASS_CREATE, PERMISSIONS.CLASS_READ, PERMISSIONS.CLASS_UPDATE, PERMISSIONS.CLASS_DELETE,
+    PERMISSIONS.TEACHER_MANAGE,
+    PERMISSIONS.STUDENT_MANAGE,
+    PERMISSIONS.PARENT_MANAGE,
+    PERMISSIONS.SUBJECT_MANAGE,
+    PERMISSIONS.ELEARNING_MANAGE,
+    PERMISSIONS.ELEARNING_VIEW,
+    PERMISSIONS.EXAM_MANAGE,
+    PERMISSIONS.EXAM_MANAGE_RESULTS,
+    PERMISSIONS.MESSAGE_MANAGE,
+    PERMISSIONS.FINANCE_MANAGE,
+    PERMISSIONS.INVENTORY_MANAGE,
+    PERMISSIONS.NEWSLETTER_MANAGE,
+    PERMISSIONS.NEWSLETTER_VIEW,
+    PERMISSIONS.LEAVE_APPROVE_ADMIN,
+    PERMISSIONS.LEAVE_VIEW_ALL,
+    PERMISSIONS.TIMETABLE_MANAGE,
+    PERMISSIONS.TIMETABLE_VIEW,
+    PERMISSIONS.CERTIFICATE_MANAGE,
+    PERMISSIONS.CERTIFICATE_VIEW,
+    PERMISSIONS.HOSTEL_MANAGE,
+    PERMISSIONS.LIBRARY_MANAGE,
+    PERMISSIONS.STATS_VIEW_ALL,
+  ],
+  
+  [ROLES.TEACHER]: [
+    PERMISSIONS.GALLERY_VIEW,
+    PERMISSIONS.GALLERY_MANAGE,
+    PERMISSIONS.STUDENT_MANAGE, // Scoped to class/school
+    PERMISSIONS.SUBJECT_MANAGE,
+    PERMISSIONS.ATTENDANCE_MANAGE_CLASS,
+    PERMISSIONS.MESSAGE_SEND_PARENTS,
+    PERMISSIONS.MESSAGE_SEND_STUDENT,
+    PERMISSIONS.MESSAGE_SEND_ADMIN,
+    PERMISSIONS.GROUP_STUDY_MANAGE,
+    PERMISSIONS.ELEARNING_MANAGE,
+    PERMISSIONS.ELEARNING_VIEW,
+    PERMISSIONS.EXAM_MANAGE, // Create/Read/Update Exams
+    PERMISSIONS.EXAM_MANAGE_RESULTS, // Delete course exam results, View results
+    PERMISSIONS.NEWSLETTER_VIEW,
+    PERMISSIONS.TIMETABLE_VIEW,
+    PERMISSIONS.STATS_VIEW_ALL,
+  ],
+  
+  [ROLES.STUDENT]: [
+    PERMISSIONS.GALLERY_VIEW,
+    PERMISSIONS.ATTENDANCE_VIEW_SELF,
+    PERMISSIONS.MESSAGE_CONTACT_TEACHER,
+    PERMISSIONS.CLASS_VIEW_SELF,
+    PERMISSIONS.ELEARNING_VIEW,
+    PERMISSIONS.EXAM_TAKE,
+    PERMISSIONS.LIBRARY_BORROW,
+    PERMISSIONS.HOSTEL_APPLY,
+    PERMISSIONS.NEWSLETTER_VIEW,
+    PERMISSIONS.LEAVE_APPLY,
+    PERMISSIONS.TIMETABLE_VIEW,
+    PERMISSIONS.CERTIFICATE_VIEW,
+  ],
+  
+  [ROLES.PARENT]: [
+    PERMISSIONS.GALLERY_VIEW,
+    PERMISSIONS.CHILD_VIEW_ALL,
+    PERMISSIONS.CHILD_VIEW_ACADEMIC,
+    PERMISSIONS.CHILD_VIEW_ATTENDANCE,
+    PERMISSIONS.CHILD_VIEW_RESULTS,
+    PERMISSIONS.CHILD_VIEW_FEES,
+    PERMISSIONS.FINANCE_VIEW_CHILD,
+    PERMISSIONS.MESSAGE_CONTACT_TEACHER,
+    PERMISSIONS.ELEARNING_VIEW,
+    PERMISSIONS.NEWSLETTER_VIEW,
+    PERMISSIONS.LEAVE_APPROVE_PARENT,
+    PERMISSIONS.TIMETABLE_VIEW,
+    PERMISSIONS.CERTIFICATE_VIEW,
+  ],
+};
