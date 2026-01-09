@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 import { 
   User, 
   Mail, 
@@ -12,10 +13,20 @@ import {
   Camera
 } from 'lucide-react';
 
+const formatDate = (value) => {
+  if (!value) return 'N/A';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return 'N/A';
+  return d.toLocaleDateString();
+};
+
 const Profile = () => {
   const { currentUser } = useOutletContext() || {};
   const navigate = useNavigate();
   const [user, setUser] = useState(currentUser || null);
+  const logoInputRef = useRef(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState('');
 
   useEffect(() => {
     // Fallback to local storage if context is missing
@@ -30,12 +41,53 @@ const Profile = () => {
     }
   }, [user, navigate]);
 
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    api
+      .get('/me')
+      .then(({ data }) => {
+        setUser(data);
+        localStorage.setItem('currentUser', JSON.stringify(data));
+      })
+      .catch(() => {});
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
     localStorage.removeItem('current_demo_user_id');
     navigate('/login');
     window.location.reload();
+  };
+
+  const uploadSchoolLogo = async (file) => {
+    if (!file) return;
+    setLogoUploading(true);
+    setLogoError('');
+    try {
+      const formData = new FormData();
+      formData.append('logo', file);
+      const { data } = await api.post('/schools/me/logo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      const nextUser = {
+        ...user,
+        school: {
+          ...(user.school || {}),
+          logo: data?.logo || data?.school?.logo || user.school?.logo || null
+        }
+      };
+      setUser(nextUser);
+      localStorage.setItem('currentUser', JSON.stringify(nextUser));
+    } catch (err) {
+      setLogoError(err?.response?.data?.error || 'Failed to upload school logo');
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
   };
 
   if (!user) {
@@ -66,9 +118,17 @@ const Profile = () => {
           <div className="relative flex justify-between items-end -mt-12 mb-6">
             <div className="relative group">
               <div className="w-24 h-24 rounded-2xl bg-white p-1 shadow-lg">
-                <div className="w-full h-full rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 text-3xl font-bold">
-                  {user.firstName?.[0] || 'U'}
-                </div>
+                {user.portrait ? (
+                  <img
+                    src={user.portrait}
+                    alt={`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'}
+                    className="w-full h-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 text-3xl font-bold">
+                    {user.firstName?.[0] || 'U'}
+                  </div>
+                )}
               </div>
               <button className="absolute bottom-2 right-2 p-1.5 bg-white rounded-full shadow-md text-slate-500 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera size={16} />
@@ -126,8 +186,15 @@ const Profile = () => {
               <div>
                 <p className="text-sm text-slate-500 mb-0.5">Member Since</p>
                 <p className="text-slate-800 font-medium">
-                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                  {formatDate(user.createdAt)}
                 </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <User className="text-slate-400 mt-1" size={18} />
+              <div>
+                <p className="text-sm text-slate-500 mb-0.5">Gender</p>
+                <p className="text-slate-800 font-medium capitalize">{user.gender || 'Not provided'}</p>
               </div>
             </div>
           </div>
@@ -137,16 +204,73 @@ const Profile = () => {
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
           <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
             <School className="text-pink-500" size={20} />
-            {user.role === 'student' ? 'Academic Information' : 'Work Information'}
+            {user.role === 'student'
+              ? 'Academic Information'
+              : user.role === 'parent'
+                ? 'Family Information'
+                : 'Work Information'}
           </h3>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <School className="text-slate-400 mt-1" size={18} />
               <div>
                 <p className="text-sm text-slate-500 mb-0.5">School</p>
-                <p className="text-slate-800 font-medium">{user.school?.name || 'School Information Not Available'}</p>
+                <p className="text-slate-800 font-medium">
+                  {user.school?.name || 'School Information Not Available'}
+                  {user.school?.code ? <span className="text-slate-500"> ({user.school.code})</span> : null}
+                </p>
               </div>
             </div>
+
+            {user.school?.address && (
+              <div className="flex items-start gap-3">
+                <MapPin className="text-slate-400 mt-1" size={18} />
+                <div>
+                  <p className="text-sm text-slate-500 mb-0.5">School Address</p>
+                  <p className="text-slate-800 font-medium">{user.school.address}</p>
+                </div>
+              </div>
+            )}
+
+            {user.role === 'school_admin' && (
+              <div className="flex items-start gap-3">
+                <School className="text-slate-400 mt-1" size={18} />
+                <div className="w-full">
+                  <p className="text-sm text-slate-500 mb-2">School Logo</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-lg border border-slate-200 bg-white overflow-hidden flex items-center justify-center">
+                      {user.school?.logo ? (
+                        <img src={user.school.logo} alt={user.school?.name || 'School'} className="w-full h-full object-contain" />
+                      ) : (
+                        <School className="text-slate-300" size={28} />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => uploadSchoolLogo(e.target.files?.[0] || null)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={logoUploading}
+                        className={`px-3 py-2 rounded-lg text-sm border ${
+                          logoUploading
+                            ? 'border-slate-200 text-slate-400 cursor-not-allowed'
+                            : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
+                        }`}
+                      >
+                        {logoUploading ? 'Uploading...' : 'Upload Logo'}
+                      </button>
+                      {logoError ? <p className="text-xs text-red-600">{logoError}</p> : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {user.role === 'student' && (
               <>
@@ -154,27 +278,83 @@ const Profile = () => {
                   <User className="text-slate-400 mt-1" size={18} />
                   <div>
                     <p className="text-sm text-slate-500 mb-0.5">Class & Section</p>
-                    <p className="text-slate-800 font-medium">{user.className || 'X'} - {user.section || 'A'}</p>
+                    <p className="text-slate-800 font-medium">
+                      {(user.student?.klass?.name || 'N/A')}{user.student?.section ? ` - ${user.student.section}` : ''}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <User className="text-slate-400 mt-1" size={18} />
                   <div>
-                    <p className="text-sm text-slate-500 mb-0.5">Roll Number</p>
-                    <p className="text-slate-800 font-medium">{user.rollNumber || 'N/A'}</p>
+                    <p className="text-sm text-slate-500 mb-0.5">Grade</p>
+                    <p className="text-slate-800 font-medium">{user.student?.grade || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="text-slate-400 mt-1" size={18} />
+                  <div>
+                    <p className="text-sm text-slate-500 mb-0.5">Date of Birth</p>
+                    <p className="text-slate-800 font-medium">{formatDate(user.student?.dateOfBirth)}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <User className="text-slate-400 mt-1" size={18} />
+                  <div>
+                    <p className="text-sm text-slate-500 mb-0.5">Blood Group</p>
+                    <p className="text-slate-800 font-medium">{user.student?.bloodGroup || 'N/A'}</p>
                   </div>
                 </div>
               </>
             )}
 
-            {(user.role === 'teacher' || user.role === 'admin' || user.role === 'school_admin') && (
+            {user.role === 'teacher' && (
+              <>
+                <div className="flex items-start gap-3">
+                  <Shield className="text-slate-400 mt-1" size={18} />
+                  <div>
+                    <p className="text-sm text-slate-500 mb-0.5">Employee Number</p>
+                    <p className="text-slate-800 font-medium">{user.teacher?.employeeNumber || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <User className="text-slate-400 mt-1" size={18} />
+                  <div>
+                    <p className="text-sm text-slate-500 mb-0.5">Qualifications</p>
+                    <p className="text-slate-800 font-medium">{user.teacher?.qualifications || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <User className="text-slate-400 mt-1" size={18} />
+                  <div>
+                    <p className="text-sm text-slate-500 mb-0.5">Work Experience</p>
+                    <p className="text-slate-800 font-medium">{user.teacher?.workExperience || 'N/A'}</p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {user.role === 'parent' && (
               <div className="flex items-start gap-3">
-                <MapPin className="text-slate-400 mt-1" size={18} />
-                <div>
-                  <p className="text-sm text-slate-500 mb-0.5">Department</p>
-                  <p className="text-slate-800 font-medium">
-                    {user.department || (['admin', 'school_admin'].includes(user.role) ? 'Administration' : 'Academics')}
-                  </p>
+                <User className="text-slate-400 mt-1" size={18} />
+                <div className="w-full">
+                  <p className="text-sm text-slate-500 mb-0.5">Children</p>
+                  {user.parent?.children?.length ? (
+                    <div className="space-y-2">
+                      {user.parent.children.map((c) => (
+                        <div key={c.studentId} className="flex items-center justify-between gap-4">
+                          <p className="text-slate-800 font-medium">
+                            {c.student?.user ? `${c.student.user.firstName} ${c.student.user.lastName}`.trim() : c.studentId}
+                          </p>
+                          <p className="text-slate-500 text-sm">
+                            {c.student?.klass?.name || 'N/A'}{c.student?.section ? ` - ${c.student.section}` : ''}
+                            {c.relationship ? ` • ${c.relationship}` : ''}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-800 font-medium">N/A</p>
+                  )}
                 </div>
               </div>
             )}
