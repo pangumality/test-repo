@@ -20,6 +20,14 @@ const formatDate = (value) => {
   return d.toLocaleDateString();
 };
 
+const toSameOriginUploadsUrl = (value) => {
+  if (!value || typeof value !== 'string') return value;
+  if (value.startsWith('/')) return value;
+  const idx = value.indexOf('/uploads/');
+  if (idx !== -1) return value.slice(idx);
+  return value;
+};
+
 const Profile = () => {
   const { currentUser } = useOutletContext() || {};
   const navigate = useNavigate();
@@ -121,7 +129,7 @@ const Profile = () => {
                 {user.role === 'school_admin' ? (
                   user.school?.logo ? (
                     <img
-                      src={user.school.logo}
+                      src={toSameOriginUploadsUrl(user.school.logo)}
                       alt={user.school?.name || 'School'}
                       className="w-full h-full rounded-xl object-contain bg-white"
                     />
@@ -132,7 +140,7 @@ const Profile = () => {
                   )
                 ) : user.portrait ? (
                   <img
-                    src={user.portrait}
+                    src={toSameOriginUploadsUrl(user.portrait)}
                     alt={`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'}
                     className="w-full h-full rounded-xl object-cover"
                   />

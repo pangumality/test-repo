@@ -1275,7 +1275,7 @@ app.post('/api/schools/me/logo', authenticate, upload.single('logo'), async (req
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const logoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const logoUrl = `/uploads/${req.file.filename}`;
     const school = await prisma.school.update({
       where: { id: String(req.user.schoolId) },
       data: { logo: logoUrl },

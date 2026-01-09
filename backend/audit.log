@@ -316,3 +316,11 @@
 [2026-01-08T19:01:33.115Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
 [2026-01-08T19:31:47.983Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_FAILED | Resource:auth | IP:unknown | Details:"Invalid credentials"
 [2026-01-08T19:32:20.176Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_FAILED | Resource:auth | IP:unknown | Details:"Invalid credentials"
+[2026-01-09T07:27:50.421Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"c4a22062-a8ce-4023-9d98-5730154138dc","logo":"http://localhost:5001/uploads/1767943670192-883910268.jpg"}
+[2026-01-09T07:27:57.924Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"c4a22062-a8ce-4023-9d98-5730154138dc","logo":"http://localhost:5001/uploads/1767943677708-40886197.png"}
+[2026-01-09T07:29:04.105Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"c4a22062-a8ce-4023-9d98-5730154138dc","logo":"http://localhost:5001/uploads/1767943743903-645917452.png"}
+[2026-01-09T07:29:19.192Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-09T07:29:46.270Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"c4a22062-a8ce-4023-9d98-5730154138dc","logo":"http://localhost:5001/uploads/1767943786031-252231829.png"}
+[2026-01-09T07:32:45.210Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"c4a22062-a8ce-4023-9d98-5730154138dc","logo":"http://localhost:5001/uploads/1767943965008-738641542.png"}
+[2026-01-09T07:41:00.110Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"c4a22062-a8ce-4023-9d98-5730154138dc","logo":"/uploads/1767944459904-372045097.jpeg"}
+[2026-01-09T07:42:07.172Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"c4a22062-a8ce-4023-9d98-5730154138dc","logo":"/uploads/1767944526966-112192324.png"}
