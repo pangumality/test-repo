@@ -1082,7 +1082,7 @@ app.get('/api/me', authenticate, async (req, res) => {
       include: {
         school: true,
         student: { include: { klass: true } },
-        teacher: true,
+        teacher: { include: { classSubjects: { include: { klass: true, subject: true } } } },
         parent: {
           include: {
             children: {
@@ -1142,7 +1142,15 @@ app.get('/api/me', authenticate, async (req, res) => {
             id: user.teacher.id,
             employeeNumber: user.teacher.employeeNumber,
             qualifications: user.teacher.qualifications,
-            workExperience: user.teacher.workExperience
+            workExperience: user.teacher.workExperience,
+            assignments: Array.isArray(user.teacher.classSubjects)
+              ? user.teacher.classSubjects.map(cs => ({
+                  classId: cs.classId,
+                  className: cs.klass?.name || null,
+                  subjectId: cs.subjectId,
+                  subjectName: cs.subject?.name || null
+                }))
+              : []
           }
         : null,
       parent: user.parent
@@ -1755,7 +1763,7 @@ app.post('/api/auth/login', async (req, res) => {
         schoolId: true,
         school: true,
         student: { include: { klass: true } },
-        teacher: true,
+        teacher: { include: { classSubjects: { include: { klass: true, subject: true } } } },
         parent: {
           include: {
             children: {
@@ -1858,7 +1866,15 @@ app.post('/api/auth/login', async (req, res) => {
               id: user.teacher.id,
               employeeNumber: user.teacher.employeeNumber,
               qualifications: user.teacher.qualifications,
-              workExperience: user.teacher.workExperience
+              workExperience: user.teacher.workExperience,
+              assignments: Array.isArray(user.teacher.classSubjects)
+                ? user.teacher.classSubjects.map(cs => ({
+                    classId: cs.classId,
+                    className: cs.klass?.name || null,
+                    subjectId: cs.subjectId,
+                    subjectName: cs.subject?.name || null
+                  }))
+                : []
             }
           : null,
         parent: user.parent

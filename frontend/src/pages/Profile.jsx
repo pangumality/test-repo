@@ -118,7 +118,19 @@ const Profile = () => {
           <div className="relative flex justify-between items-end -mt-12 mb-6">
             <div className="relative group">
               <div className="w-24 h-24 rounded-2xl bg-white p-1 shadow-lg">
-                {user.portrait ? (
+                {user.role === 'school_admin' ? (
+                  user.school?.logo ? (
+                    <img
+                      src={user.school.logo}
+                      alt={user.school?.name || 'School'}
+                      className="w-full h-full rounded-xl object-contain bg-white"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 text-3xl font-bold">
+                      {user.school?.name?.[0] || 'S'}
+                    </div>
+                  )
+                ) : user.portrait ? (
                   <img
                     src={user.portrait}
                     alt={`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'}
@@ -130,9 +142,29 @@ const Profile = () => {
                   </div>
                 )}
               </div>
-              <button className="absolute bottom-2 right-2 p-1.5 bg-white rounded-full shadow-md text-slate-500 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera size={16} />
-              </button>
+              {user.role === 'school_admin' ? (
+                <>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => uploadSchoolLogo(e.target.files?.[0] || null)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={logoUploading}
+                    className={`absolute bottom-2 right-2 p-1.5 bg-white rounded-full shadow-md transition-opacity ${
+                      logoUploading
+                        ? 'text-slate-300 cursor-not-allowed opacity-100'
+                        : 'text-slate-500 hover:text-indigo-600 opacity-100 group-hover:opacity-100'
+                    }`}
+                  >
+                    <Camera size={16} />
+                  </button>
+                </>
+              ) : null}
             </div>
             <div className="flex gap-3">
               <span className="bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-medium border border-indigo-100 capitalize">
@@ -231,46 +263,9 @@ const Profile = () => {
                 </div>
               </div>
             )}
-
-            {user.role === 'school_admin' && (
-              <div className="flex items-start gap-3">
-                <School className="text-slate-400 mt-1" size={18} />
-                <div className="w-full">
-                  <p className="text-sm text-slate-500 mb-2">School Logo</p>
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg border border-slate-200 bg-white overflow-hidden flex items-center justify-center">
-                      {user.school?.logo ? (
-                        <img src={user.school.logo} alt={user.school?.name || 'School'} className="w-full h-full object-contain" />
-                      ) : (
-                        <School className="text-slate-300" size={28} />
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        ref={logoInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => uploadSchoolLogo(e.target.files?.[0] || null)}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => logoInputRef.current?.click()}
-                        disabled={logoUploading}
-                        className={`px-3 py-2 rounded-lg text-sm border ${
-                          logoUploading
-                            ? 'border-slate-200 text-slate-400 cursor-not-allowed'
-                            : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
-                        }`}
-                      >
-                        {logoUploading ? 'Uploading...' : 'Upload Logo'}
-                      </button>
-                      {logoError ? <p className="text-xs text-red-600">{logoError}</p> : null}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {user.role === 'school_admin' && logoError ? (
+              <p className="text-xs text-red-600">{logoError}</p>
+            ) : null}
             
             {user.role === 'student' && (
               <>
@@ -328,6 +323,27 @@ const Profile = () => {
                   <div>
                     <p className="text-sm text-slate-500 mb-0.5">Work Experience</p>
                     <p className="text-slate-800 font-medium">{user.teacher?.workExperience || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <School className="text-slate-400 mt-1" size={18} />
+                  <div className="w-full">
+                    <p className="text-sm text-slate-500 mb-0.5">Assigned Classes & Subjects</p>
+                    {Array.isArray(user.teacher?.assignments) && user.teacher.assignments.length > 0 ? (
+                      <div className="space-y-2">
+                        {user.teacher.assignments.map((a, idx) => (
+                          <div
+                            key={`${a.classId || 'class'}-${a.subjectId || 'subject'}-${idx}`}
+                            className="flex items-center justify-between gap-4"
+                          >
+                            <p className="text-slate-800 font-medium">{a.className || 'N/A'}</p>
+                            <p className="text-slate-500 text-sm">{a.subjectName || 'N/A'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-800 font-medium">N/A</p>
+                    )}
                   </div>
                 </div>
               </>
