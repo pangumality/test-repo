@@ -43,15 +43,15 @@ const StatCard = ({ icon: Icon, title, count, colorFrom, colorTo, iconColor, but
           <Icon size={24} />
         </div>
         {buttonLabel && (
-          <span className={`text-xs font-bold px-3 py-1 rounded-full bg-slate-50 text-slate-500 group-hover:bg-white group-hover:shadow-sm transition-all border border-slate-100`}>
+          <span className={`text-xs font-bold px-3 py-1 rounded-full bg-slate-50 group-hover:bg-white group-hover:shadow-sm transition-all border border-slate-100 bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent`}>
             {buttonLabel}
           </span>
         )}
       </div>
       
       <div>
-        <h3 className="text-slate-500 text-sm font-medium uppercase tracking-wider mb-1">{title}</h3>
-        <span className="text-4xl font-black text-slate-800 tracking-tight">{count}</span>
+        <h3 className={`bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent text-sm font-medium uppercase tracking-wider mb-1`}>{title}</h3>
+        <span className={`bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent text-4xl font-black tracking-tight`}>{count}</span>
       </div>
     </>
   );
@@ -228,7 +228,6 @@ const Dashboard = () => {
             iconColor="shadow-blue-500/40"
             buttonLabel="View All"
             link="/students"
-            link="/students"
         />
           {(!currentUser || currentUser.role !== 'teacher') && (
             <StatCard 
@@ -239,7 +238,6 @@ const Dashboard = () => {
               colorTo="to-pink-500"
               iconColor="shadow-rose-500/40"
               buttonLabel="View All"
-              link="/teachers"
               link="/teachers"
           />
           )}
@@ -252,7 +250,6 @@ const Dashboard = () => {
             iconColor="shadow-emerald-500/40"
             buttonLabel={currentUser?.role === 'student' ? 'My Subjects' : 'View All'} 
             link={currentUser?.role === 'student' ? '/subjects' : '/classes'}
-            link={currentUser?.role === 'student' ? '/subjects' : '/classes'}
         />
           {(!currentUser || currentUser.role !== 'teacher') && (
             <StatCard 
@@ -263,7 +260,6 @@ const Dashboard = () => {
               colorTo="to-purple-500"
               iconColor="shadow-violet-500/40"
               buttonLabel="Finance"
-              link="/finance"
               link="/finance"
           />
           )}

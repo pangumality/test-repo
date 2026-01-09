@@ -16,6 +16,7 @@ const Schools = () => {
     phone: '',
     email: '',
     website: '',
+    logo: '',
     adminEmail: ''
   });
   const [submitting, setSubmitting] = useState(false);
@@ -51,6 +52,7 @@ const Schools = () => {
       phone: school.phone || '',
       email: school.email || '',
       website: school.website || '',
+      logo: school.logo || '',
       adminEmail: ''
     });
     setShowModal(true);
@@ -81,7 +83,7 @@ const Schools = () => {
       }
       setShowModal(false);
       setEditingSchool(null);
-      setFormData({ name: '', code: '', address: '', phone: '', email: '', website: '', adminEmail: '' });
+      setFormData({ name: '', code: '', address: '', phone: '', email: '', website: '', logo: '', adminEmail: '' });
       fetchSchools();
     } catch (err) {
       console.error('Error saving school:', err);
@@ -109,7 +111,7 @@ const Schools = () => {
         <button 
           onClick={() => {
             setEditingSchool(null);
-            setFormData({ name: '', code: '', address: '', phone: '', email: '', website: '', adminEmail: '' });
+            setFormData({ name: '', code: '', address: '', phone: '', email: '', website: '', logo: '', adminEmail: '' });
             setShowModal(true);
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
@@ -127,8 +129,12 @@ const Schools = () => {
             className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer"
           >
             <div className="flex justify-between items-start mb-4">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <SchoolIcon className="text-blue-600" size={24} />
+              <div className="bg-blue-50 p-3 rounded-lg overflow-hidden w-12 h-12 flex items-center justify-center">
+                {school.logo ? (
+                  <img src={school.logo} alt={school.name} className="w-full h-full object-contain" />
+                ) : (
+                  <SchoolIcon className="text-blue-600" size={24} />
+                )}
               </div>
               <div className="flex gap-2">
                 <button 

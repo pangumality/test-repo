@@ -76,19 +76,27 @@ export default function Teachers() {
 
   const startAdd = () => {
     setEditingId('new');
-    setForm({ name: '', email: '', subject: '' });
+    setForm({ name: '', email: '', subject: '', phone: '', portrait: '', workExperience: '', qualifications: '' });
     setError('');
   };
 
   const startEdit = (t) => {
     setEditingId(t.id);
-    setForm({ name: t.name, email: t.email, subject: t.subject });
+    setForm({
+        name: t.name,
+        email: t.email,
+        subject: t.subject,
+        phone: t.phone || '',
+        portrait: t.portrait || '',
+        workExperience: t.workExperience || '',
+        qualifications: t.qualifications || ''
+    });
     setError('');
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ name: '', email: '', subject: '' });
+    setForm({ name: '', email: '', subject: '', phone: '', portrait: '', workExperience: '', qualifications: '' });
     setError('');
   };
 
@@ -181,11 +189,37 @@ export default function Teachers() {
             <input
               type="text"
               className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"
+              placeholder="Phone"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            />
+            <input
+              type="text"
+              className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"
+              placeholder="Portrait URL"
+              value={form.portrait}
+              onChange={(e) => setForm({ ...form, portrait: e.target.value })}
+            />
+            <input
+              type="text"
+              className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"
               placeholder="Subject (Optional)"
               value={form.subject}
               onChange={(e) => setForm({ ...form, subject: e.target.value })}
             />
-            <div className="flex items-center gap-3">
+            <textarea
+              className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400 col-span-full md:col-span-2"
+              placeholder="Work Experience"
+              value={form.workExperience}
+              onChange={(e) => setForm({ ...form, workExperience: e.target.value })}
+            />
+            <textarea
+              className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400 col-span-full md:col-span-2"
+              placeholder="Qualifications"
+              value={form.qualifications}
+              onChange={(e) => setForm({ ...form, qualifications: e.target.value })}
+            />
+            <div className="flex items-center gap-3 col-span-full">
               <button
                 className="px-3 py-2 rounded-md bg-gray-800 text-white hover:bg-gray-700 disabled:opacity-50"
                 onClick={save}
@@ -211,13 +245,14 @@ export default function Teachers() {
                 <th className="text-left text-sm text-gray-600 px-4 py-2 border-b">Name</th>
                 <th className="text-left text-sm text-gray-600 px-4 py-2 border-b">Email</th>
                 <th className="text-left text-sm text-gray-600 px-4 py-2 border-b">Subject</th>
+                <th className="text-left text-sm text-gray-600 px-4 py-2 border-b">Phone</th>
                 <th className="text-left text-sm text-gray-600 px-4 py-2 border-b">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                  <tr>
-                   <td colSpan="4" className="px-4 py-8 text-center text-gray-500">
+                   <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
                      No teachers found. Add one to get started.
                    </td>
                  </tr>
@@ -226,6 +261,7 @@ export default function Teachers() {
                   <tr key={t.id} className="odd:bg-white even:bg-gray-50">
                     <td className="px-4 py-2 border-b text-gray-800">{t.name}</td>
                     <td className="px-4 py-2 border-b text-gray-700">{t.email}</td>
+                    <td className="px-4 py-2 border-b text-gray-700">{t.phone}</td>
                     <td className="px-4 py-2 border-b text-gray-700">{t.subject}</td>
                     <td className="px-4 py-2 border-b">
                       <div className="flex items-center gap-3">

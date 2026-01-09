@@ -29,7 +29,7 @@ const Leaves = () => {
 
   const isStudent = currentUser?.role === 'student';
   const isParent = currentUser?.role === 'parent';
-  const isAdmin = ['admin', 'staff', 'teacher'].includes(currentUser?.role);
+  const isAdmin = ['admin', 'school_admin'].includes(currentUser?.role);
 
   useEffect(() => {
     fetchLeaves();

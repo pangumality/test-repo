@@ -129,7 +129,7 @@ export default function Gallery() {
     }
   };
 
-  const canManage = ['admin', 'staff', 'teacher'].includes(String(userRole || '').toLowerCase());
+  const canManage = ['admin', 'school_admin'].includes(String(userRole || '').toLowerCase());
 
   console.log('Gallery Role Debug:', { userRole, canManage });
 

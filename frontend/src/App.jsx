@@ -76,37 +76,37 @@ function App() {
 
           {/* Restricted Routes for Admins only */}
           <Route path="teachers" element={
-            <RequireRole roles={['admin', 'staff']}>
+            <RequireRole roles={['admin', 'school_admin']}>
               <Teachers />
             </RequireRole>
           } />
           <Route path="finance" element={
-            <RequireRole roles={['admin', 'staff']}>
+            <RequireRole roles={['admin', 'school_admin']}>
               <Finance />
             </RequireRole>
           } />
           <Route path="library" element={
-            <RequireRole roles={['admin', 'staff']}>
+            <RequireRole roles={['admin', 'school_admin']}>
               <Library />
             </RequireRole>
           } />
           <Route path="hostel" element={
-            <RequireRole roles={['admin', 'staff']}>
+            <RequireRole roles={['admin', 'school_admin']}>
               <Hostel />
             </RequireRole>
           } />
           <Route path="transport" element={
-            <RequireRole roles={['admin', 'staff']}>
+            <RequireRole roles={['admin', 'school_admin']}>
               <Transport />
             </RequireRole>
           } />
           <Route path="sports" element={
-            <RequireRole roles={['admin', 'staff']}>
+            <RequireRole roles={['admin', 'school_admin']}>
               <Sports />
             </RequireRole>
           } />
           <Route path="inventory" element={
-            <RequireRole roles={['admin', 'staff']}>
+            <RequireRole roles={['admin', 'school_admin']}>
               <Inventory />
             </RequireRole>
           } />

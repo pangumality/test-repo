@@ -18,7 +18,7 @@ const Certificates = () => {
     remarks: ''
   });
 
-  const canManage = ['admin', 'staff'].includes(currentUser?.role);
+  const canManage = ['admin', 'school_admin'].includes(currentUser?.role);
 
   const CERT_TYPES = [
     { value: 'transfer_certificate', label: 'Transfer Certificate (TC)' },

@@ -31,7 +31,8 @@ import {
   ChevronRight,
   Check,
   CheckCheck,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ArrowUp
 } from 'lucide-react';
 import clsx from 'clsx';
 import { seedAll } from '../utils/seed';
@@ -44,10 +45,10 @@ const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) =>
       to={to}
       onClick={onClick}
       className={clsx(
-        'group flex items-center gap-3 px-4 py-3 mb-1.5 rounded-xl border-none transition-all duration-300 relative overflow-hidden',
+        'group flex items-center gap-3 px-4 py-3 mb-2 rounded-2xl transition-all duration-300 relative overflow-hidden',
         active
-          ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-200 transform scale-[1.02]'
-          : 'bg-transparent text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 hover:pl-6',
+          ? 'bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-pink-600 text-white shadow-xl shadow-indigo-300 ring-1 ring-white/20 scale-[1.01]'
+          : 'bg-white/0 text-slate-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:via-fuchsia-50 hover:to-pink-50 hover:text-indigo-700 hover:translate-x-1 ring-1 ring-transparent hover:ring-indigo-200',
         isCollapsed ? 'justify-center px-2' : ''
       )}
       title={isCollapsed ? label : ''}
@@ -55,14 +56,15 @@ const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) =>
       {!isCollapsed && active && (
         <span className="absolute left-0 top-0 bottom-0 w-1 bg-white/30" />
       )}
-      <Icon 
-        size={20} 
+      <div
         className={clsx(
-          'transition-colors duration-300',
-          active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600'
-        )} 
-      />
-      {!isCollapsed && <span className="font-medium whitespace-nowrap overflow-hidden tracking-wide">{label}</span>}
+          'flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-300',
+          active ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200 group-hover:text-indigo-700'
+        )}
+      >
+        <Icon size={18} />
+      </div>
+      {!isCollapsed && <span className="font-semibold whitespace-nowrap overflow-hidden tracking-wide">{label}</span>}
       {!isCollapsed && !active && (
          <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400" />
       )}
@@ -72,28 +74,28 @@ const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) =>
 
 const MENU_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
-  { icon: Calendar, label: 'Attendance', to: '/attendance', allowedRoles: ['student','teacher','admin','staff'] },
-  { icon: MessageSquare, label: 'Messages', to: '/messages', allowedRoles: ['student','teacher','admin','staff','parent'] },
-  { icon: Bell, label: 'Notice Board', to: '/notices', allowedRoles: ['student','teacher','admin','staff','parent'] },
-  { icon: Newspaper, label: 'Newsletters', to: '/newsletters', allowedRoles: ['student','teacher','admin','staff','parent'] },
-  { icon: ImageIcon, label: 'Gallery', to: '/gallery', allowedRoles: ['student','teacher','admin','staff','parent'] },
-  { icon: FileCheck, label: 'Leaves', to: '/leaves', allowedRoles: ['student','parent','admin','staff','teacher'] },
-  { icon: Clock, label: 'Time Table', to: '/timetable', allowedRoles: ['student','teacher','admin','staff','parent'] },
-  { icon: Award, label: 'Certificates', to: '/certificates', allowedRoles: ['student','parent','admin','staff'] },
+  { icon: Calendar, label: 'Attendance', to: '/attendance', allowedRoles: ['student','teacher','admin','school_admin'] },
+  { icon: MessageSquare, label: 'Messages', to: '/messages', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: Bell, label: 'Notice Board', to: '/notices', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: Newspaper, label: 'Newsletters', to: '/newsletters', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: ImageIcon, label: 'Gallery', to: '/gallery', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: FileCheck, label: 'Leaves', to: '/leaves', allowedRoles: ['student','parent','admin','school_admin','teacher'] },
+  { icon: Clock, label: 'Time Table', to: '/timetable', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: Award, label: 'Certificates', to: '/certificates', allowedRoles: ['student','parent','admin','school_admin'] },
   { icon: Users, label: 'Teachers', to: '/teachers', excludedRoles: ['student','teacher','parent'] },
   { icon: GraduationCap, label: 'Students', to: '/students', excludedRoles: ['student','parent'] },
-  { icon: Home, label: 'Classes', to: '/classes', allowedRoles: ['teacher','admin','staff'] },
+  { icon: Home, label: 'Classes', to: '/classes', allowedRoles: ['teacher','admin','school_admin'] },
   { icon: SchoolIcon, label: 'Schools', to: '/schools', allowedRoles: ['admin'] },
   { icon: BookOpen, label: 'Exams', to: '/exams', excludedRoles: ['student','parent'] },
   { icon: FileText, label: 'My Exams', to: '/student/exams', allowedRoles: ['student'] },
   { icon: CreditCard, label: 'Finance', to: '/finance', excludedRoles: ['student','teacher','parent'] },
-  { icon: Library, label: 'Library', to: '/library', allowedRoles: ['student','admin','staff'] },
-  { icon: Home, label: 'Hostel', to: '/hostel', allowedRoles: ['student','admin','staff'] },
+  { icon: Library, label: 'Library', to: '/library', allowedRoles: ['student','admin','school_admin'] },
+  { icon: Home, label: 'Hostel', to: '/hostel', allowedRoles: ['student','admin','school_admin'] },
   { icon: Bus, label: 'Transport', to: '/transport', excludedRoles: ['student','teacher','parent'] },
-  { icon: Radio, label: 'E-Learning', to: '/e-learning', allowedRoles: ['student','teacher','admin','staff'] },
-  { icon: BookOpen, label: 'Subjects', to: '/subjects', allowedRoles: ['student','teacher','admin','staff'] },
+  { icon: Radio, label: 'E-Learning', to: '/e-learning', allowedRoles: ['student','teacher','admin','school_admin'] },
+  { icon: BookOpen, label: 'Subjects', to: '/subjects', allowedRoles: ['student','teacher','admin','school_admin'] },
   { icon: Trophy, label: 'Sports', to: '/sports', excludedRoles: ['student','teacher','parent'] },
-  { icon: Users, label: 'Group Studies', to: '/group-studies', allowedRoles: ['student','teacher','admin','staff'] },
+  { icon: Users, label: 'Group Studies', to: '/group-studies', allowedRoles: ['student','teacher','admin','school_admin'] },
   { icon: Package, label: 'Inventory', to: '/inventory', excludedRoles: ['student','teacher','parent'] },
 ];
 
@@ -104,9 +106,11 @@ const DashboardLayout = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = window.innerWidth < 768;
+  const logoUrl = import.meta.env.VITE_LOGO_URL || '/logo.jpg';
 
   useEffect(() => {
     const loadUser = () => {
@@ -216,6 +220,21 @@ const DashboardLayout = () => {
     window.location.reload(); // Ensure state clears
   };
 
+  const handleScroll = (e) => {
+    if (e.target.scrollTop > 300) {
+      setShowScrollTop(true);
+    } else {
+      setShowScrollTop(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    const mainContent = document.querySelector('main.flex-1.overflow-y-auto');
+    if (mainContent) {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   // Handle Mobile Header
   if (isMobile) {
     return (
@@ -228,7 +247,14 @@ const DashboardLayout = () => {
                <button onClick={() => setMobileMenuOpen(true)}>
                  <Menu size={24} />
                </button>
-               <span className="font-medium text-lg">The Asian School</span>
+               {currentUser?.school?.logo ? (
+                 <img src={currentUser.school.logo} alt="school logo" className="w-10 h-10 rounded-full object-cover border border-white/30 bg-white" />
+               ) : logoUrl ? (
+                 <img src={logoUrl} alt="logo" className="w-8 h-8 rounded-full object-cover border border-white/30" />
+               ) : null}
+               <span className="font-medium text-lg truncate max-w-[200px]">
+                 {currentUser?.school?.name || 'doonITes ERP'}
+               </span>
             </div>
             {/* Optional: Add notification or user icon here if needed */}
           </div>
@@ -336,12 +362,31 @@ const DashboardLayout = () => {
       {/* Top Navigation Bar */}
       <header className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white h-16 flex items-center justify-between px-6 shadow-md z-20 sticky top-0">
         <div className="flex items-center gap-4">
-           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-             <SchoolIcon size={18} className="text-white" />
+           {currentUser?.school?.logo ? (
+             <img src={currentUser.school.logo} alt="school logo" className="w-10 h-10 rounded-full object-cover shadow-lg shadow-indigo-500/30 bg-white" />
+           ) : logoUrl ? (
+             <img src={logoUrl} alt="logo" className="w-8 h-8 rounded-full object-cover shadow-lg shadow-indigo-500/30" />
+           ) : (
+             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+               <SchoolIcon size={18} className="text-white" />
+             </div>
+           )}
+           <div className="flex flex-col">
+             {currentUser?.school?.name ? (
+               <>
+                 <h1 className="text-lg font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400 leading-tight">
+                   {currentUser.school.name}
+                 </h1>
+                 <span className="text-[10px] text-indigo-300 font-medium tracking-wider">
+                   POWERED BY doonITes ERP
+                 </span>
+               </>
+             ) : (
+               <h1 className="text-lg font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
+                 doonITes weBBed serVIces ERP
+               </h1>
+             )}
            </div>
-           <h1 className="text-lg font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
-             doonITes weBBed serVIces ERP
-           </h1>
         </div>
         <div className="flex items-center gap-6 relative">
            <div className="relative">
@@ -466,13 +511,29 @@ const DashboardLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main 
+          className="flex-1 overflow-y-auto p-6 scroll-smooth"
+          onScroll={handleScroll}
+        >
            <Outlet context={{ currentUser }} />
         </main>
+
+        {/* Scroll to Top Button */}
+        <button
+          onClick={scrollToTop}
+          className={clsx(
+            "fixed bottom-20 right-8 bg-indigo-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50 hover:bg-indigo-700 hover:scale-110",
+            showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
+          )}
+          aria-label="Scroll to top"
+        >
+          <ArrowUp size={24} />
+        </button>
       </div>
       
-      <footer className="w-full bg-white border-t border-gray-200 py-4 px-6 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} School ERP. All rights reserved.
+      <footer className="w-full bg-[#0f1240] py-4 px-6 text-center text-sm text-white">
+        © 2025 doonITes weBBed serVIces. All Rights Reserved.<br />
+        Visit: erp@geenie.org | Call: +91-9258622202
       </footer>
     </div>
   );

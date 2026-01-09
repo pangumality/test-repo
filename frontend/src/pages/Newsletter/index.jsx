@@ -16,7 +16,7 @@ const Newsletter = () => {
   // Assuming 'staff' role corresponds to School Admin in this context based on app logic
   // or explicitly check permissions if available in currentUser context.
   // For simplicity, checking roles.
-  const canManage = ['admin', 'staff'].includes(currentUser?.role);
+  const canManage = ['admin', 'school_admin'].includes(currentUser?.role);
 
   useEffect(() => {
     fetchNewsletters();

@@ -50,7 +50,18 @@ const checkTeacherSubjectAccess = async (userId, subjectId) => {
 export { prisma };
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
@@ -1208,6 +1219,12 @@ app.get('/api/schools/:id', authenticate, requirePermission(PERMISSIONS.SCHOOL_M
     const teacherCount = await prisma.user.count({
       where: { schoolId: id, role: 'teacher' }
     });
+    
+    // Get school admin
+    const adminUser = await prisma.user.findFirst({
+      where: { schoolId: id, role: ROLES.SCHOOL_ADMIN },
+      select: { id: true, firstName: true, lastName: true, email: true, phone: true }
+    });
 
     res.json({
       ...school,
@@ -1215,7 +1232,8 @@ app.get('/api/schools/:id', authenticate, requirePermission(PERMISSIONS.SCHOOL_M
         students: school._count.students,
         teachers: teacherCount,
         classes: school._count.classes
-      }
+      },
+      admin: adminUser || null
     });
   } catch (error) {
     console.error('Error fetching school details:', error);
@@ -1225,7 +1243,7 @@ app.get('/api/schools/:id', authenticate, requirePermission(PERMISSIONS.SCHOOL_M
 
 app.post('/api/schools', authenticate, requirePermission(PERMISSIONS.SCHOOL_MANAGE), async (req, res) => {
   try {
-    const { name, code, adminEmail } = req.body; // Added adminEmail
+    const { name, code, adminEmail, address, phone, email, website, logo } = req.body;
     
     if (!adminEmail) {
       return res.status(400).json({ error: 'Admin email is required' });
@@ -1251,7 +1269,12 @@ app.post('/api/schools', authenticate, requirePermission(PERMISSIONS.SCHOOL_MANA
         data: { 
           id, 
           name, 
-          code 
+          code,
+          address,
+          phone,
+          email,
+          website,
+          logo
         }
       });
 
@@ -1263,7 +1286,7 @@ app.post('/api/schools', authenticate, requirePermission(PERMISSIONS.SCHOOL_MANA
           password: await bcrypt.hash('School@admin', 10), // Default password
           firstName: 'School',
           lastName: 'Admin',
-          role: ROLES.SCHOOL_ADMIN, // Using 'staff' as enum placeholder for school_admin
+          role: ROLES.SCHOOL_ADMIN, 
           schoolId: newSchool.id,
           isActive: true
         }
@@ -1283,11 +1306,11 @@ app.post('/api/schools', authenticate, requirePermission(PERMISSIONS.SCHOOL_MANA
 app.put('/api/schools/:id', authenticate, requirePermission(PERMISSIONS.SCHOOL_MANAGE), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, code } = req.body; // Schema only supports name and code currently
+    const { name, code, address, phone, email, website, logo } = req.body;
     
     const updatedSchool = await prisma.school.update({
       where: { id },
-      data: { name, code }
+      data: { name, code, address, phone, email, website, logo }
     });
     await logAudit(req.user.id, 'UPDATE', 'school', { id, name });
     res.json(updatedSchool);
@@ -1334,6 +1357,10 @@ app.get('/api/teachers', authenticate, requirePermission(PERMISSIONS.TEACHER_MAN
       id: t.id,
       name: `${t.firstName} ${t.lastName}`,
       email: t.email,
+      phone: t.phone,
+      portrait: t.portrait,
+      workExperience: t.teacher?.workExperience,
+      qualifications: t.teacher?.qualifications,
       // Mapping employeeNumber to subject as a workaround for schema restrictions
       subject: t.teacher?.employeeNumber || 'General' 
     }));
@@ -1347,7 +1374,7 @@ app.get('/api/teachers', authenticate, requirePermission(PERMISSIONS.TEACHER_MAN
 
 app.post('/api/teachers', authenticate, requirePermission(PERMISSIONS.TEACHER_MANAGE), async (req, res) => {
   try {
-    const { name, email, subject } = req.body;
+    const { name, email, subject, phone, portrait, workExperience, qualifications } = req.body;
     const { schoolId } = req.user; // Assign to creator's school
 
     if (!name || !email) {
@@ -1379,7 +1406,9 @@ app.post('/api/teachers', authenticate, requirePermission(PERMISSIONS.TEACHER_MA
           password: 'Teacher@123', // Default password
           role: 'teacher',
           schoolId: schoolId,
-          isActive: true
+          isActive: true,
+          phone,
+          portrait
         }
       });
 
@@ -1389,13 +1418,15 @@ app.post('/api/teachers', authenticate, requirePermission(PERMISSIONS.TEACHER_MA
           id: teacherId,
           userId: userId,
           // Workaround: Storing subject in employeeNumber due to DB schema restrictions
-          employeeNumber: subject || 'General' 
+          employeeNumber: subject || 'General',
+          workExperience,
+          qualifications
         }
       });
     });
 
     await logAudit(req.user.id, 'CREATE', 'teacher', { id: userId, name });
-    res.status(201).json({ id: userId, name, email, subject });
+    res.status(201).json({ id: userId, name, email, subject, phone, portrait, workExperience, qualifications });
 
   } catch (error) {
     console.error('Error creating teacher:', error);
@@ -1658,7 +1689,9 @@ app.post('/api/auth/login', async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName, 
         role: user.role,
-        email: user.email
+        email: user.email,
+        phone: user.phone,
+        school: user.school
       } 
     });
 
@@ -2344,12 +2377,12 @@ app.post('/api/messages/broadcast', authenticate, async (req, res) => {
           where: { schoolId, role: ROLES.PARENT },
           select: { id: true }
         });
-      } else if (scope === 'staff_all') {
+      } else if (scope === 'school_admin_all') {
         recipients = await prisma.user.findMany({
           where: { schoolId, role: ROLES.SCHOOL_ADMIN },
           select: { id: true }
         });
-      } else if (scope === 'staff_department') {
+      } else if (scope === 'school_admin_department') {
         const { department } = req.body || {};
         if (!listDepartments().includes(department)) return res.status(400).json({ error: 'Unknown department' });
         const userIds = getDepartmentStaff(department, schoolId);
@@ -3667,7 +3700,7 @@ app.get('/api/stats', authenticate, requirePermission(PERMISSIONS.STATS_VIEW_ALL
 // --- E-Learning ---
 
 const checkSubjectAccessForUser = async (user, subjectId) => {
-    if (user.role === 'admin' || user.role === 'staff') return true;
+    if (user.role === 'admin' || user.role === 'school_admin') return true;
     if (user.role === 'teacher') return checkTeacherSubjectAccess(user.id, subjectId);
     return false;
 };

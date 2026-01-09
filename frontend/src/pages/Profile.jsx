@@ -76,7 +76,7 @@ const Profile = () => {
             </div>
             <div className="flex gap-3">
               <span className="bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-medium border border-indigo-100 capitalize">
-                {user.role}
+                {user.role === 'school_admin' ? 'School Admin' : user.role}
               </span>
               {user.isActive && (
                 <span className="bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-medium border border-emerald-100">
@@ -144,7 +144,7 @@ const Profile = () => {
               <School className="text-slate-400 mt-1" size={18} />
               <div>
                 <p className="text-sm text-slate-500 mb-0.5">School</p>
-                <p className="text-slate-800 font-medium">The Asian School</p>
+                <p className="text-slate-800 font-medium">{user.school?.name || 'School Information Not Available'}</p>
               </div>
             </div>
             
@@ -167,13 +167,13 @@ const Profile = () => {
               </>
             )}
 
-            {(user.role === 'teacher' || user.role === 'admin') && (
+            {(user.role === 'teacher' || user.role === 'admin' || user.role === 'school_admin') && (
               <div className="flex items-start gap-3">
                 <MapPin className="text-slate-400 mt-1" size={18} />
                 <div>
                   <p className="text-sm text-slate-500 mb-0.5">Department</p>
                   <p className="text-slate-800 font-medium">
-                    {user.department || (user.role === 'admin' ? 'Administration' : 'Academics')}
+                    {user.department || (['admin', 'school_admin'].includes(user.role) ? 'Administration' : 'Academics')}
                   </p>
                 </div>
               </div>

@@ -187,7 +187,7 @@ async function seedSchool({
       firstName: schoolCode,
       lastName: 'Admin',
       passwordPlain: 'School@admin',
-      role: 'staff',
+      role: 'school_admin',
     });
   }
 

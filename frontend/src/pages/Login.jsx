@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { User, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
+const logoUrl = import.meta.env.VITE_LOGO_URL || '/logo.jpg';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/login`, {
+      const response = await api.post('/auth/login', {
         email,
         password
       });
@@ -53,11 +54,15 @@ const Login = () => {
 
       <div className="bg-white p-8 rounded shadow-lg w-full max-w-md z-10 relative">
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-full border-2 border-orange-500 flex items-center justify-center">
-             <div className="text-orange-500 font-bold text-2xl flex gap-1">
-                <User size={20} />
-                <User size={20} />
-             </div>
+          <div className="w-16 h-16 rounded-full border-2 border-orange-500 flex items-center justify-center overflow-hidden bg-white">
+             {logoUrl ? (
+               <img src={logoUrl} alt="logo" className="w-full h-full object-cover rounded-full" />
+             ) : (
+               <div className="text-orange-500 font-bold text-2xl flex gap-1">
+                  <User size={20} />
+                  <User size={20} />
+               </div>
+             )}
           </div>
         </div>
 
@@ -121,8 +126,9 @@ const Login = () => {
         </form>
       </div>
       
-      <footer className="absolute bottom-2 left-0 right-0 text-center text-xs text-white/80 z-10">
-        © {new Date().getFullYear()} School ERP. All rights reserved.
+      <footer className="absolute bottom-0 left-0 right-0 text-center text-xs text-white z-10 bg-[#0f1240] py-2">
+        © 2025 doonITes weBBed serVIces. All Rights Reserved.<br />
+        Visit: erp@geenie.org | Call: +91-9258622202
       </footer>
     </div>
   );

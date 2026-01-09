@@ -231,7 +231,7 @@ const Subjects = () => {
   const [formData, setFormData] = useState({ name: '', teacherUserId: '' });
   const [teachers, setTeachers] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-  const canManage = currentUser?.role === 'admin' || currentUser?.role === 'staff';
+  const canManage = currentUser?.role === 'admin' || currentUser?.role === 'school_admin';
   const canAccess = canManage || currentUser?.role === 'teacher';
   const [details, setDetails] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);

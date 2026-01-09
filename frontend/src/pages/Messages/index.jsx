@@ -203,7 +203,7 @@ const NewMessageModal = ({ isOpen, onClose, onStartChat, onStartBroadcast, curre
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          {(currentUser?.role === 'admin' || currentUser?.role === 'staff' || currentUser?.role === 'teacher') && (
+          {(currentUser?.role === 'admin' || currentUser?.role === 'school_admin' || currentUser?.role === 'teacher') && (
             <div className="mt-3 flex items-center justify-between">
               <label className="text-sm text-gray-600">Broadcast</label>
               <input type="checkbox" checked={isBroadcastMode} onChange={(e)=>setIsBroadcastMode(e.target.checked)} />
@@ -247,14 +247,27 @@ const NewMessageModal = ({ isOpen, onClose, onStartChat, onStartBroadcast, curre
         ) : (
           <div className="p-4 space-y-3">
             {currentUser?.role === 'admin' && (
-              <button
-                onClick={()=>onStartBroadcast({ scope: 'school_admin_all' })}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg"
-              >
-                Broadcast to all school admins
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={()=>onStartBroadcast({ scope: 'school_admin_all' })}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Broadcast to all school admins
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                   {['Admission', 'Accounts', 'Transport', 'Hostel', 'Academic'].map(dept => (
+                     <button
+                       key={dept}
+                       onClick={()=>onStartBroadcast({ scope: 'school_admin_department', department: dept })}
+                       className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded text-sm"
+                     >
+                       {dept} Dept
+                     </button>
+                   ))}
+                </div>
+              </div>
             )}
-            {currentUser?.role === 'staff' && (
+            {currentUser?.role === 'school_admin' && (
               <div className="space-y-2">
                 <button
                   onClick={()=>onStartBroadcast({ scope: 'teachers_all' })}
@@ -269,13 +282,13 @@ const NewMessageModal = ({ isOpen, onClose, onStartChat, onStartBroadcast, curre
                   Broadcast to all parents
                 </button>
                 <div className="space-y-1">
-                  <p className="text-sm text-gray-600">Broadcast to staff department</p>
+                  <p className="text-sm text-gray-600">Broadcast to school admin department</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <button onClick={()=>onStartBroadcast({ scope: 'staff_department', department: 'finance' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Finance</button>
-                    <button onClick={()=>onStartBroadcast({ scope: 'staff_department', department: 'library' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Library</button>
-                    <button onClick={()=>onStartBroadcast({ scope: 'staff_department', department: 'transport' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Transport</button>
-                    <button onClick={()=>onStartBroadcast({ scope: 'staff_department', department: 'sports' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Sports</button>
-                    <button onClick={()=>onStartBroadcast({ scope: 'staff_department', department: 'exams' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Exams</button>
+                    <button onClick={()=>onStartBroadcast({ scope: 'school_admin_department', department: 'finance' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Finance</button>
+                    <button onClick={()=>onStartBroadcast({ scope: 'school_admin_department', department: 'library' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Library</button>
+                    <button onClick={()=>onStartBroadcast({ scope: 'school_admin_department', department: 'transport' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Transport</button>
+                    <button onClick={()=>onStartBroadcast({ scope: 'school_admin_department', department: 'sports' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Sports</button>
+                    <button onClick={()=>onStartBroadcast({ scope: 'school_admin_department', department: 'exams' })} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg">Exams</button>
                   </div>
                 </div>
               </div>

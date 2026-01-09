@@ -1,6 +1,6 @@
 export const ROLES = {
   SUPER_ADMIN: 'admin',
-  SCHOOL_ADMIN: 'staff',
+  SCHOOL_ADMIN: 'school_admin',
   TEACHER: 'teacher',
   STUDENT: 'student',
   PARENT: 'parent',
@@ -108,7 +108,7 @@ export const PERMISSIONS = {
 export const ROLE_PERMISSIONS = {
   [ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS),
   
-  [ROLES.SCHOOL_ADMIN]: [ // This now maps to 'staff'
+  [ROLES.SCHOOL_ADMIN]: [
     PERMISSIONS.GALLERY_MANAGE,
     PERMISSIONS.GALLERY_VIEW,
     PERMISSIONS.CLASS_CREATE, PERMISSIONS.CLASS_READ, PERMISSIONS.CLASS_UPDATE, PERMISSIONS.CLASS_DELETE,

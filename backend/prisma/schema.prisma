@@ -212,6 +212,11 @@ model School {
   id            String            @id
   name          String
   code          String            @unique
+  address       String?
+  phone         String?
+  email         String?
+  website       String?
+  logo          String?
   latitude      Float?
   longitude     Float?
   attendanceRadiusMeters Int       @default(3)
@@ -464,6 +469,8 @@ model Teacher {
   id             String            @id
   userId         String            @unique
   employeeNumber String?
+  workExperience String?
+  qualifications String?
   classSubjects  ClassSubject[]
   classWorks     ClassWork[]
   homeworks      Homework[]
@@ -480,6 +487,7 @@ model User {
   lastName            String
   email               String?                   @unique
   phone               String?
+  portrait            String?
   password            String
   role                UserRole
   isActive            Boolean                   @default(true)
@@ -765,7 +773,7 @@ enum UserRole {
   parent
   admin
   driver
-  staff
+  school_admin
 }
 
 enum Gender {

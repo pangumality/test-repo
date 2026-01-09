@@ -70,7 +70,7 @@ const NoticeBoard = () => {
     }
   };
 
-  const canManage = ['admin', 'staff', 'teacher'].includes(currentUser?.role);
+  const canManage = ['admin', 'school_admin', 'teacher'].includes(currentUser?.role);
 
   return (
     <div className="p-6">

@@ -247,7 +247,7 @@ export default function Subject() {
       if (subject) setSubjectName(subject.name);
       
       const isTeacher = user?.role === 'teacher';
-      const isAdmin = user?.role === 'admin' || user?.role === 'staff';
+      const isAdmin = user?.role === 'admin' || user?.role === 'school_admin';
       setCanManage(isAdmin || isTeacher);
 
       const { data: notesData } = await api.get(`/class-notes?subjectId=${subjectId}`);

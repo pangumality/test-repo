@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ override: true }); // Ensure env vars are loaded and override system defaults
-import { PrismaClient } from '@prisma/client';
+import prismaClientPkg from '../../node_modules/.prisma/client/index.js';
+const { PrismaClient } = prismaClientPkg;
 import pg from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 

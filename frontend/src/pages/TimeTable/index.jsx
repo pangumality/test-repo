@@ -23,7 +23,7 @@ const TimeTable = () => {
     endTime: '09:45'
   });
 
-  const canManage = ['admin', 'staff'].includes(currentUser?.role);
+  const canManage = ['admin', 'school_admin'].includes(currentUser?.role);
   const isTeacher = currentUser?.role === 'teacher';
 
   const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
