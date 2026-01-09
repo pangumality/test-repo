@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Attempt to connect to DB on start
 async function startServer() {

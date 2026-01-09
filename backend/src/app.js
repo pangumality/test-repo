@@ -1079,7 +1079,25 @@ app.get('/api/me', authenticate, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      include: { student: true }
+      include: {
+        school: true,
+        student: { include: { klass: true } },
+        teacher: { include: { classSubjects: { include: { klass: true, subject: true } } } },
+        parent: {
+          include: {
+            children: {
+              include: {
+                student: {
+                  include: {
+                    klass: true,
+                    user: { select: { id: true, firstName: true, lastName: true } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     });
     if (!user) return res.status(404).json({ error: 'Not found' });
     res.json({
@@ -1089,8 +1107,73 @@ app.get('/api/me', authenticate, async (req, res) => {
       email: user.email,
       phone: user.phone,
       role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      gender: user.gender,
+      portrait: user.portrait,
       schoolId: user.schoolId,
-      classId: user.student?.classId || null
+      school: user.school
+        ? {
+            id: user.school.id,
+            name: user.school.name,
+            code: user.school.code,
+            address: user.school.address,
+            email: user.school.email,
+            phone: user.school.phone,
+            website: user.school.website,
+            logo: user.school.logo
+          }
+        : null,
+      student: user.student
+        ? {
+            id: user.student.id,
+            classId: user.student.classId,
+            section: user.student.section,
+            grade: user.student.grade,
+            dateOfBirth: user.student.dateOfBirth,
+            bloodGroup: user.student.bloodGroup,
+            healthCondition: user.student.healthCondition,
+            religion: user.student.religion,
+            klass: user.student.klass ? { id: user.student.klass.id, name: user.student.klass.name } : null
+          }
+        : null,
+      teacher: user.teacher
+        ? {
+            id: user.teacher.id,
+            employeeNumber: user.teacher.employeeNumber,
+            qualifications: user.teacher.qualifications,
+            workExperience: user.teacher.workExperience,
+            assignments: Array.isArray(user.teacher.classSubjects)
+              ? user.teacher.classSubjects.map(cs => ({
+                  classId: cs.classId,
+                  className: cs.klass?.name || null,
+                  subjectId: cs.subjectId,
+                  subjectName: cs.subject?.name || null
+                }))
+              : []
+          }
+        : null,
+      parent: user.parent
+        ? {
+            id: user.parent.id,
+            children: Array.isArray(user.parent.children)
+              ? user.parent.children.map(c => ({
+                  studentId: c.studentId,
+                  relationship: c.relationship,
+                  isPrimary: c.isPrimary,
+                  student: c.student
+                    ? {
+                        id: c.student.id,
+                        grade: c.student.grade,
+                        section: c.student.section,
+                        klass: c.student.klass ? { id: c.student.klass.id, name: c.student.klass.name } : null,
+                        user: c.student.user
+                      }
+                    : null
+                }))
+              : []
+          }
+        : null
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to load profile' });
@@ -1177,6 +1260,32 @@ app.get('/api/classes/:classId/school', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch school' });
+  }
+});
+
+app.post('/api/schools/me/logo', authenticate, upload.single('logo'), async (req, res) => {
+  try {
+    if (req.user.role !== ROLES.SCHOOL_ADMIN && req.user.role !== ROLES.SUPER_ADMIN) {
+      return res.status(403).json({ error: 'Not allowed' });
+    }
+    if (!req.user.schoolId) {
+      return res.status(400).json({ error: 'Missing schoolId' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const logoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const school = await prisma.school.update({
+      where: { id: String(req.user.schoolId) },
+      data: { logo: logoUrl },
+      select: { id: true, name: true, code: true, logo: true }
+    });
+
+    await logAudit(req.user.id, 'UPDATE', 'school', { id: school.id, logo: school.logo });
+    res.json({ logo: school.logo, school });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update school logo' });
   }
 });
 
@@ -1638,7 +1747,38 @@ app.post('/api/auth/login', async (req, res) => {
   
   try {
     const user = await prisma.user.findUnique({
-      where: { email: email }
+      where: { email: email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        createdAt: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        gender: true,
+        portrait: true,
+        schoolId: true,
+        school: true,
+        student: { include: { klass: true } },
+        teacher: { include: { classSubjects: { include: { klass: true, subject: true } } } },
+        parent: {
+          include: {
+            children: {
+              include: {
+                student: {
+                  include: {
+                    klass: true,
+                    user: { select: { id: true, firstName: true, lastName: true } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
     // Note: In a real production app, use bcrypt.compare(password, user.password)
@@ -1691,7 +1831,73 @@ app.post('/api/auth/login', async (req, res) => {
         role: user.role,
         email: user.email,
         phone: user.phone,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        gender: user.gender,
+        portrait: user.portrait,
+        schoolId: user.schoolId,
         school: user.school
+          ? {
+              id: user.school.id,
+              name: user.school.name,
+              code: user.school.code,
+              address: user.school.address,
+              email: user.school.email,
+              phone: user.school.phone,
+              website: user.school.website,
+              logo: user.school.logo
+            }
+          : null,
+        student: user.student
+          ? {
+              id: user.student.id,
+              classId: user.student.classId,
+              section: user.student.section,
+              grade: user.student.grade,
+              dateOfBirth: user.student.dateOfBirth,
+              bloodGroup: user.student.bloodGroup,
+              healthCondition: user.student.healthCondition,
+              religion: user.student.religion,
+              klass: user.student.klass ? { id: user.student.klass.id, name: user.student.klass.name } : null
+            }
+          : null,
+        teacher: user.teacher
+          ? {
+              id: user.teacher.id,
+              employeeNumber: user.teacher.employeeNumber,
+              qualifications: user.teacher.qualifications,
+              workExperience: user.teacher.workExperience,
+              assignments: Array.isArray(user.teacher.classSubjects)
+                ? user.teacher.classSubjects.map(cs => ({
+                    classId: cs.classId,
+                    className: cs.klass?.name || null,
+                    subjectId: cs.subjectId,
+                    subjectName: cs.subject?.name || null
+                  }))
+                : []
+            }
+          : null,
+        parent: user.parent
+          ? {
+              id: user.parent.id,
+              children: Array.isArray(user.parent.children)
+                ? user.parent.children.map(c => ({
+                    studentId: c.studentId,
+                    relationship: c.relationship,
+                    isPrimary: c.isPrimary,
+                    student: c.student
+                      ? {
+                          id: c.student.id,
+                          grade: c.student.grade,
+                          section: c.student.section,
+                          klass: c.student.klass ? { id: c.student.klass.id, name: c.student.klass.name } : null,
+                          user: c.student.user
+                        }
+                      : null
+                  }))
+                : []
+            }
+          : null
       } 
     });
 
