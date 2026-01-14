@@ -430,10 +430,10 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { password: adminPassword, schoolId: tabo.school.id, role: 'admin' },
+    update: { password: adminPassword, schoolId: null, role: 'admin' },
     create: {
       id: randomUUID(),
-      schoolId: tabo.school.id,
+      schoolId: null,
       email: adminEmail,
       firstName: 'Super',
       lastName: 'Admin',

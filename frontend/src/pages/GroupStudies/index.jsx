@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, Calendar, BookOpen, Edit2 } from 'lucide-react';
+import { Users, Plus, Trash2, Calendar, BookOpen, Edit2, Video } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 
 export default function GroupStudies() {
+  const navigate = useNavigate();
   const [studies, setStudies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -12,7 +14,8 @@ export default function GroupStudies() {
     title: '',
     description: '',
     date: '',
-    subjectId: ''
+    subjectId: '',
+    meetingLink: ''
   });
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -39,18 +42,24 @@ export default function GroupStudies() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        subjectId: formData.subjectId || null,
+        meetingLink: formData.meetingLink || null
+      };
+
       if (editingId) {
-        await api.put(`/group-studies/${editingId}`, formData);
+        await api.put(`/group-studies/${editingId}`, payload);
       } else {
-        await api.post('/group-studies', formData);
+        await api.post('/group-studies', payload);
       }
-      setFormData({ title: '', description: '', date: '', subjectId: '' });
+      setFormData({ title: '', description: '', date: '', subjectId: '', meetingLink: '' });
       setEditingId(null);
       setShowModal(false);
       fetchData();
     } catch (error) {
       console.error('Failed to save study group:', error);
-      alert('Failed to save study group');
+      alert('Failed to save study group: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -59,7 +68,8 @@ export default function GroupStudies() {
         title: study.title,
         description: study.description || '',
         date: study.date ? new Date(study.date).toISOString().slice(0, 16) : '',
-        subjectId: study.subjectId || ''
+        subjectId: study.subjectId || '',
+        meetingLink: study.meetingLink || ''
     });
     setEditingId(study.id);
     setShowModal(true);
@@ -68,7 +78,7 @@ export default function GroupStudies() {
   const closeModal = () => {
     setShowModal(false);
     setEditingId(null);
-    setFormData({ title: '', description: '', date: '', subjectId: '' });
+    setFormData({ title: '', description: '', date: '', subjectId: '', meetingLink: '' });
   };
 
   const handleDelete = async (id) => {
@@ -131,7 +141,7 @@ export default function GroupStudies() {
                 <div className="space-y-2 text-sm text-gray-500">
                     <div className="flex items-center gap-2">
                         <Calendar size={16} />
-                        <span>{new Date(study.date).toLocaleDateString()}</span>
+                        <span>{new Date(study.date).toLocaleDateString()} {new Date(study.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
                     {study.subject && (
                         <div className="flex items-center gap-2">
@@ -145,8 +155,12 @@ export default function GroupStudies() {
                 </div>
               </div>
               
-              <button className="mt-4 w-full py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
-                Join Group
+              <button 
+                onClick={() => navigate(`/group-studies/${study.id}/live`)}
+                className="mt-4 w-full py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <Video size={18} />
+                Join Live Room
               </button>
             </div>
           ))

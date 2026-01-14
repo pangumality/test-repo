@@ -35,6 +35,25 @@ const Profile = () => {
   const logoInputRef = useRef(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoError, setLogoError] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [profileForm, setProfileForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    gender: ''
+  });
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
   useEffect(() => {
     // Fallback to local storage if context is missing
@@ -61,6 +80,18 @@ const Profile = () => {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    if (isEditing) return;
+    setProfileForm({
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      gender: user.gender || ''
+    });
+  }, [user, isEditing]);
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -95,6 +126,68 @@ const Profile = () => {
     } finally {
       setLogoUploading(false);
       if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setProfileError('');
+    setProfileSuccess('');
+    setProfileForm({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      gender: user?.gender || ''
+    });
+  };
+
+  const saveProfile = async () => {
+    setProfileSaving(true);
+    setProfileError('');
+    setProfileSuccess('');
+    try {
+      await api.put('/me', {
+        firstName: profileForm.firstName,
+        lastName: profileForm.lastName,
+        email: profileForm.email,
+        phone: profileForm.phone,
+        gender: profileForm.gender
+      });
+      const { data } = await api.get('/me');
+      setUser(data);
+      localStorage.setItem('currentUser', JSON.stringify(data));
+      setIsEditing(false);
+      setProfileSuccess('Profile updated');
+    } catch (err) {
+      setProfileError(err?.response?.data?.error || 'Failed to update profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const changePassword = async (e) => {
+    e.preventDefault();
+    setPasswordSaving(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+    try {
+      const { oldPassword, newPassword, confirmPassword } = passwordForm;
+      if (!oldPassword || !newPassword) {
+        setPasswordError('Old password and new password are required');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setPasswordError('New password and confirm password do not match');
+        return;
+      }
+      await api.put('/me', { oldPassword, newPassword });
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordSuccess('Password updated');
+    } catch (err) {
+      setPasswordError(err?.response?.data?.error || 'Failed to update password');
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -202,23 +295,97 @@ const Profile = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Information */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <User className="text-indigo-500" size={20} />
-            Personal Information
-          </h3>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <User className="text-indigo-500" size={20} />
+              Personal Information
+            </h3>
+            <div className="flex items-center gap-2">
+              {isEditing ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    disabled={profileSaving}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveProfile}
+                    disabled={profileSaving}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+                  >
+                    {profileSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(true);
+                    setProfileError('');
+                    setProfileSuccess('');
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium border border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+          </div>
+          {profileError ? <p className="text-sm text-red-600 mb-3">{profileError}</p> : null}
+          {profileSuccess ? <p className="text-sm text-emerald-600 mb-3">{profileSuccess}</p> : null}
           <div className="space-y-4">
+            {isEditing ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">First Name</p>
+                  <input
+                    value={profileForm.firstName}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, firstName: e.target.value }))}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">Last Name</p>
+                  <input
+                    value={profileForm.lastName}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, lastName: e.target.value }))}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  />
+                </div>
+              </div>
+            ) : null}
             <div className="flex items-start gap-3">
               <Mail className="text-slate-400 mt-1" size={18} />
               <div>
                 <p className="text-sm text-slate-500 mb-0.5">Email Address</p>
-                <p className="text-slate-800 font-medium">{user.email || 'Not provided'}</p>
+                {isEditing ? (
+                  <input
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, email: e.target.value }))}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  />
+                ) : (
+                  <p className="text-slate-800 font-medium">{user.email || 'Not provided'}</p>
+                )}
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Phone className="text-slate-400 mt-1" size={18} />
               <div>
                 <p className="text-sm text-slate-500 mb-0.5">Phone Number</p>
-                <p className="text-slate-800 font-medium">{user.phone || 'Not provided'}</p>
+                {isEditing ? (
+                  <input
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, phone: e.target.value }))}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  />
+                ) : (
+                  <p className="text-slate-800 font-medium">{user.phone || 'Not provided'}</p>
+                )}
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -234,7 +401,20 @@ const Profile = () => {
               <User className="text-slate-400 mt-1" size={18} />
               <div>
                 <p className="text-sm text-slate-500 mb-0.5">Gender</p>
-                <p className="text-slate-800 font-medium capitalize">{user.gender || 'Not provided'}</p>
+                {isEditing ? (
+                  <select
+                    value={profileForm.gender}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, gender: e.target.value }))}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white"
+                  >
+                    <option value="">Not provided</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                ) : (
+                  <p className="text-slate-800 font-medium capitalize">{user.gender || 'Not provided'}</p>
+                )}
               </div>
             </div>
           </div>
@@ -384,6 +564,53 @@ const Profile = () => {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <Shield className="text-indigo-500" size={20} />
+          Change Password
+        </h3>
+        {passwordError ? <p className="text-sm text-red-600 mb-3">{passwordError}</p> : null}
+        {passwordSuccess ? <p className="text-sm text-emerald-600 mb-3">{passwordSuccess}</p> : null}
+        <form onSubmit={changePassword} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm text-slate-500 mb-1">Old Password</p>
+            <input
+              type="password"
+              value={passwordForm.oldPassword}
+              onChange={(e) => setPasswordForm((p) => ({ ...p, oldPassword: e.target.value }))}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+          <div>
+            <p className="text-sm text-slate-500 mb-1">New Password</p>
+            <input
+              type="password"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+          <div>
+            <p className="text-sm text-slate-500 mb-1">Confirm Password</p>
+            <input
+              type="password"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+          <div className="md:col-span-3 flex justify-end">
+            <button
+              type="submit"
+              disabled={passwordSaving}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {passwordSaving ? 'Updating...' : 'Update Password'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

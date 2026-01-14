@@ -20,6 +20,7 @@ import noticeRoutes from './routes/noticeRoutes.js';
 import sportsRoutes from './routes/sportsRoutes.js';
 import groupStudyRoutes from './routes/groupStudyRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
+import aiTutorRoutes from './routes/aiTutorRoutes.js';
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 
@@ -52,10 +53,13 @@ export { prisma };
 // Middleware
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: '*',
+  exposedHeaders: '*'
 }));
+
 app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Private-Network", "true");
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);
     return;
@@ -67,6 +71,17 @@ app.use(helmet({
 }));
 app.use(morgan('dev'));
 app.use(express.json());
+
+// DEBUGGING MIDDLEWARE
+app.use((req, res, next) => {
+  console.log(`[DEBUG] ${req.method} ${req.url}`);
+  if (req.method === 'POST' || req.method === 'PUT') {
+    const bodyStr = req.body ? JSON.stringify(req.body) : '';
+    console.log('[DEBUG] Body:', bodyStr.substring(0, 200));
+  }
+  next();
+});
+
 app.use('/uploads', express.static('uploads'));
 
 app.use('/api/hostels', hostelRoutes);
@@ -75,6 +90,7 @@ app.use('/api/notices', noticeRoutes);
 app.use('/api/sports', sportsRoutes);
 app.use('/api/group-studies', groupStudyRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/ai-tutor', aiTutorRoutes);
 
 // Routes
 app.get('/', (req, res) => {
@@ -994,7 +1010,7 @@ app.get('/api/group-studies', authenticate, async (req, res) => {
 
 app.post('/api/group-studies', authenticate, requirePermission(PERMISSIONS.GROUP_STUDY_MANAGE), async (req, res) => {
   try {
-    const { title, description, date, subjectId } = req.body;
+    const { title, description, date, subjectId, meetingLink } = req.body;
     const { schoolId, id: userId } = req.user;
     
     if (req.user.role === 'teacher' && subjectId) {
@@ -1009,21 +1025,22 @@ app.post('/api/group-studies', authenticate, requirePermission(PERMISSIONS.GROUP
         creatorId: userId,
         title,
         description,
+        meetingLink: meetingLink || null,
         date: new Date(date),
-        subjectId
+        subjectId: subjectId || null
       }
     });
     res.status(201).json(study);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to create group study' });
+    console.error('Error creating group study:', error);
+    res.status(500).json({ error: 'Failed to create group study: ' + error.message });
   }
 });
 
 app.put('/api/group-studies/:id', authenticate, requirePermission(PERMISSIONS.GROUP_STUDY_MANAGE), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, date, subjectId } = req.body;
+    const { title, description, date, subjectId, meetingLink } = req.body;
     const { id: userId, role } = req.user;
 
     const study = await prisma.groupStudy.findUnique({ where: { id } });
@@ -1045,13 +1062,64 @@ app.put('/api/group-studies/:id', authenticate, requirePermission(PERMISSIONS.GR
         data: {
             title,
             description,
+            meetingLink: meetingLink || null,
             date: date ? new Date(date) : undefined,
-            subjectId
+            subjectId: subjectId || null
         }
     });
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update group study' });
+    console.error('Error updating group study:', error);
+    res.status(500).json({ error: 'Failed to update group study: ' + error.message });
+  }
+});
+
+app.get('/api/group-studies/:id/status', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const study = await prisma.groupStudy.findUnique({
+      where: { id },
+      select: { isLive: true, creatorId: true, meetingLink: true }
+    });
+    if (!study) return res.status(404).json({ error: 'Study not found' });
+    res.json(study);
+  } catch (error) {
+    console.error('Error fetching group study status:', error);
+    res.status(500).json({ error: 'Failed to fetch status: ' + error.message });
+  }
+});
+
+app.post('/api/group-studies/:id/live', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isLive } = req.body;
+    const { id: userId } = req.user;
+
+    const study = await prisma.groupStudy.findUnique({ where: { id } });
+    if (!study) return res.status(404).json({ error: 'Study not found' });
+    if (study.creatorId !== userId) return res.status(403).json({ error: 'Only creator can manage live status' });
+
+    let updateData = { isLive };
+    let roomName = null;
+
+    if (isLive) {
+        // Generate a unique room name to ensure fresh session (and Moderator status)
+        roomName = `SchoolERP_${id}_${Date.now()}`;
+        updateData.meetingLink = roomName;
+    } else {
+        // Clear it when ending
+        updateData.meetingLink = null;
+    }
+
+    await prisma.groupStudy.update({
+      where: { id },
+      data: updateData
+    });
+    
+    res.json({ success: true, isLive, roomName });
+  } catch (error) {
+    console.error('Failed to update live status:', error);
+    res.status(500).json({ error: 'Failed to update live status' });
   }
 });
 
@@ -1182,11 +1250,25 @@ app.get('/api/me', authenticate, async (req, res) => {
 
 app.put('/api/me', authenticate, async (req, res) => {
   try {
-    const { phone, oldPassword, newPassword } = req.body;
+    const { phone, firstName, lastName, email, gender, oldPassword, newPassword } = req.body;
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) return res.status(404).json({ error: 'Not found' });
     const data = {};
     if (phone !== undefined) data.phone = phone || null;
+    if (firstName !== undefined) data.firstName = String(firstName || '').trim() || null;
+    if (lastName !== undefined) data.lastName = String(lastName || '').trim() || null;
+    if (gender !== undefined) data.gender = String(gender || '').trim() || null;
+    if (email !== undefined) {
+      const nextEmail = String(email || '').trim();
+      if (!nextEmail) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      const existing = await prisma.user.findUnique({ where: { email: nextEmail } });
+      if (existing && existing.id !== user.id) {
+        return res.status(400).json({ error: 'Email is already in use' });
+      }
+      data.email = nextEmail;
+    }
     if (newPassword) {
       let ok = false;
       try { ok = await bcrypt.compare(oldPassword || '', user.password); } catch { ok = false; }
@@ -1743,9 +1825,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-this';
 
 // Login Route
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
+  console.log('[DEBUG] Login request received');
+  const { email, password } = req.body || {};
+  console.log(`[DEBUG] Attempting login for: ${email}`);
+
+  if (!email || !password) {
+    console.log('[DEBUG] Missing credentials');
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
   
   try {
+    console.log('[DEBUG] Fetching user from database...');
     const user = await prisma.user.findUnique({
       where: { email: email },
       select: {
@@ -1781,6 +1871,8 @@ app.post('/api/auth/login', async (req, res) => {
       }
     });
 
+    console.log(`[DEBUG] User fetch result: ${user ? 'Found' : 'Not Found'}`);
+
     // Note: In a real production app, use bcrypt.compare(password, user.password)
     // Here we are comparing plain text as per existing seed data logic, 
     // but the task asked to "Update Login endpoint to use real JWTs and hashing".
@@ -1804,16 +1896,19 @@ app.post('/api/auth/login', async (req, res) => {
       valid = true;
     }
     if (!valid) {
+      console.log('[DEBUG] Invalid password');
       await logAudit(user.id, 'LOGIN_FAILED', 'auth', 'Invalid credentials');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     if (!user.isActive) {
+      console.log('[DEBUG] Account inactive');
       await logAudit(user.id, 'LOGIN_BLOCKED', 'auth', 'Account inactive');
       return res.status(403).json({ error: 'Account is disabled' });
     }
 
     // Generate Real JWT
+    console.log('[DEBUG] Generating token...');
     const token = jwt.sign(
       { userId: user.id, role: user.role, schoolId: user.schoolId },
       JWT_SECRET,
@@ -1822,6 +1917,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     await logAudit(user.id, 'LOGIN_SUCCESS', 'auth');
 
+    console.log('[DEBUG] Sending response...');
     return res.json({ 
       token, 
       user: { 
@@ -1902,8 +1998,9 @@ app.post('/api/auth/login', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Login error details:', error);
+    console.error('Login error stack:', error.stack);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
@@ -4091,13 +4188,30 @@ app.put('/api/notifications/:id/read', authenticate, async (req, res) => {
         if (result.count === 0) {
              return res.status(404).json({ error: 'Notification not found or not owned by user' });
         }
-        
         res.json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to update notification' });
+        res.status(500).json({ error: 'Failed to mark as read' });
     }
 });
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('Unhandled Error:', err);
+    console.error('Stack:', err.stack);
 
+    // Handle JSON Parse Errors
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({ error: 'Invalid JSON payload' });
+    }
+
+    if (!res.headersSent) {
+        res.status(500).json({ 
+            error: 'Internal Server Error', 
+            message: err.message,
+            path: req.path,
+            method: req.method
+        });
+    }
+});
 
 export default app;

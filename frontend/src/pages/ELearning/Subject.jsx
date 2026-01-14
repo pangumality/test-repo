@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, FileText, Edit2, Volume2, Play, Pause, StopCircle, Calendar, Image as ImageIcon, BookOpen, Clock, Briefcase, List } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, FileText, Edit2, Volume2, Play, Pause, StopCircle, Calendar, Image as ImageIcon, BookOpen, Clock, Briefcase, List, Bot } from 'lucide-react';
 import api from '../../utils/api';
+import AITutor from './components/AITutor';
 
 const TabButton = ({ active, onClick, icon: Icon, label }) => (
   <button
@@ -352,11 +353,25 @@ export default function Subject() {
           <TabButton active={activeTab === 'homework'} onClick={() => setActiveTab('homework')} icon={BookOpen} label="Homework" />
           <TabButton active={activeTab === 'syllabus'} onClick={() => setActiveTab('syllabus')} icon={FileText} label="Syllabus" />
           <TabButton active={activeTab === 'exams'} onClick={() => setActiveTab('exams')} icon={Edit2} label="Exams" />
+          <TabButton active={activeTab === 'ai-tutor'} onClick={() => setActiveTab('ai-tutor')} icon={Bot} label="AI Tutor" />
         </div>
       </div>
 
       {/* Content */}
       <div className="mt-6">
+        {activeTab === 'ai-tutor' && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+               <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><Bot size={24}/></div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800">AI Subject Expert</h3>
+                    <p className="text-sm text-gray-500">Ask any questions about {subjectName}</p>
+                  </div>
+               </div>
+               <AITutor embedded={true} context={subjectName} />
+            </div>
+        )}
+
         {activeTab === 'notes' && (
           <div className="space-y-4">
              <div className="flex justify-between items-center">

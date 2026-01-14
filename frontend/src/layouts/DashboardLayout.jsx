@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Bell, 
@@ -32,7 +32,8 @@ import {
   Check,
   CheckCheck,
   Image as ImageIcon,
-  ArrowUp
+  ArrowUp,
+  Bot
 } from 'lucide-react';
 import clsx from 'clsx';
 import { seedAll } from '../utils/seed';
@@ -109,8 +110,19 @@ const DashboardLayout = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const scrollContainerRef = useRef(null);
   const isMobile = window.innerWidth < 768;
   const logoUrl = import.meta.env.VITE_LOGO_URL || '/logo.jpg';
+
+  const scrollToTopAll = (behavior = 'auto') => {
+    const el = scrollContainerRef.current;
+    if (el && typeof el.scrollTo === 'function') {
+      el.scrollTo({ top: 0, behavior });
+    }
+    window.scrollTo({ top: 0, behavior });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
 
   useEffect(() => {
     const loadUser = () => {
@@ -155,6 +167,11 @@ const DashboardLayout = () => {
     window.addEventListener('storage', loadUser);
     return () => window.removeEventListener('storage', loadUser);
   }, [navigate]);
+
+  useEffect(() => {
+    scrollToTopAll('auto');
+    requestAnimationFrame(() => scrollToTopAll('auto'));
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     if (currentUser) {
@@ -229,10 +246,7 @@ const DashboardLayout = () => {
   };
 
   const scrollToTop = () => {
-    const mainContent = document.querySelector('main.flex-1.overflow-y-auto');
-    if (mainContent) {
-      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    scrollToTopAll('smooth');
   };
 
   // Handle Mobile Header
@@ -298,7 +312,10 @@ const DashboardLayout = () => {
                      label={item.label} 
                      to={item.to} 
                      active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))}
-                     onClick={() => setMobileMenuOpen(false)}
+                     onClick={() => {
+                       setMobileMenuOpen(false);
+                       scrollToTopAll('auto');
+                     }}
                    />
                  ))}
               </div>
@@ -306,7 +323,10 @@ const DashboardLayout = () => {
               <div className="p-4 border-t bg-gray-50">
                 <Link 
                   to="/profile" 
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollToTopAll('auto');
+                  }}
                   className="flex items-center gap-3 mb-4 hover:bg-gray-100 p-2 rounded-lg -mx-2 transition-colors"
                 >
                   <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
@@ -327,7 +347,7 @@ const DashboardLayout = () => {
         )}
 
         {/* Mobile Content */}
-        <main className="flex-1 -mt-6 z-20 px-2 overflow-y-auto pb-20">
+        <main ref={scrollContainerRef} className="flex-1 -mt-6 z-20 px-2 overflow-y-auto pb-20">
           {location.pathname === '/' ? (
             <MobileDashboardHome />
           ) : (
@@ -503,6 +523,7 @@ const DashboardLayout = () => {
                    label={item.label} 
                    to={item.to} 
                    active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))}
+                   onClick={() => scrollToTopAll('auto')}
                    isCollapsed={isCollapsed}
                  />
                );
@@ -512,6 +533,7 @@ const DashboardLayout = () => {
 
         {/* Main Content */}
         <main 
+          ref={scrollContainerRef}
           className="flex-1 overflow-y-auto p-6 scroll-smooth"
           onScroll={handleScroll}
         >

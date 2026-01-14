@@ -13,6 +13,7 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log('Logging in with API BaseURL:', api.defaults.baseURL);
     setLoading(true);
     setError('');
 
@@ -39,7 +40,9 @@ const Login = () => {
       window.location.reload();
 
     } catch (err) {
-      console.error(err);
+      console.error('Login Error Object:', err);
+      console.error('Login Error Response:', err.response);
+      console.error('Login Error Data:', err.response?.data);
       setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);

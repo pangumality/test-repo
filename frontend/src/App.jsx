@@ -21,6 +21,7 @@ import ElearningItemForm from './pages/ELearning/ElearningItemForm';
 import ExamSetup from './pages/Exams/Setup';
 import Sports from './pages/Sports';
 import GroupStudies from './pages/GroupStudies';
+import LiveRoom from './pages/GroupStudies/LiveRoom';
 import Inventory from './pages/Inventory';
 import Schools from './pages/Schools';
 import SchoolDetails from './pages/Schools/SchoolDetails';
@@ -117,6 +118,7 @@ function App() {
           <Route path="e-learning/:subjectId/:type/form" element={<ElearningItemForm />} />
           <Route path="subjects" element={<Subjects />} />
           <Route path="group-studies" element={<GroupStudies />} />
+          <Route path="group-studies/:id/live" element={<LiveRoom />} />
           <Route path="exams/:examId/setup" element={<ExamSetup />} />
         </Route>
 
