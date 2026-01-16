@@ -452,3 +452,5 @@
 [2026-01-15T17:33:58.623Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768498438422-436719663.jpg"}
 [2026-01-15T17:34:19.087Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768498458873-731996274.jpeg"}
 [2026-01-16T08:28:34.469Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T09:09:57.778Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T09:16:00.494Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""

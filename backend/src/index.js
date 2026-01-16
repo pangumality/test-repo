@@ -10,8 +10,9 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*', // Allow all for dev
-    methods: ['GET', 'POST']
+    origin: true, // Reflect request origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
   }
 });
 
@@ -80,7 +81,7 @@ async function startServer() {
       console.log('✅ Super admin updated:', email);
     }
     
-    server.listen(PORT, () => {
+    server.listen(PORT,'0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {

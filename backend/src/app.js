@@ -96,20 +96,17 @@ export { prisma };
 
 // Middleware
 app.use(cors({
-  origin: '*',
+  origin: true, // Reflects the request origin, effectively allowing access from anywhere
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: '*',
-  exposedHeaders: '*'
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Allow-Origin'],
+  credentials: true // Allow cookies and authorization headers
 }));
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Private-Network", "true");
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(204);
-    return;
-  }
   next();
 });
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
