@@ -40,25 +40,15 @@ import { seedAll } from '../utils/seed';
 import MobileDashboardHome from '../components/MobileDashboardHome';
 import api from '../utils/api';
 
-const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed, colorTheme }) => {
-  const themeVariant = colorTheme || 'purple';
-
+const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) => {
   const activeClasses =
-    themeVariant === 'purple'
-      ? 'bg-purple-500/90 text-white shadow-lg shadow-purple-900/40 scale-[1.02]'
-      : themeVariant === 'blue'
-      ? 'bg-blue-500/90 text-white shadow-lg shadow-blue-900/40 scale-[1.02]'
-      : 'bg-slate-100 text-slate-900 shadow-sm scale-[1.02]';
+    'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 scale-[1.02]';
 
   const inactiveClasses =
-    themeVariant === 'light'
-      ? 'bg-transparent text-slate-600 hover:bg-slate-50 hover:shadow-md hover:shadow-slate-200/60 hover:text-slate-900 hover:translate-x-1'
-      : 'bg-transparent text-white/80 hover:bg-white/10 hover:shadow-lg hover:shadow-black/20 hover:text-white hover:translate-x-1';
+    'bg-transparent text-slate-700 hover:bg-slate-50 hover:shadow-md hover:shadow-slate-200/60 hover:text-slate-900 hover:translate-x-1';
 
   const inactiveIconClasses =
-    themeVariant === 'light'
-      ? 'bg-slate-100 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-900'
-      : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white';
+    'bg-slate-100 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-900';
 
   return (
     <Link
@@ -119,7 +109,7 @@ const MENU_ITEMS = [
   { icon: Package, label: 'Inventory', to: '/inventory', excludedRoles: ['student','teacher','parent'] },
 ];
 
-const DashboardLayout = ({ theme = 'light', setTheme, uiColor = 'purple', setUiColor }) => {
+const DashboardLayout = ({ theme = 'light', setTheme }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // For mobile
   const [currentUser, setCurrentUser] = useState(null);
@@ -395,41 +385,9 @@ const DashboardLayout = ({ theme = 'light', setTheme, uiColor = 'purple', setUiC
     );
   }
 
-  const sidebarTheme = uiColor;
-
-  const sidebarBgClass =
-    sidebarTheme === 'purple'
-      ? 'bg-gradient-to-b from-purple-600 via-purple-600 to-indigo-600 text-white'
-      : sidebarTheme === 'blue'
-      ? 'bg-gradient-to-b from-blue-600 via-blue-600 to-sky-500 text-white'
-      : 'bg-white text-slate-800';
-
-  const sidebarBorderClass =
-    sidebarTheme === 'white' ? 'border-r border-slate-100/80' : 'border-none';
-
-  const sidebarHeaderTitleClass =
-    sidebarTheme === 'white' ? 'text-slate-900' : 'text-white';
-
-  const sidebarHeaderSubtitleClass =
-    sidebarTheme === 'white' ? 'text-slate-400' : 'text-white/60';
-
-  const sidebarToggleButtonClass =
-    sidebarTheme === 'white'
-      ? 'p-1.5 rounded-lg transition-colors text-slate-400 hover:bg-slate-100 hover:text-slate-700'
-      : 'p-1.5 rounded-lg transition-colors text-white/70 hover:bg-white/15 hover:text-white';
-
-  const sidebarBlobClass =
-    sidebarTheme === 'white'
-      ? 'bg-gradient-to-b from-slate-50 to-transparent'
-      : 'bg-gradient-to-b from-white/15 to-transparent';
-
-  const sidebarItemThemeVariant = sidebarTheme === 'white' ? 'light' : sidebarTheme;
-
-  const appBgClass = sidebarTheme === 'white' ? 'bg-slate-100' : 'bg-slate-50';
+  const appBgClass = 'bg-slate-50';
 
   const topBottomBackground = 'linear-gradient(90deg, #05081a 0%, #0b1029 100%)';
-
-  const mainBackground = 'linear-gradient(180deg, var(--ui-bg-start) 0%, var(--ui-bg-mid) 40%, var(--ui-bg-end) 100%)';
 
   return (
     <div className={clsx('min-h-screen flex flex-col font-sans', appBgClass)}>
@@ -466,35 +424,6 @@ const DashboardLayout = ({ theme = 'light', setTheme, uiColor = 'purple', setUiC
            </div>
         </div>
         <div className="flex items-center gap-6 relative">
-          <div className="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1 border border-white/20">
-            <button
-              type="button"
-              onClick={() => setUiColor && setUiColor('purple')}
-              className={clsx(
-                "w-4 h-4 rounded-full bg-purple-500 border-2 transition-all duration-200",
-                sidebarTheme === 'purple' ? "border-white" : "border-white/40"
-              )}
-              aria-label="Purple theme"
-            />
-            <button
-              type="button"
-              onClick={() => setUiColor && setUiColor('blue')}
-              className={clsx(
-                "w-4 h-4 rounded-full bg-blue-500 border-2 transition-all duration-200",
-                sidebarTheme === 'blue' ? "border-white" : "border-white/40"
-              )}
-              aria-label="Blue theme"
-            />
-            <button
-              type="button"
-              onClick={() => setUiColor && setUiColor('white')}
-              className={clsx(
-                "w-4 h-4 rounded-full bg-white border-2 transition-all duration-200",
-                sidebarTheme === 'white' ? "border-slate-200" : "border-slate-400/60"
-              )}
-              aria-label="White theme"
-            />
-          </div>
           <button
             type="button"
             onClick={() => setTheme && setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -572,11 +501,7 @@ const DashboardLayout = ({ theme = 'light', setTheme, uiColor = 'purple', setUiC
            <Link to="/profile" className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors">
              <User
                size={20}
-               className={sidebarTheme === 'white'
-                 ? 'text-slate-500'
-                 : sidebarTheme === 'blue'
-                 ? 'text-sky-400'
-                 : 'text-purple-400'}
+               className="text-indigo-300"
              />
              <span className="text-sm font-medium">
                {currentUser ? `${currentUser.firstName} (${currentUser.role})` : 'Loading...'}
@@ -594,32 +519,27 @@ const DashboardLayout = ({ theme = 'light', setTheme, uiColor = 'purple', setUiC
 
       <div className="flex flex-1 overflow-hidden">
         <aside className={clsx(
-            "overflow-y-auto flex-shrink-0 pb-10 transition-all duration-300 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative",
-            sidebarBgClass,
-            sidebarBorderClass,
+            "bg-white border-r border-indigo-50/50 overflow-y-auto flex-shrink-0 pb-10 transition-all duration-300 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative",
             isCollapsed ? "w-20" : "w-72"
         )}>
-          <div className={clsx("absolute top-0 left-0 w-full h-40 pointer-events-none", sidebarBlobClass)} />
+          <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-indigo-50/60 to-transparent pointer-events-none" />
           
           <div className={clsx("px-4 pt-5 pb-3 flex items-center relative z-10", isCollapsed ? "justify-center" : "justify-between")}>
-             {!isCollapsed && (
-               <div className="flex flex-col">
-                 <span className={clsx("text-sm font-semibold tracking-wide", sidebarHeaderTitleClass)}>
-                   doonITes ERP
-                 </span>
-                 <span className={clsx("text-[11px] mt-1 tracking-wide uppercase font-medium", sidebarHeaderSubtitleClass)}>
-                   Menu
-                 </span>
-               </div>
-             )}
+            {!isCollapsed && (
+              <div className="flex flex-col">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-900/60">
+                  Menu
+                </span>
+              </div>
+            )}
              <button 
                 onClick={() => setIsCollapsed(!isCollapsed)} 
-                className={sidebarToggleButtonClass}
+                className="p-1.5 rounded-lg transition-colors text-indigo-400 hover:bg-indigo-50"
              >
                 {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
              </button>
           </div>
-          <div className="px-4 pb-2 relative z-10" />
+          <div className={clsx("px-4 pb-2 relative z-10", isCollapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between")} />
           <div className="flex flex-col px-3 relative z-10 gap-1 mt-1">
              {MENU_ITEMS.map((item) => {
                if (item.allowedRoles && (!currentUser || !item.allowedRoles.includes(currentUser.role))) return null;
@@ -634,7 +554,6 @@ const DashboardLayout = ({ theme = 'light', setTheme, uiColor = 'purple', setUiC
                    active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))}
                    onClick={() => scrollToTopAll('auto')}
                    isCollapsed={isCollapsed}
-                   colorTheme={sidebarItemThemeVariant}
                  />
                );
              })}
@@ -646,9 +565,8 @@ const DashboardLayout = ({ theme = 'light', setTheme, uiColor = 'purple', setUiC
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto p-6 scroll-smooth"
           onScroll={handleScroll}
-          style={{ backgroundImage: mainBackground }}
         >
-           <Outlet context={{ currentUser, uiColor: sidebarTheme }} />
+           <Outlet context={{ currentUser }} />
         </main>
 
         {/* Scroll to Top Button */}

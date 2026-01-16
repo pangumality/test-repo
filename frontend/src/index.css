@@ -18,35 +18,7 @@
     --ui-accent: #8b5cf6;
     --ui-accent-soft: #ede9fe;
     --ui-accent-secondary: #f97316;
-    --ui-surface: #ede9fe;
-  }
-
-  :root[data-ui-color='blue'] {
-    --ui-accent-strong: #2563eb;
-    --ui-accent: #3b82f6;
-    --ui-accent-soft: #dbeafe;
-    --ui-accent-secondary: #22c55e;
-    --ui-surface: #bfdbfe;
-    --ui-bg-start: #2563eb;   /* blue-600 */
-    --ui-bg-mid: #2563eb;     /* blue-600 */
-    --ui-bg-end: #0ea5e9;     /* sky-500 */
-  }
-
-  :root[data-ui-color='white'] {
-    --ui-accent-strong: #0f172a;
-    --ui-accent: #1e293b;
-    --ui-accent-soft: #e5e7eb;
-    --ui-accent-secondary: #ef4444;
-    --ui-surface: #ffffff;
-    --ui-bg-start: #ffffff;
-    --ui-bg-mid: #ffffff;
-    --ui-bg-end: #ffffff;
-  }
-
-  :root[data-ui-color='purple'] {
-    --ui-bg-start: #7c3aed;   /* purple-600 */
-    --ui-bg-mid: #7c3aed;     /* purple-600 */
-    --ui-bg-end: #4f46e5;     /* indigo-600 */
+    --ui-surface: #f5efff;
   }
 
   .dark body {
@@ -70,8 +42,7 @@
 
 @layer components {
   .glass {
-    @apply backdrop-blur-lg border border-white/20 shadow-glass;
-    background-color: var(--ui-surface);
+    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-glass;
   }
   
   .glass-dark {
@@ -90,10 +61,9 @@
   }
 
   .btn-secondary {
-    @apply text-slate-700 border border-slate-200 shadow-sm
+    @apply bg-white text-slate-700 border border-slate-200 shadow-sm
            hover:bg-slate-50 hover:border-slate-300
            active:bg-slate-100 transition-all duration-200 rounded-xl px-4 py-2 font-medium;
-    background-color: var(--ui-surface);
   }
 }
 

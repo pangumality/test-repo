@@ -11,13 +11,6 @@ const ThemeProvider = ({ children }) => {
     return 'light';
   });
 
-  const [uiColor, setUiColor] = useState(() => {
-    if (typeof window === 'undefined') return 'purple';
-    const stored = localStorage.getItem('uiColor');
-    if (stored === 'purple' || stored === 'blue' || stored === 'white') return stored;
-    return 'purple';
-  });
-
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
@@ -28,13 +21,7 @@ const ThemeProvider = ({ children }) => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.uiColor = uiColor;
-    localStorage.setItem('uiColor', uiColor);
-  }, [uiColor]);
-
-  return React.cloneElement(children, { theme, setTheme, uiColor, setUiColor });
+  return React.cloneElement(children, { theme, setTheme });
 };
 
 ReactDOM.createRoot(document.getElementById('root')).render(

@@ -42,10 +42,7 @@ export default function ELearning() {
         </div>
       </div>
 
-      <div
-        className="backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-soft p-6"
-        style={{ backgroundColor: 'var(--ui-surface)' }}
-      >
+      <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-soft p-6">
         {subjects.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 mb-4"
@@ -63,8 +60,7 @@ export default function ELearning() {
               <Link
                 key={s.id}
                 to={`/e-learning/${s.id}`}
-                className="group relative overflow-hidden rounded-2xl border border-slate-100 transition-all duration-300 shadow-sm hover:shadow-lg flex items-center justify-between px-4 py-4"
-                style={{ backgroundColor: 'var(--ui-surface)' }}
+                className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white/70 transition-all duration-300 shadow-sm hover:shadow-lg flex items-center justify-between px-4 py-4"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform"

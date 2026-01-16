@@ -74,8 +74,7 @@ const StatCard = ({
     return (
       <Link
         to={link}
-        className="group relative rounded-[2rem] p-6 shadow-soft border border-white/40 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden block backdrop-blur-xl"
-        style={{ backgroundColor: 'var(--ui-surface)' }}
+        className="group relative bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 shadow-soft border border-white/40 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden block"
       >
         {content}
       </Link>
@@ -83,10 +82,7 @@ const StatCard = ({
   }
 
   return (
-    <div
-      className="group relative rounded-[2rem] p-6 shadow-soft border border-white/40 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden backdrop-blur-xl"
-      style={{ backgroundColor: 'var(--ui-surface)' }}
-    >
+    <div className="group relative bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 shadow-soft border border-white/40 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
       {content}
     </div>
   );
@@ -207,16 +203,16 @@ const Dashboard = () => {
                 Math.round(stats.revenue / 100),
               ],
               backgroundColor: [
-                'var(--ui-accent-strong)',
-                'var(--ui-accent)',
-                'var(--ui-accent-secondary)',
-                'var(--ui-accent-soft)',
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(244, 63, 94, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
               ],
               hoverBackgroundColor: [
-                'var(--ui-accent-strong)',
-                'var(--ui-accent-strong)',
-                'var(--ui-accent-secondary)',
-                'var(--ui-accent)',
+                'rgba(59, 130, 246, 1)',
+                'rgba(244, 63, 94, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(139, 92, 246, 1)',
               ],
               borderRadius: 8,
               borderSkipped: false,
@@ -232,16 +228,16 @@ const Dashboard = () => {
               label: 'School Statistics',
               data: [stats.students, stats.teachers, stats.classes, stats.parents],
               backgroundColor: [
-                'var(--ui-accent-strong)',
-                'var(--ui-accent)',
-                'var(--ui-accent-secondary)',
-                'var(--ui-accent-soft)',
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(244, 63, 94, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
               ],
               hoverBackgroundColor: [
-                'var(--ui-accent-strong)',
-                'var(--ui-accent-strong)',
-                'var(--ui-accent-secondary)',
-                'var(--ui-accent)',
+                'rgba(59, 130, 246, 1)',
+                'rgba(244, 63, 94, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(139, 92, 246, 1)',
               ],
               borderRadius: 8,
               borderSkipped: false,
@@ -368,10 +364,7 @@ const Dashboard = () => {
 
       {currentUser?.role === 'admin' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div
-            className="lg:col-span-3 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 p-8"
-            style={{ backgroundColor: 'var(--ui-surface)' }}
-          >
+          <div className="lg:col-span-3 bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 p-8">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-[var(--ui-accent-soft)] text-[color:var(--ui-accent)]">
@@ -416,10 +409,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div
-        className="backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 p-6"
-        style={{ backgroundColor: 'var(--ui-surface)' }}
-      >
+      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 p-6">
         <div className="flex justify-between items-center mb-6 border-b border-slate-100/50 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20"
@@ -495,21 +485,13 @@ const Dashboard = () => {
                   <span
                     className={`text-xs font-medium w-7 h-7 flex items-center justify-center rounded-full transition-all duration-300 ${
                       isToday
-                        ? 'text-white shadow-md shadow-indigo-500/40 scale-110'
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/40 scale-110'
                         : hasEvents
-                        ? 'text-white shadow-md shadow-indigo-500/20 scale-105'
+                        ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md shadow-indigo-500/20 scale-105'
                         : isWeekend
                         ? 'text-red-500 group-hover:bg-red-50'
                         : 'text-slate-500 group-hover:bg-slate-100'
                     }`}
-                    style={
-                      isToday || hasEvents
-                        ? {
-                            backgroundImage:
-                              'linear-gradient(to bottom right, var(--ui-accent-strong), var(--ui-accent))',
-                          }
-                        : undefined
-                    }
                   >
                     {day}
                   </span>
@@ -566,8 +548,7 @@ const Dashboard = () => {
                         <span className="font-semibold text-slate-800 truncate">
                           {event.title}
                         </span>
-                        <span className="text-[11px] px-2 py-0.5 rounded-full font-medium"
-                              style={{ backgroundColor: 'var(--ui-accent-soft)', color: 'var(--ui-accent-strong)' }}>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-medium">
                           {event.type === 'sport' && 'Sport'}
                           {event.type === 'group_study' && 'Group Study'}
                           {event.type === 'exam' && 'Exam'}
@@ -668,7 +649,10 @@ const Dashboard = () => {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary px-4 py-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                  >
                     Save
                   </button>
                 </div>

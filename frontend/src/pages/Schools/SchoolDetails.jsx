@@ -15,10 +15,7 @@ import {
 } from 'lucide-react';
 
 const StatCard = ({ icon: Icon, title, value, color }) => (
-  <div
-    className="p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4"
-    style={{ backgroundColor: 'var(--ui-surface)' }}
-  >
+  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
     <div className={`p-3 rounded-lg ${color}`}>
       <Icon className="text-white" size={24} />
     </div>
@@ -90,17 +87,11 @@ const SchoolDetails = () => {
       </div>
 
       {/* Hero Section */}
-      <div
-        className="rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-        style={{ backgroundColor: 'var(--ui-surface)' }}
-      >
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-32"></div>
         <div className="px-8 pb-8">
           <div className="relative flex justify-between items-end -mt-12 mb-6">
-            <div
-              className="p-4 rounded-2xl shadow-lg"
-              style={{ backgroundColor: 'var(--ui-surface)' }}
-            >
+            <div className="bg-white p-4 rounded-2xl shadow-lg">
               <School size={48} className="text-blue-600" />
             </div>
             <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-mono font-medium">

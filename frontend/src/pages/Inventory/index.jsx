@@ -147,10 +147,7 @@ export default function Inventory() {
           <div className="w-10 h-10 rounded-full border-4 border-brand-200 border-t-brand-500 animate-spin" />
         </div>
       ) : (
-        <div
-          className="backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 overflow-hidden"
-          style={{ backgroundColor: 'var(--ui-surface)' }}
-        >
+        <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-slate-50/80 border-b border-slate-100">
@@ -258,7 +255,7 @@ export default function Inventory() {
               <input type="number" className="w-full border p-2 rounded" value={itemForm.minStock} onChange={e => setItemForm({...itemForm, minStock: e.target.value})} />
             </div>
           </div>
-          <button type="submit" className="w-full btn-primary">Save Item</button>
+          <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Save Item</button>
         </form>
       </Modal>
 
@@ -304,7 +301,7 @@ export default function Inventory() {
               onChange={e => setTransForm({...transForm, notes: e.target.value})} 
             />
           </div>
-          <button type="submit" className="w-full btn-primary">Confirm Transaction</button>
+          <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Confirm Transaction</button>
         </form>
       </Modal>
     </div>
