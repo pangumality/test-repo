@@ -20,23 +20,72 @@ export default function ELearning() {
     fetchSubjects();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-12 h-12 rounded-full border-4 border-slate-200 animate-spin"
+             style={{ borderTopColor: 'var(--ui-accent)' }} />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-700 uppercase">E-Learning Resources</h2>
-      <div className="bg-white rounded-xl shadow-soft p-6">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-display font-bold text-gradient tracking-tight">
+            E-Learning Resources
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Explore interactive subjects and digital content for your classes
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-soft p-6"
+        style={{ backgroundColor: 'var(--ui-surface)' }}
+      >
         {subjects.length === 0 ? (
-          <p className="text-gray-500">No subjects found.</p>
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 mb-4"
+                 style={{ backgroundImage: 'linear-gradient(to bottom right, var(--ui-accent-strong), var(--ui-accent))' }}>
+              <span className="text-2xl">📚</span>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-1">No subjects found</h3>
+            <p className="text-sm text-slate-500">
+              Once subjects are added, you will see all available resources here.
+            </p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {subjects.map((s) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {subjects.map((s, index) => (
               <Link
                 key={s.id}
                 to={`/e-learning/${s.id}`}
-                className="px-3 py-3 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-100 flex justify-between items-center"
+                className="group relative overflow-hidden rounded-2xl border border-slate-100 transition-all duration-300 shadow-sm hover:shadow-lg flex items-center justify-between px-4 py-4"
+                style={{ backgroundColor: 'var(--ui-surface)' }}
               >
-                <span>{s.name}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform"
+                       style={{ backgroundImage: 'linear-gradient(to bottom right, var(--ui-accent-strong), var(--ui-accent-secondary))' }}>
+                    <span className="text-sm font-semibold">
+                      {s.name?.[0]?.toUpperCase() || 'S'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-slate-700 group-hover:text-slate-900">
+                      {s.name}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      Subject {index + 1}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold px-3 py-1 rounded-full border transition-colors"
+                      style={{ backgroundColor: 'var(--ui-accent-soft)', color: 'var(--ui-accent)' }}>
+                  Open
+                </span>
               </Link>
             ))}
           </div>

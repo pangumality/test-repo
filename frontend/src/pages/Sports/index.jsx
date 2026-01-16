@@ -5,11 +5,14 @@ import api from '../../utils/api';
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{title}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
+    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white/80 backdrop-blur-2xl rounded-2xl p-6 w-full max-w-md border border-white/40 shadow-2xl">
+        <div className="flex justify-between items-center mb-4 border-b border-white/40 pb-3 -mx-6 px-6 pt-1 rounded-t-2xl"
+             style={{ backgroundImage: 'linear-gradient(to right, var(--ui-accent-strong), transparent)' }}>
+          <h2 className="text-xl font-bold text-gradient">{title}</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/80 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors">
+            ✕
+          </button>
         </div>
         {children}
       </div>
@@ -89,22 +92,21 @@ const Sports = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 uppercase">Sports Management</h1>
-          <p className="text-gray-600">Manage sports, teams, and events</p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-display font-bold text-gradient uppercase">Sports Management</h1>
+          <p className="text-slate-500">Manage sports, teams, and events</p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b">
+      <div className="flex gap-4 mb-6 border-b border-slate-200">
         {['overview', 'teams', 'events'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-2 px-4 capitalize font-medium ${
-              activeTab === tab ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'
+            className={`pb-2 px-4 capitalize font-medium transition-colors ${
+              activeTab === tab ? 'border-b-2 border-brand-600 text-brand-600' : 'text-slate-500 hover:text-brand-500'
             }`}
           >
             {tab}

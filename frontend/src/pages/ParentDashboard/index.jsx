@@ -138,7 +138,11 @@ const ParentDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* Academic Overview Card */}
-          <Link to="/subjects" className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block">
+          <Link
+            to="/subjects"
+            className="p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block"
+            style={{ backgroundColor: 'var(--ui-surface)' }}
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-400 opacity-10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110" />
             
             <div className="flex items-center justify-between mb-6 relative">
@@ -172,7 +176,11 @@ const ParentDashboard = () => {
           </Link>
 
           {/* Attendance Card */}
-          <Link to="/attendance" className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block">
+          <Link
+            to="/attendance"
+            className="p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block"
+            style={{ backgroundColor: 'var(--ui-surface)' }}
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-400 opacity-10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110" />
             
             <div className="flex items-center justify-between mb-6 relative">
@@ -228,7 +236,11 @@ const ParentDashboard = () => {
           </Link>
 
           {/* Fees Card */}
-          <Link to="/finance" className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block">
+          <Link
+            to="/finance"
+            className="p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block"
+            style={{ backgroundColor: 'var(--ui-surface)' }}
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 opacity-10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110" />
             
             <div className="flex items-center justify-between mb-6 relative">
@@ -277,7 +289,11 @@ const ParentDashboard = () => {
           </Link>
 
           {/* Results Card */}
-          <Link to="/exams" className="md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden block">
+          <Link
+            to="/exams"
+            className="md:col-span-2 lg:col-span-3 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden block"
+            style={{ backgroundColor: 'var(--ui-surface)' }}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-bold text-slate-700 flex items-center gap-3">
                 <div className="p-2.5 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg text-white shadow-lg shadow-orange-500/30">

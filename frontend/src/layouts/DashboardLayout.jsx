@@ -40,16 +40,33 @@ import { seedAll } from '../utils/seed';
 import MobileDashboardHome from '../components/MobileDashboardHome';
 import api from '../utils/api';
 
-const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) => {
+const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed, colorTheme }) => {
+  const themeVariant = colorTheme || 'purple';
+
+  const activeClasses =
+    themeVariant === 'purple'
+      ? 'bg-purple-500/90 text-white shadow-lg shadow-purple-900/40 scale-[1.02]'
+      : themeVariant === 'blue'
+      ? 'bg-blue-500/90 text-white shadow-lg shadow-blue-900/40 scale-[1.02]'
+      : 'bg-slate-100 text-slate-900 shadow-sm scale-[1.02]';
+
+  const inactiveClasses =
+    themeVariant === 'light'
+      ? 'bg-transparent text-slate-600 hover:bg-slate-50 hover:shadow-md hover:shadow-slate-200/60 hover:text-slate-900 hover:translate-x-1'
+      : 'bg-transparent text-white/80 hover:bg-white/10 hover:shadow-lg hover:shadow-black/20 hover:text-white hover:translate-x-1';
+
+  const inactiveIconClasses =
+    themeVariant === 'light'
+      ? 'bg-slate-100 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-900'
+      : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white';
+
   return (
     <Link
       to={to}
       onClick={onClick}
       className={clsx(
         'group flex items-center gap-3 px-4 py-3 mb-2 rounded-2xl transition-all duration-300 relative overflow-hidden',
-        active
-          ? 'bg-gradient-to-r from-brand-600 via-brand-500 to-secondary-500 text-white shadow-lg shadow-brand-500/30 scale-[1.02]'
-          : 'bg-transparent text-slate-600 hover:bg-white hover:shadow-md hover:shadow-brand-500/10 hover:text-brand-600 hover:translate-x-1',
+        active ? activeClasses : inactiveClasses,
         isCollapsed ? 'justify-center px-2' : ''
       )}
       title={isCollapsed ? label : ''}
@@ -62,7 +79,7 @@ const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) =>
           'flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 shadow-sm',
           active 
             ? 'bg-white/20 text-white backdrop-blur-sm' 
-            : 'bg-white text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-600'
+            : inactiveIconClasses
         )}
       >
         <Icon size={18} />
@@ -102,7 +119,7 @@ const MENU_ITEMS = [
   { icon: Package, label: 'Inventory', to: '/inventory', excludedRoles: ['student','teacher','parent'] },
 ];
 
-const DashboardLayout = ({ theme = 'light', setTheme }) => {
+const DashboardLayout = ({ theme = 'light', setTheme, uiColor = 'purple', setUiColor }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // For mobile
   const [currentUser, setCurrentUser] = useState(null);
@@ -378,11 +395,49 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
     );
   }
 
-  // Desktop Layout
+  const sidebarTheme = uiColor;
+
+  const sidebarBgClass =
+    sidebarTheme === 'purple'
+      ? 'bg-gradient-to-b from-purple-600 via-purple-600 to-indigo-600 text-white'
+      : sidebarTheme === 'blue'
+      ? 'bg-gradient-to-b from-blue-600 via-blue-600 to-sky-500 text-white'
+      : 'bg-white text-slate-800';
+
+  const sidebarBorderClass =
+    sidebarTheme === 'white' ? 'border-r border-slate-100/80' : 'border-none';
+
+  const sidebarHeaderTitleClass =
+    sidebarTheme === 'white' ? 'text-slate-900' : 'text-white';
+
+  const sidebarHeaderSubtitleClass =
+    sidebarTheme === 'white' ? 'text-slate-400' : 'text-white/60';
+
+  const sidebarToggleButtonClass =
+    sidebarTheme === 'white'
+      ? 'p-1.5 rounded-lg transition-colors text-slate-400 hover:bg-slate-100 hover:text-slate-700'
+      : 'p-1.5 rounded-lg transition-colors text-white/70 hover:bg-white/15 hover:text-white';
+
+  const sidebarBlobClass =
+    sidebarTheme === 'white'
+      ? 'bg-gradient-to-b from-slate-50 to-transparent'
+      : 'bg-gradient-to-b from-white/15 to-transparent';
+
+  const sidebarItemThemeVariant = sidebarTheme === 'white' ? 'light' : sidebarTheme;
+
+  const appBgClass = sidebarTheme === 'white' ? 'bg-slate-100' : 'bg-slate-50';
+
+  const topBottomBackground = 'linear-gradient(90deg, #05081a 0%, #0b1029 100%)';
+
+  const mainBackground = 'linear-gradient(180deg, var(--ui-bg-start) 0%, var(--ui-bg-mid) 40%, var(--ui-bg-end) 100%)';
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className={clsx('min-h-screen flex flex-col font-sans', appBgClass)}>
       {/* Top Navigation Bar */}
-      <header className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white h-16 flex items-center justify-between px-6 shadow-md z-20 sticky top-0">
+      <header
+        className="h-16 flex items-center justify-between px-6 shadow-md z-20 sticky top-0 text-white"
+        style={{ backgroundImage: topBottomBackground }}
+      >
         <div className="flex items-center gap-4">
            {currentUser?.school?.logo ? (
              <img src={currentUser.school.logo} alt="school logo" className="w-10 h-10 rounded-full object-cover shadow-lg shadow-indigo-500/30 bg-white" />
@@ -411,6 +466,35 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
            </div>
         </div>
         <div className="flex items-center gap-6 relative">
+          <div className="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1 border border-white/20">
+            <button
+              type="button"
+              onClick={() => setUiColor && setUiColor('purple')}
+              className={clsx(
+                "w-4 h-4 rounded-full bg-purple-500 border-2 transition-all duration-200",
+                sidebarTheme === 'purple' ? "border-white" : "border-white/40"
+              )}
+              aria-label="Purple theme"
+            />
+            <button
+              type="button"
+              onClick={() => setUiColor && setUiColor('blue')}
+              className={clsx(
+                "w-4 h-4 rounded-full bg-blue-500 border-2 transition-all duration-200",
+                sidebarTheme === 'blue' ? "border-white" : "border-white/40"
+              )}
+              aria-label="Blue theme"
+            />
+            <button
+              type="button"
+              onClick={() => setUiColor && setUiColor('white')}
+              className={clsx(
+                "w-4 h-4 rounded-full bg-white border-2 transition-all duration-200",
+                sidebarTheme === 'white' ? "border-slate-200" : "border-slate-400/60"
+              )}
+              aria-label="White theme"
+            />
+          </div>
           <button
             type="button"
             onClick={() => setTheme && setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -486,7 +570,14 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
            </div>
 
            <Link to="/profile" className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors">
-             <User size={20} className="text-purple-400" />
+             <User
+               size={20}
+               className={sidebarTheme === 'white'
+                 ? 'text-slate-500'
+                 : sidebarTheme === 'blue'
+                 ? 'text-sky-400'
+                 : 'text-purple-400'}
+             />
              <span className="text-sm font-medium">
                {currentUser ? `${currentUser.firstName} (${currentUser.role})` : 'Loading...'}
              </span>
@@ -502,26 +593,35 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <aside className={clsx(
-            "bg-white border-r border-indigo-50/50 overflow-y-auto flex-shrink-0 pb-10 transition-all duration-300 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative",
+            "overflow-y-auto flex-shrink-0 pb-10 transition-all duration-300 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative",
+            sidebarBgClass,
+            sidebarBorderClass,
             isCollapsed ? "w-20" : "w-72"
         )}>
-          {/* Decorative background blob */}
-          <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-indigo-50/50 to-transparent pointer-events-none" />
+          <div className={clsx("absolute top-0 left-0 w-full h-40 pointer-events-none", sidebarBlobClass)} />
           
-          <div className={clsx("p-4 flex items-center relative z-10", isCollapsed ? "justify-center" : "justify-between")}>
-             {!isCollapsed && <h3 className="text-indigo-900/50 font-bold text-xs uppercase tracking-wider mb-2 px-2">Main Menu</h3>}
+          <div className={clsx("px-4 pt-5 pb-3 flex items-center relative z-10", isCollapsed ? "justify-center" : "justify-between")}>
+             {!isCollapsed && (
+               <div className="flex flex-col">
+                 <span className={clsx("text-sm font-semibold tracking-wide", sidebarHeaderTitleClass)}>
+                   doonITes ERP
+                 </span>
+                 <span className={clsx("text-[11px] mt-1 tracking-wide uppercase font-medium", sidebarHeaderSubtitleClass)}>
+                   Menu
+                 </span>
+               </div>
+             )}
              <button 
                 onClick={() => setIsCollapsed(!isCollapsed)} 
-                className="p-1.5 hover:bg-indigo-50 text-indigo-400 rounded-lg transition-colors"
+                className={sidebarToggleButtonClass}
              >
                 {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
              </button>
           </div>
-          <div className="flex flex-col px-3 relative z-10 gap-1">
+          <div className="px-4 pb-2 relative z-10" />
+          <div className="flex flex-col px-3 relative z-10 gap-1 mt-1">
              {MENU_ITEMS.map((item) => {
-               // Filter logic
                if (item.allowedRoles && (!currentUser || !item.allowedRoles.includes(currentUser.role))) return null;
                if (item.excludedRoles && currentUser && item.excludedRoles.includes(currentUser.role)) return null;
 
@@ -534,6 +634,7 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                    active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))}
                    onClick={() => scrollToTopAll('auto')}
                    isCollapsed={isCollapsed}
+                   colorTheme={sidebarItemThemeVariant}
                  />
                );
              })}
@@ -545,8 +646,9 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto p-6 scroll-smooth"
           onScroll={handleScroll}
+          style={{ backgroundImage: mainBackground }}
         >
-           <Outlet context={{ currentUser }} />
+           <Outlet context={{ currentUser, uiColor: sidebarTheme }} />
         </main>
 
         {/* Scroll to Top Button */}
@@ -562,8 +664,16 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
         </button>
       </div>
       
-      <footer className="w-full bg-white/80 backdrop-blur-md border-t border-white/20 py-4 px-6 text-center text-sm text-slate-500">
-        <p>© 2025 doonITes ERP. <span className="text-brand-500">Made with ❤️ for Education.</span></p>
+      <footer
+        className="w-full py-4 px-6 text-center text-sm border-t border-slate-900/40"
+        style={{ backgroundImage: topBottomBackground }}
+      >
+        <p className="text-slate-200">
+          © 2025 doonITes ERP.{' '}
+          <span className="font-semibold" style={{ color: 'var(--ui-accent)' }}>
+            Made with ❤️ for Education.
+          </span>
+        </p>
       </footer>
     </div>
   );

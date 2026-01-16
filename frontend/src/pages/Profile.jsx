@@ -33,8 +33,11 @@ const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(currentUser || null);
   const logoInputRef = useRef(null);
+  const portraitInputRef = useRef(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoError, setLogoError] = useState('');
+  const [portraitUploading, setPortraitUploading] = useState(false);
+  const [portraitError, setPortraitError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState('');
@@ -121,6 +124,32 @@ const Profile = () => {
     } finally {
       setLogoUploading(false);
       if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const uploadPortrait = async (file) => {
+    if (!file) return;
+    setPortraitUploading(true);
+    setPortraitError('');
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await api.post('/upload', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const url = res.data && res.data.url;
+      if (!url) {
+        throw new Error('No URL returned');
+      }
+      await api.put('/me', { portrait: url });
+      const { data: refreshed } = await api.get('/me');
+      setUser(refreshed);
+      localStorage.setItem('currentUser', JSON.stringify(refreshed));
+    } catch (err) {
+      setPortraitError(err?.response?.data?.error || 'Failed to upload profile picture');
+    } finally {
+      setPortraitUploading(false);
+      if (portraitInputRef.current) portraitInputRef.current.value = '';
     }
   };
 
@@ -253,6 +282,28 @@ const Profile = () => {
                     disabled={logoUploading}
                     className={`absolute bottom-2 right-2 p-1.5 bg-white rounded-full shadow-md transition-opacity ${
                       logoUploading
+                        ? 'text-slate-300 cursor-not-allowed opacity-100'
+                        : 'text-slate-500 hover:text-indigo-600 opacity-100 group-hover:opacity-100'
+                    }`}
+                  >
+                    <Camera size={16} />
+                  </button>
+                </>
+              ) : user.role === 'teacher' ? (
+                <>
+                  <input
+                    ref={portraitInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => uploadPortrait(e.target.files?.[0] || null)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => portraitInputRef.current?.click()}
+                    disabled={portraitUploading}
+                    className={`absolute bottom-2 right-2 p-1.5 bg-white rounded-full shadow-md transition-opacity ${
+                      portraitUploading
                         ? 'text-slate-300 cursor-not-allowed opacity-100'
                         : 'text-slate-500 hover:text-indigo-600 opacity-100 group-hover:opacity-100'
                     }`}

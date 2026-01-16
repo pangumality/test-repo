@@ -36,17 +36,25 @@ import Certificates from './pages/Certificates';
 import Profile from './pages/Profile';
 import NoticeBoard from './pages/NoticeBoard';
 
-function App({ theme, setTheme }) {
+function App({ theme, setTheme, uiColor, setUiColor }) {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
         
-        <Route path="/" element={
-          <ProtectedRoute>
-            <DashboardLayout theme={theme} setTheme={setTheme} />
-          </ProtectedRoute>
-        }>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout
+                theme={theme}
+                setTheme={setTheme}
+                uiColor={uiColor}
+                setUiColor={setUiColor}
+              />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="profile" element={<Profile />} />
           <Route path="attendance" element={<Attendance />} />

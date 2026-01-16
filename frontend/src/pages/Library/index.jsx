@@ -172,7 +172,10 @@ const Library = () => {
       </div>
 
       {/* Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div
+        className="rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+        style={{ backgroundColor: 'var(--ui-surface)' }}
+      >
         {activeTab === 'inventory' && (
           <div className="overflow-x-auto">
             <table className="w-full text-left">

@@ -1304,7 +1304,7 @@ app.get('/api/me', authenticate, async (req, res) => {
 
 app.put('/api/me', authenticate, async (req, res) => {
   try {
-    const { phone, firstName, lastName, email, gender, oldPassword, newPassword } = req.body;
+    const { phone, firstName, lastName, email, gender, portrait, oldPassword, newPassword } = req.body;
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) return res.status(404).json({ error: 'Not found' });
     const data = {};
@@ -1312,6 +1312,7 @@ app.put('/api/me', authenticate, async (req, res) => {
     if (firstName !== undefined) data.firstName = String(firstName || '').trim() || null;
     if (lastName !== undefined) data.lastName = String(lastName || '').trim() || null;
     if (gender !== undefined) data.gender = String(gender || '').trim() || null;
+    if (portrait !== undefined) data.portrait = portrait || null;
     if (email !== undefined) {
       const nextEmail = String(email || '').trim();
       if (!nextEmail) {

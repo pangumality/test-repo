@@ -14,11 +14,12 @@ export default function Modal({ open, onClose, title, children }) {
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-soft w-full max-w-xl mx-4">
-        <div className="px-6 py-4 border-b flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-          <button className="text-gray-500 hover:text-gray-700" onClick={onClose}>✕</button>
+      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white/80 backdrop-blur-2xl rounded-2xl shadow-2xl w-full max-w-xl mx-4 border border-white/40">
+        <div className="px-6 py-4 border-b border-white/40 flex items-center justify-between"
+             style={{ backgroundImage: 'linear-gradient(to right, var(--ui-accent-strong), transparent)' }}>
+          <h3 className="text-lg font-semibold text-slate-900 text-gradient">{title}</h3>
+          <button className="w-8 h-8 rounded-full flex items-center justify-center bg-white/80 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors" onClick={onClose}>✕</button>
         </div>
         <div className="p-6">{children}</div>
       </div>
