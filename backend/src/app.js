@@ -18,8 +18,11 @@ import libraryRoutes from './routes/libraryRoutes.js';
 import financeRoutes from './routes/financeRoutes.js';
 import noticeRoutes from './routes/noticeRoutes.js';
 import sportsRoutes from './routes/sportsRoutes.js';
+import calendarRoutes from './routes/calendarRoutes.js';
 import groupStudyRoutes from './routes/groupStudyRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
+import transportRoutes from './routes/transportRoutes.js';
+import schoolRoutes from './routes/schoolRoutes.js';
 import aiTutorRoutes from './routes/aiTutorRoutes.js';
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
@@ -46,6 +49,47 @@ const checkTeacherSubjectAccess = async (userId, subjectId) => {
     });
     return !!assigned;
 };
+
+const normalizeSchoolAdmins = async () => {
+  try {
+    const schools = await prisma.school.findMany({
+      select: { id: true }
+    });
+
+    for (const { id: schoolId } of schools) {
+      const admins = await prisma.user.findMany({
+        where: { schoolId, role: ROLES.SCHOOL_ADMIN },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      if (admins.length <= 1) {
+        continue;
+      }
+
+      const [, ...duplicates] = admins;
+      const duplicateIds = duplicates.map((user) => user.id);
+
+      if (duplicateIds.length === 0) {
+        continue;
+      }
+
+      await prisma.user.updateMany({
+        where: { id: { in: duplicateIds } },
+        data: { role: ROLES.TEACHER }
+      });
+    }
+  } catch (error) {
+    console.error('Error normalizing school admin roles:', error);
+  }
+};
+
+normalizeSchoolAdmins()
+  .then(() => {
+    console.log('[INIT] School admin roles normalized');
+  })
+  .catch((err) => {
+    console.error('[INIT] Failed to normalize school admin roles', err);
+  });
 
 // Export prisma client for usage in other files if needed
 export { prisma };
@@ -88,8 +132,11 @@ app.use('/api/hostels', hostelRoutes);
 app.use('/api/books', libraryRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/sports', sportsRoutes);
+app.use('/api/calendar', calendarRoutes);
 app.use('/api/group-studies', groupStudyRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/transport', transportRoutes);
+app.use('/api/schools', schoolRoutes);
 app.use('/api/ai-tutor', aiTutorRoutes);
 
 // Routes
@@ -210,12 +257,20 @@ app.get('/api/classes', authenticate, async (req, res) => {
   }
 });
 
-app.get('/api/students', authenticate, requirePermission(PERMISSIONS.STUDENT_MANAGE), async (req, res) => {
+app.get('/api/students', authenticate, async (req, res) => {
   const { classId } = req.query;
   const { schoolId, role, id: userId } = req.user;
 
   try {
     const where = { schoolId };
+
+    if (
+      role !== ROLES.SUPER_ADMIN &&
+      role !== ROLES.SCHOOL_ADMIN &&
+      role !== ROLES.TEACHER
+    ) {
+      return res.status(403).json({ error: 'Not allowed' });
+    }
     
     // Scoping for Teachers: Only show students in classes they teach
     if (role === 'teacher') {
@@ -271,6 +326,7 @@ app.get('/api/students', authenticate, requirePermission(PERMISSIONS.STUDENT_MAN
         email: s.user.email,
         phone: s.user.phone,
         gender: s.user.gender,
+        portrait: s.user.portrait,
         className: s.klass?.name,
         classId: s.classId,
         grade: s.grade,
@@ -297,7 +353,7 @@ app.post('/api/students', authenticate, requirePermission(PERMISSIONS.STUDENT_MA
     const { 
       firstName, lastName, email, phone, gender, classId, section,
       dateOfBirth, bloodGroup, healthCondition, religion, grade,
-      guardianName, guardianEmail, guardianPhone
+      guardianName, guardianEmail, guardianPhone, portrait
     } = req.body;
     const { schoolId } = req.user;
 
@@ -331,7 +387,8 @@ app.post('/api/students', authenticate, requirePermission(PERMISSIONS.STUDENT_MA
           password: await bcrypt.hash('Student@123', 10),
           role: 'student',
           schoolId,
-          isActive: true
+          isActive: true,
+          portrait: portrait || null
         }
       });
 
@@ -426,7 +483,7 @@ app.put('/api/students/:id', authenticate, requirePermission(PERMISSIONS.STUDENT
     const { 
       firstName, lastName, classId, section, phone, gender,
       dateOfBirth, bloodGroup, healthCondition, religion, grade,
-      guardianName, guardianEmail, guardianPhone
+      guardianName, guardianEmail, guardianPhone, portrait
     } = req.body;
     
     // Find student
@@ -447,7 +504,7 @@ app.put('/api/students/:id', authenticate, requirePermission(PERMISSIONS.STUDENT
     await prisma.$transaction(async (prisma) => {
       await prisma.user.update({
         where: { id: student.userId },
-        data: { firstName, lastName, phone: phone || undefined, gender: gender || undefined }
+        data: { firstName, lastName, phone: phone || undefined, gender: gender || undefined, portrait: portrait || undefined }
       });
       
       const updateData = {};
@@ -899,7 +956,7 @@ app.post('/api/upload', authenticate, upload.single('image'), (req, res) => {
   if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
   }
-  const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  const url = `/uploads/${req.file.filename}`;
   res.json({ url });
 });
 
@@ -1434,7 +1491,7 @@ app.get('/api/schools/:id', authenticate, requirePermission(PERMISSIONS.SCHOOL_M
 
 app.post('/api/schools', authenticate, requirePermission(PERMISSIONS.SCHOOL_MANAGE), async (req, res) => {
   try {
-    const { name, code, adminEmail, address, phone, email, website, logo } = req.body;
+    const { name, code, adminEmail, address, phone, email, website, logo, adminPortrait } = req.body;
     
     if (!adminEmail) {
       return res.status(400).json({ error: 'Admin email is required' });
@@ -1479,7 +1536,8 @@ app.post('/api/schools', authenticate, requirePermission(PERMISSIONS.SCHOOL_MANA
           lastName: 'Admin',
           role: ROLES.SCHOOL_ADMIN, 
           schoolId: newSchool.id,
-          isActive: true
+          isActive: true,
+          portrait: adminPortrait || null
         }
       });
 
@@ -3920,7 +3978,7 @@ app.post('/api/upload', authenticate, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
-    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const url = `/uploads/${req.file.filename}`;
     res.json({ url });
 });
 

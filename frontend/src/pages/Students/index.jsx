@@ -10,7 +10,8 @@ export default function Students() {
     firstName: '', lastName: '', email: '', phone: '', gender: '', klass: '', section: '',
     grade: '',
     dateOfBirth: '', bloodGroup: '', healthCondition: '', religion: '',
-    guardianName: '', guardianEmail: '', guardianPhone: ''
+    guardianName: '', guardianEmail: '', guardianPhone: '',
+    portrait: ''
   });
   const [list, setList] = useState([]);
 
@@ -56,7 +57,8 @@ export default function Students() {
       klass: klass || (classesList[0]?.id || ''), section: '',
       grade: '',
       dateOfBirth: '', bloodGroup: '', healthCondition: '', religion: '',
-      guardianName: '', guardianEmail: '', guardianPhone: ''
+      guardianName: '', guardianEmail: '', guardianPhone: '',
+      portrait: ''
     });
   };
 
@@ -77,7 +79,8 @@ export default function Students() {
       religion: s.religion || '',
       guardianName: s.guardianName || '',
       guardianEmail: s.guardianEmail || '',
-      guardianPhone: s.guardianPhone || ''
+      guardianPhone: s.guardianPhone || '',
+      portrait: s.portrait || ''
     });
   };
 
@@ -88,8 +91,30 @@ export default function Students() {
       klass: klass || '', section: '',
       grade: '',
       dateOfBirth: '', bloodGroup: '', healthCondition: '', religion: '',
-      guardianName: '', guardianEmail: '', guardianPhone: ''
+      guardianName: '', guardianEmail: '', guardianPhone: '',
+      portrait: ''
     });
+  };
+
+  const handlePortraitUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await api.post('/upload', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const url = res.data && res.data.url;
+      if (url) {
+        setForm(prev => ({ ...prev, portrait: url }));
+      }
+    } catch (err) {
+      console.error('Failed to upload portrait', err);
+      alert('Failed to upload portrait');
+    } finally {
+      e.target.value = '';
+    }
   };
 
   const save = async () => {
@@ -109,7 +134,8 @@ export default function Students() {
         religion: form.religion || undefined,
         guardianName: form.guardianName || undefined,
         guardianEmail: form.guardianEmail || undefined,
-        guardianPhone: form.guardianPhone || undefined
+        guardianPhone: form.guardianPhone || undefined,
+        portrait: form.portrait || undefined
       };
 
       if (editingId === 'new') {
@@ -220,6 +246,15 @@ export default function Students() {
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
+            <div className="md:col-span-2 flex flex-col gap-1">
+              <span className="text-sm text-gray-600">Profile picture</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"
+                onChange={handlePortraitUpload}
+              />
+            </div>
             <select
               className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"
               value={form.gender}

@@ -1,10 +1,12 @@
 import express from 'express';
 import { authenticate } from '../middleware/authMiddleware.js';
-import { 
-    getGroupStudies, 
-    createGroupStudy, 
-    updateGroupStudy, 
-    deleteGroupStudy 
+import { requirePermission } from '../middleware/rbacMiddleware.js';
+import { PERMISSIONS } from '../config/rbac.js';
+import {
+  getGroupStudies,
+  createGroupStudy,
+  updateGroupStudy,
+  deleteGroupStudy,
 } from '../controllers/groupStudyController.js';
 
 const router = express.Router();
@@ -12,8 +14,8 @@ const router = express.Router();
 router.use(authenticate);
 
 router.get('/', getGroupStudies);
-router.post('/', createGroupStudy);
-router.put('/:id', updateGroupStudy);
-router.delete('/:id', deleteGroupStudy);
+router.post('/', requirePermission(PERMISSIONS.GROUP_STUDY_MANAGE), createGroupStudy);
+router.put('/:id', requirePermission(PERMISSIONS.GROUP_STUDY_MANAGE), updateGroupStudy);
+router.delete('/:id', requirePermission(PERMISSIONS.GROUP_STUDY_MANAGE), deleteGroupStudy);
 
 export default router;

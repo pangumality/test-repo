@@ -36,7 +36,7 @@ import Certificates from './pages/Certificates';
 import Profile from './pages/Profile';
 import NoticeBoard from './pages/NoticeBoard';
 
-function App() {
+function App({ theme, setTheme }) {
   return (
     <Router>
       <Routes>
@@ -44,7 +44,7 @@ function App() {
         
         <Route path="/" element={
           <ProtectedRoute>
-            <DashboardLayout />
+            <DashboardLayout theme={theme} setTheme={setTheme} />
           </ProtectedRoute>
         }>
           <Route index element={<Dashboard />} />
@@ -57,7 +57,11 @@ function App() {
           <Route path="leaves" element={<Leaves />} />
           <Route path="timetable" element={<TimeTable />} />
           <Route path="certificates" element={<Certificates />} />
-          <Route path="students" element={<Students />} />
+          <Route path="students" element={
+            <RequireRole roles={['admin', 'school_admin']}>
+              <Students />
+            </RequireRole>
+          } />
           <Route path="classes" element={<Classes />} />
           <Route path="schools" element={
             <RequireRole roles={['admin']}>

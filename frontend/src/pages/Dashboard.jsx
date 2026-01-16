@@ -36,41 +36,39 @@ ChartJS.register(
 const StatCard = ({ icon: Icon, title, count, colorFrom, colorTo, iconColor, buttonLabel, link }) => {
   const CardContent = () => (
     <>
-      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colorFrom} ${colorTo} opacity-10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110`} />
+      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colorFrom} ${colorTo} opacity-[0.08] rounded-bl-[100px] -mr-8 -mt-8 transition-all duration-500 group-hover:scale-110 group-hover:opacity-10`} />
       
-      <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl bg-gradient-to-br ${colorFrom} ${colorTo} shadow-lg ${iconColor} text-white transform group-hover:scale-110 transition-transform duration-300`}>
-          <Icon size={24} />
+      <div className="flex items-start justify-between mb-4 relative z-10">
+        <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${colorFrom} ${colorTo} shadow-lg ${iconColor} text-white transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+          <Icon size={24} strokeWidth={2.5} />
         </div>
         {buttonLabel && (
-          <span className={`text-xs font-bold px-3 py-1 rounded-full bg-slate-50 group-hover:bg-white group-hover:shadow-sm transition-all border border-slate-100 bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent`}>
+          <span className={`text-[10px] font-bold px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm group-hover:bg-white shadow-sm transition-all border border-slate-100/50 bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent uppercase tracking-wider`}>
             {buttonLabel}
           </span>
         )}
       </div>
       
-      <div>
-        <h3 className={`bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent text-sm font-medium uppercase tracking-wider mb-1`}>{title}</h3>
-        <span className={`bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent text-4xl font-black tracking-tight`}>{count}</span>
+      <div className="relative z-10">
+        <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1 opacity-80">{title}</h3>
+        <span className={`bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent text-4xl font-display font-bold tracking-tight`}>{count}</span>
       </div>
     </>
   );
 
   if (link) {
     return (
-      <Link to={link} className="group relative bg-white rounded-2xl p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden block">
+      <Link to={link} className="group relative bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 shadow-soft border border-white/40 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden block">
         <CardContent />
       </Link>
     );
   }
 
   return (
-    <div className="group relative bg-white rounded-2xl p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+    <div className="group relative bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 shadow-soft border border-white/40 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
       <CardContent />
     </div>
   );
-
-  return link ? <Link to={link}>{CardContent}</Link> : CardContent;
 };
 
 const Dashboard = () => {
@@ -85,6 +83,16 @@ const Dashboard = () => {
     users: 0,
     revenue: 0,
     messages: 0
+  });
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [activeCalendarDay, setActiveCalendarDay] = useState(null);
+  const [showDayEventsModal, setShowDayEventsModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [newCalendarEvent, setNewCalendarEvent] = useState({
+    title: '',
+    description: '',
+    date: '',
   });
 
   useEffect(() => {
@@ -101,6 +109,46 @@ const Dashboard = () => {
       console.error('Failed to fetch stats:', error);
     }
   };
+
+  useEffect(() => {
+    fetchCalendarEvents();
+  }, []);
+
+  const fetchCalendarEvents = async () => {
+    try {
+      const response = await api.get('/calendar');
+      setCalendarEvents(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch calendar events:', error);
+    }
+  };
+
+  const calendarYear = calendarMonth.getFullYear();
+  const calendarMonthIndex = calendarMonth.getMonth();
+  const monthStart = new Date(calendarYear, calendarMonthIndex, 1);
+  const firstWeekday = monthStart.getDay();
+  const daysInMonth = new Date(calendarYear, calendarMonthIndex + 1, 0).getDate();
+
+  const eventsByDay = calendarEvents.reduce((acc, event) => {
+    const d = new Date(event.date);
+    if (d.getFullYear() === calendarYear && d.getMonth() === calendarMonthIndex) {
+      const day = d.getDate();
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(event);
+    }
+    return acc;
+  }, {});
+
+  const monthLabel = calendarMonth.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const selectedDayEvents =
+    activeCalendarDay != null && eventsByDay[activeCalendarDay]
+      ? eventsByDay[activeCalendarDay]
+      : [];
+  const canManageCalendar = currentUser?.role === 'school_admin';
 
   if (currentUser?.role === 'parent') {
     return <ParentDashboard />;
@@ -166,10 +214,10 @@ const Dashboard = () => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-           <h2 className="text-2xl font-black text-slate-800 tracking-tight">Dashboard Overview</h2>
-           <p className="text-slate-500 mt-1">Welcome back, {currentUser?.firstName || 'Guest'}! Here's what's happening today.</p>
+           <h2 className="text-3xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 tracking-tight">Dashboard Overview</h2>
+           <p className="text-slate-500 mt-1">Welcome back, <span className="bg-gradient-to-r from-brand-600 to-secondary-600 bg-clip-text text-transparent font-bold">{currentUser?.firstName || 'Guest'}</span>! Here's what's happening today.</p>
         </div>
-        <div className="text-sm font-medium text-slate-500 bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200">
+        <div className="text-sm font-medium text-slate-500 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm border border-white/50 hover:bg-white transition-colors">
            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
       </div>
@@ -180,9 +228,9 @@ const Dashboard = () => {
             icon={Building2} 
             title="Total Schools" 
             count={stats.schools} 
-            colorFrom="from-blue-500"
-            colorTo="to-cyan-400"
-            iconColor="shadow-blue-500/40"
+            colorFrom="from-brand-500"
+            colorTo="to-brand-400"
+            iconColor="shadow-brand-500/40"
             buttonLabel="Manage"
             link="/schools"
           />
@@ -190,9 +238,9 @@ const Dashboard = () => {
             icon={Users} 
             title="Total Users" 
             count={stats.users} 
-            colorFrom="from-rose-500"
+            colorFrom="from-secondary-500"
             colorTo="to-pink-500"
-            iconColor="shadow-rose-500/40"
+            iconColor="shadow-secondary-500/40"
             buttonLabel="View All"
             // link="/users" // Assuming a users page exists or we just show count
           />
@@ -210,9 +258,9 @@ const Dashboard = () => {
             icon={MessageSquare} 
             title="Total Messages" 
             count={stats.messages} 
-            colorFrom="from-violet-500"
-            colorTo="to-purple-500"
-            iconColor="shadow-violet-500/40"
+            colorFrom="from-amber-500"
+            colorTo="to-orange-500"
+            iconColor="shadow-amber-500/40"
             buttonLabel="View Logs"
             // link="/logs"
           />
@@ -223,9 +271,9 @@ const Dashboard = () => {
             icon={GraduationCap} 
             title="Total Students" 
             count={stats.students} 
-            colorFrom="from-blue-500"
-            colorTo="to-cyan-400"
-            iconColor="shadow-blue-500/40"
+            colorFrom="from-brand-500"
+            colorTo="to-brand-400"
+            iconColor="shadow-brand-500/40"
             buttonLabel="View All"
             link="/students"
         />
@@ -234,9 +282,9 @@ const Dashboard = () => {
               icon={Users} 
               title="Total Teachers" 
               count={stats.teachers} 
-              colorFrom="from-rose-500"
+              colorFrom="from-secondary-500"
               colorTo="to-pink-500"
-              iconColor="shadow-rose-500/40"
+              iconColor="shadow-secondary-500/40"
               buttonLabel="View All"
               link="/teachers"
           />
@@ -256,9 +304,9 @@ const Dashboard = () => {
               icon={CreditCard} 
               title="Total Parents" 
               count={stats.parents} 
-              colorFrom="from-violet-500"
-              colorTo="to-purple-500"
-              iconColor="shadow-violet-500/40"
+              colorFrom="from-amber-500"
+              colorTo="to-orange-500"
+              iconColor="shadow-amber-500/40"
               buttonLabel="Finance"
               link="/finance"
           />
@@ -268,13 +316,13 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {currentUser?.role === 'admin' && (
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <div className="flex items-center justify-between mb-6">
+          <div className="lg:col-span-2 bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 p-8">
+            <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                <div className="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
                   <BarChart2 size={20} />
                 </div>
-                <h3 className="text-lg font-bold text-slate-700">Statistics Overview</h3>
+                <h3 className="text-xl font-bold text-slate-700">Statistics Overview</h3>
               </div>
             </div>
             <div className="h-80">
@@ -288,7 +336,7 @@ const Dashboard = () => {
                     tooltip: {
                       backgroundColor: '#1e293b',
                       padding: 12,
-                      cornerRadius: 8,
+                      cornerRadius: 12,
                       titleFont: { size: 14, weight: 'bold' },
                       bodyFont: { size: 13 },
                       displayColors: false,
@@ -312,49 +360,213 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-6 ${!(currentUser?.role === 'admin' || currentUser?.role === 'super_admin') ? 'lg:col-span-3' : ''}`}>
-          <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+        <div className={`bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 p-6 ${!(currentUser?.role === 'admin' || currentUser?.role === 'super_admin') ? 'lg:col-span-3' : ''}`}>
+          <div className="flex justify-between items-center mb-6 border-b border-slate-100/50 pb-4">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">📅</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                <span className="text-lg">📅</span>
+              </div>
               <h3 className="font-bold text-slate-700">Events Calendar</h3>
             </div>
-            <button className="text-indigo-500 text-sm font-medium hover:text-indigo-700 transition-colors">View All</button>
+            {canManageCalendar && (
+              <button
+                onClick={() => setShowCalendarModal(true)}
+                className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
+              >
+                + Add event
+              </button>
+            )}
           </div>
           
           <div className="text-center mb-6">
-             <h3 className="text-xl font-bold text-slate-800">December 2025</h3>
-             <p className="text-sm text-slate-400">School Activities & Holidays</p>
+            <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">{monthLabel}</h3>
+            <p className="text-sm text-slate-400 font-medium">School events for your school</p>
           </div>
 
-          {/* Simple Calendar Grid Mockup */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
+          <div className="border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm bg-white/40 backdrop-blur-sm">
+            <div className="grid grid-cols-7 bg-slate-50/80 border-b border-slate-200/60">
                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                  <div key={day} className="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">{day}</div>
                ))}
             </div>
-            <div className="grid grid-cols-7 bg-white">
-               {/* Padding days */}
-               {[1, 2, 3, 4, 5, 6].map(d => (
-                 <div key={`pad-${d}`} className="h-20 border-r border-b border-slate-100 last:border-r-0"></div>
+            <div className="grid grid-cols-7">
+               {Array.from({ length: firstWeekday }).map((_, idx) => (
+                 <div key={`pad-${idx}`} className="h-24 border-r border-b border-slate-100/60 last:border-r-0 bg-slate-50/20" />
                ))}
-               
-               {/* Days 1-31 */}
-               {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                 <div key={day} className={`h-20 border-r border-b border-slate-100 last:border-r-0 p-1 relative hover:bg-slate-50 transition-colors group`}>
-                   <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${day === 30 ? 'bg-indigo-500 text-white shadow-md shadow-indigo-200' : 'text-slate-600'}`}>
-                     {day}
-                   </span>
-                   {day === 30 && (
-                     <div className="mt-1">
-                       <div className="h-1.5 w-full bg-rose-400 rounded-full mb-0.5"></div>
-                       <div className="h-1.5 w-2/3 bg-emerald-400 rounded-full"></div>
-                     </div>
-                   )}
-                 </div>
-               ))}
-            </div>
+               {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+                 const dayEvents = eventsByDay[day] || [];
+                 const hasEvents = dayEvents.length > 0;
+                 return (
+                  <div
+                    key={day}
+                    className="h-24 border-r border-b border-slate-100/60 last:border-r-0 p-1 relative hover:bg-white/60 transition-colors group cursor-pointer"
+                    onClick={() => {
+                      if (!hasEvents) return;
+                      setActiveCalendarDay(day);
+                      setShowDayEventsModal(true);
+                    }}
+                  >
+                    <span
+                      className={`text-xs font-medium w-7 h-7 flex items-center justify-center rounded-full transition-all duration-300 ${
+                        hasEvents 
+                          ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md shadow-indigo-500/20 scale-105' 
+                          : 'text-slate-500 group-hover:bg-slate-100'
+                       }`}
+                     >
+                       {day}
+                     </span>
+                     {hasEvents && (
+                       <div className="mt-1.5 space-y-1 px-0.5">
+                         {dayEvents.slice(0, 2).map((event) => (
+                           <div
+                             key={event.id}
+                             className="h-1.5 w-full bg-gradient-to-r from-indigo-200 to-purple-200 rounded-full"
+                             title={event.title}
+                           />
+                         ))}
+                        {dayEvents.length > 2 && (
+                          <div className="text-[10px] text-indigo-400 font-medium text-center">
+                            +{dayEvents.length - 2}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+           </div>
           </div>
+
+          {showDayEventsModal && activeCalendarDay != null && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl p-6 w-full max-w-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-slate-800">
+                    Events on {activeCalendarDay} {monthLabel}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDayEventsModal(false);
+                      setActiveCalendarDay(null);
+                    }}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {selectedDayEvents.length === 0 ? (
+                  <p className="text-sm text-slate-500">No events for this day.</p>
+                ) : (
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {selectedDayEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className="border border-slate-100 rounded-lg p-3 bg-slate-50"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-semibold text-slate-800 truncate">
+                            {event.title}
+                          </span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-medium">
+                            {event.type === 'sport' && 'Sport'}
+                            {event.type === 'group_study' && 'Group Study'}
+                            {event.type === 'exam' && 'Exam'}
+                            {event.type === 'activity' && 'Activity'}
+                            {event.type === 'notice' && 'Notice'}
+                            {event.type === 'calendar' && 'Calendar'}
+                          </span>
+                        </div>
+                        {event.description && (
+                          <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">
+                            {event.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {showCalendarModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl p-6 w-full max-w-md">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">Add calendar event</h3>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    try {
+                      await api.post('/calendar', {
+                        title: newCalendarEvent.title,
+                        description: newCalendarEvent.description || undefined,
+                        date: newCalendarEvent.date,
+                      });
+                      setShowCalendarModal(false);
+                      setNewCalendarEvent({ title: '', description: '', date: '' });
+                      fetchCalendarEvents();
+                    } catch (error) {
+                      alert(error.response?.data?.error || 'Failed to create event');
+                    }
+                  }}
+                >
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={newCalendarEvent.title}
+                      onChange={(e) =>
+                        setNewCalendarEvent((prev) => ({ ...prev, title: e.target.value }))
+                      }
+                      className="w-full px-3 py-2 border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={newCalendarEvent.date}
+                      onChange={(e) =>
+                        setNewCalendarEvent((prev) => ({ ...prev, date: e.target.value }))
+                      }
+                      className="w-full px-3 py-2 border rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      value={newCalendarEvent.description}
+                      onChange={(e) =>
+                        setNewCalendarEvent((prev) => ({ ...prev, description: e.target.value }))
+                      }
+                      className="w-full px-3 py-2 border rounded-lg h-24"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCalendarModal(false);
+                        setNewCalendarEvent({ title: '', description: '', date: '' });
+                      }}
+                      className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

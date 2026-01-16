@@ -100,6 +100,27 @@ export default function Teachers() {
     setError('');
   };
 
+  const handlePortraitUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await api.post('/upload', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const url = res.data && res.data.url;
+      if (url) {
+        setForm(prev => ({ ...prev, portrait: url }));
+      }
+    } catch (err) {
+      console.error('Failed to upload portrait', err);
+      alert('Failed to upload portrait');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   const save = async () => {
     if (!form.name.trim() || !form.email.trim()) return;
     
@@ -193,13 +214,21 @@ export default function Teachers() {
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
-            <input
-              type="text"
-              className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"
-              placeholder="Portrait URL"
-              value={form.portrait}
-              onChange={(e) => setForm({ ...form, portrait: e.target.value })}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                type="text"
+                className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"
+                placeholder="Portrait URL"
+                value={form.portrait}
+                onChange={(e) => setForm({ ...form, portrait: e.target.value })}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"
+                onChange={handlePortraitUpload}
+              />
+            </div>
             <input
               type="text"
               className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:border-gray-400"

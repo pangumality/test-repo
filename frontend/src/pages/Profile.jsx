@@ -22,10 +22,10 @@ const formatDate = (value) => {
 
 const toSameOriginUploadsUrl = (value) => {
   if (!value || typeof value !== 'string') return value;
-  if (value.startsWith('/')) return value;
+  if (value.startsWith('/uploads/')) return value;
   const idx = value.indexOf('/uploads/');
-  if (idx !== -1) return value.slice(idx);
-  return value;
+  if (idx === -1) return value;
+  return value.slice(idx);
 };
 
 const Profile = () => {
@@ -108,19 +108,14 @@ const Profile = () => {
     try {
       const formData = new FormData();
       formData.append('logo', file);
-      const { data } = await api.post('/schools/me/logo', formData, {
+      await api.post('/schools/me/logo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      const nextUser = {
-        ...user,
-        school: {
-          ...(user.school || {}),
-          logo: data?.logo || data?.school?.logo || user.school?.logo || null
-        }
-      };
-      setUser(nextUser);
-      localStorage.setItem('currentUser', JSON.stringify(nextUser));
+      const { data: refreshed } = await api.get('/me');
+      setUser(refreshed);
+      localStorage.setItem('currentUser', JSON.stringify(refreshed));
+      window.location.reload();
     } catch (err) {
       setLogoError(err?.response?.data?.error || 'Failed to upload school logo');
     } finally {

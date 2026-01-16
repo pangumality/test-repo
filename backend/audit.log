@@ -417,3 +417,38 @@
 [2026-01-13T19:40:38.124Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:CREATE | Resource:school | IP:unknown | Details:{"id":"d7bbf12b-29c4-40fa-8b62-a7b147233b18","name":"St Thomas College"}
 [2026-01-13T19:41:24.246Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
 [2026-01-14T07:04:45.717Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-14T14:55:19.109Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-14T15:33:30.252Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:ACCESS_DENIED | Resource:student:manage | IP:unknown | Details:"Role student missing permission"
+[2026-01-15T06:40:28.073Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:ACCESS_DENIED | Resource:student:manage | IP:unknown | Details:"Role student missing permission"
+[2026-01-15T06:41:01.205Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T08:29:57.814Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T13:38:07.125Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T13:38:38.184Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T14:29:14.200Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T14:38:11.147Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T15:19:22.780Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:09:44.399Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:teacher | IP:unknown | Details:{"id":"61859ba3-0be8-447e-b1fb-3c3da835310b","name":"kuvezika mality"}
+[2026-01-15T16:11:00.544Z] User:61859ba3-0be8-447e-b1fb-3c3da835310b | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:24:53.574Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:36:05.075Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:46:22.630Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:46:39.213Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:47:17.595Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:48:49.348Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:53:55.624Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:CREATE | Resource:school | IP:unknown | Details:{"id":"cc551d50-1ba4-4b21-8b20-c1bcbee9d3b1","name":"kayombo secondary"}
+[2026-01-15T16:54:45.369Z] User:0d825c97-f58d-4b7f-a528-d801c50aa6be | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T16:55:24.222Z] User:0d825c97-f58d-4b7f-a528-d801c50aa6be | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"cc551d50-1ba4-4b21-8b20-c1bcbee9d3b1","logo":"/uploads/1768496123994-308877512.png"}
+[2026-01-15T17:08:35.494Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:CREATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","name":"Arakan Boys"}
+[2026-01-15T17:10:59.111Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T17:11:29.273Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-15T17:11:50.996Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768497110773-910780376.png"}
+[2026-01-15T17:17:36.253Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768497455956-562390082.png"}
+[2026-01-15T17:18:06.120Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768497485901-180213247.png"}
+[2026-01-15T17:18:36.257Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768497515418-267084586.jpeg"}
+[2026-01-15T17:20:54.731Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768497654526-199160379.png"}
+[2026-01-15T17:26:05.709Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768497965464-60581144.png"}
+[2026-01-15T17:26:59.531Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768498019297-319644025.jpeg"}
+[2026-01-15T17:33:13.696Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768498393405-100653168.png"}
+[2026-01-15T17:33:58.623Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768498438422-436719663.jpg"}
+[2026-01-15T17:34:19.087Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"1781b476-b632-43b2-b9e1-dac4254437a4","logo":"/uploads/1768498458873-731996274.jpeg"}
+[2026-01-16T08:28:34.469Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""

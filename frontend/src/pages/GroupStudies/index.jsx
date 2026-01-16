@@ -91,7 +91,8 @@ export default function GroupStudies() {
     }
   };
 
-  const canManage = currentUser?.role === 'teacher' || currentUser?.role === 'admin' || currentUser?.role === 'student'; // Students can create too? User said "Student group studies"
+  const canManage = currentUser?.role === 'teacher' || currentUser?.role === 'student';
+  const isReadOnly = !canManage;
 
   if (loading) return <div>Loading...</div>;
 
@@ -100,16 +101,24 @@ export default function GroupStudies() {
       <div className="flex justify-between items-center">
         <div>
             <h2 className="text-xl font-bold text-gray-700 uppercase">Group Studies</h2>
-            <p className="text-gray-600">Collaborate with peers</p>
+            <p className="text-gray-600">
+              {isReadOnly ? 'Read only - you can view groups but not change them.' : 'Collaborate with peers'}
+            </p>
         </div>
         
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-        >
-          <Plus size={20} />
-          New Group
-        </button>
+        {canManage ? (
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            <Plus size={20} />
+            New Group
+          </button>
+        ) : (
+          <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">
+            Read only
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -123,7 +132,7 @@ export default function GroupStudies() {
                   <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
                     <Users size={24} />
                   </div>
-                  {(currentUser?.role === 'admin' || currentUser?.id === study.creatorId) && (
+                  {canManage && currentUser?.id === study.creatorId && (
                     <div className="flex gap-2">
                         <button onClick={() => handleEdit(study)} className="text-blue-400 hover:text-blue-600">
                             <Edit2 size={18} />

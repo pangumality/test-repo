@@ -48,26 +48,28 @@ const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) =>
       className={clsx(
         'group flex items-center gap-3 px-4 py-3 mb-2 rounded-2xl transition-all duration-300 relative overflow-hidden',
         active
-          ? 'bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-pink-600 text-white shadow-xl shadow-indigo-300 ring-1 ring-white/20 scale-[1.01]'
-          : 'bg-white/0 text-slate-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:via-fuchsia-50 hover:to-pink-50 hover:text-indigo-700 hover:translate-x-1 ring-1 ring-transparent hover:ring-indigo-200',
+          ? 'bg-gradient-to-r from-brand-600 via-brand-500 to-secondary-500 text-white shadow-lg shadow-brand-500/30 scale-[1.02]'
+          : 'bg-transparent text-slate-600 hover:bg-white hover:shadow-md hover:shadow-brand-500/10 hover:text-brand-600 hover:translate-x-1',
         isCollapsed ? 'justify-center px-2' : ''
       )}
       title={isCollapsed ? label : ''}
     >
       {!isCollapsed && active && (
-        <span className="absolute left-0 top-0 bottom-0 w-1 bg-white/30" />
+        <div className="absolute inset-0 bg-white/10 animate-pulse-slow" />
       )}
       <div
         className={clsx(
-          'flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-300',
-          active ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200 group-hover:text-indigo-700'
+          'flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 shadow-sm',
+          active 
+            ? 'bg-white/20 text-white backdrop-blur-sm' 
+            : 'bg-white text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-600'
         )}
       >
         <Icon size={18} />
       </div>
-      {!isCollapsed && <span className="font-semibold whitespace-nowrap overflow-hidden tracking-wide">{label}</span>}
+      {!isCollapsed && <span className="font-medium whitespace-nowrap overflow-hidden tracking-wide">{label}</span>}
       {!isCollapsed && !active && (
-         <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400" />
+         <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 text-brand-300 group-hover:translate-x-1" />
       )}
     </Link>
   );
@@ -84,7 +86,7 @@ const MENU_ITEMS = [
   { icon: Clock, label: 'Time Table', to: '/timetable', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
   { icon: Award, label: 'Certificates', to: '/certificates', allowedRoles: ['student','parent','admin','school_admin'] },
   { icon: Users, label: 'Teachers', to: '/teachers', excludedRoles: ['student','teacher','parent'] },
-  { icon: GraduationCap, label: 'Students', to: '/students', excludedRoles: ['student','parent'] },
+  { icon: GraduationCap, label: 'Students', to: '/students', allowedRoles: ['admin','school_admin'] },
   { icon: Home, label: 'Classes', to: '/classes', allowedRoles: ['teacher','admin','school_admin'] },
   { icon: SchoolIcon, label: 'Schools', to: '/schools', allowedRoles: ['admin'] },
   { icon: BookOpen, label: 'Exams', to: '/exams', excludedRoles: ['student','parent'] },
@@ -100,7 +102,7 @@ const MENU_ITEMS = [
   { icon: Package, label: 'Inventory', to: '/inventory', excludedRoles: ['student','teacher','parent'] },
 ];
 
-const DashboardLayout = () => {
+const DashboardLayout = ({ theme = 'light', setTheme }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // For mobile
   const [currentUser, setCurrentUser] = useState(null);
@@ -409,6 +411,13 @@ const DashboardLayout = () => {
            </div>
         </div>
         <div className="flex items-center gap-6 relative">
+          <button
+            type="button"
+            onClick={() => setTheme && setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center"
+          >
+            {theme === 'dark' ? '🌙' : '☀️'}
+          </button>
            <div className="relative">
              <button 
                className="relative hover:text-gray-300 focus:outline-none"
@@ -553,9 +562,8 @@ const DashboardLayout = () => {
         </button>
       </div>
       
-      <footer className="w-full bg-[#0f1240] py-4 px-6 text-center text-sm text-white">
-        © 2025 doonITes weBBed serVIces. All Rights Reserved.<br />
-        Visit: erp@geenie.org | Call: +91-9258622202
+      <footer className="w-full bg-white/80 backdrop-blur-md border-t border-white/20 py-4 px-6 text-center text-sm text-slate-500">
+        <p>© 2025 doonITes ERP. <span className="text-brand-500">Made with ❤️ for Education.</span></p>
       </footer>
     </div>
   );

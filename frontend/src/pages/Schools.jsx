@@ -17,10 +17,53 @@ const Schools = () => {
     email: '',
     website: '',
     logo: '',
-    adminEmail: ''
+    adminEmail: '',
+    adminPortrait: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const handleAdminPortraitUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await api.post('/upload', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const url = res.data && res.data.url;
+      if (url) {
+        setFormData(prev => ({ ...prev, adminPortrait: url }));
+      }
+    } catch (err) {
+      console.error('Failed to upload admin portrait', err);
+      alert('Failed to upload admin portrait');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await api.post('/upload', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const url = res.data && res.data.url;
+      if (url) {
+        setFormData(prev => ({ ...prev, logo: url }));
+      }
+    } catch (err) {
+      console.error('Failed to upload school logo', err);
+      alert('Failed to upload school logo');
+    } finally {
+      e.target.value = '';
+    }
+  };
 
   // Fetch schools
   const fetchSchools = async () => {
@@ -53,7 +96,8 @@ const Schools = () => {
       email: school.email || '',
       website: school.website || '',
       logo: school.logo || '',
-      adminEmail: ''
+      adminEmail: '',
+      adminPortrait: ''
     });
     setShowModal(true);
   };
@@ -83,7 +127,7 @@ const Schools = () => {
       }
       setShowModal(false);
       setEditingSchool(null);
-      setFormData({ name: '', code: '', address: '', phone: '', email: '', website: '', logo: '', adminEmail: '' });
+      setFormData({ name: '', code: '', address: '', phone: '', email: '', website: '', logo: '', adminEmail: '', adminPortrait: '' });
       fetchSchools();
     } catch (err) {
       console.error('Error saving school:', err);
@@ -111,7 +155,7 @@ const Schools = () => {
         <button 
           onClick={() => {
             setEditingSchool(null);
-            setFormData({ name: '', code: '', address: '', phone: '', email: '', website: '', logo: '', adminEmail: '' });
+            setFormData({ name: '', code: '', address: '', phone: '', email: '', website: '', logo: '', adminEmail: '', adminPortrait: '' });
             setShowModal(true);
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
@@ -174,7 +218,7 @@ const Schools = () => {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h2 className="text-xl font-bold text-gray-800">
                 {editingSchool ? 'Edit School' : 'Add New School'}
@@ -187,7 +231,7 @@ const Schools = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
               {error && (
                 <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
                   {error}
@@ -254,23 +298,52 @@ const Schools = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">School Logo</label>
+                <input
+                  type="text"
+                  name="logo"
+                  value={formData.logo}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Logo URL or upload below"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                />
+              </div>
+
               {!editingSchool && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="text-sm font-bold text-blue-800 mb-2">School Admin Account</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-blue-700 mb-1">Admin Email *</label>
-                    <input
-                      type="email"
-                      name="adminEmail"
-                      value={formData.adminEmail || ''}
-                      onChange={handleInputChange}
-                      required={!editingSchool}
-                      className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="admin@school.com"
-                    />
-                    <p className="text-xs text-blue-600 mt-1">
-                      Default password will be: <strong>School@admin</strong>
-                    </p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-blue-700 mb-1">Admin Email *</label>
+                      <input
+                        type="email"
+                        name="adminEmail"
+                        value={formData.adminEmail || ''}
+                        onChange={handleInputChange}
+                        required={!editingSchool}
+                        className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="admin@school.com"
+                      />
+                      <p className="text-xs text-blue-600 mt-1">
+                        Default password will be: <strong>School@admin</strong>
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-blue-700 mb-1">Admin Profile Picture</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAdminPortraitUpload}
+                        className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
