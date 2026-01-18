@@ -38,5 +38,15 @@ export function setDepartmentStaff(dept, schoolId, userIds) {
 }
 
 export function listDepartments() {
-  return ['finance', 'library', 'transport', 'sports', 'exams'];
+  return [
+    'inventory',
+    'transport',
+    'library',
+    'hostel',
+    'reception',
+    'radio',
+    'finance',
+    'sports',
+    'exams',
+  ];
 }

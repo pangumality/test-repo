@@ -458,3 +458,102 @@
 [2026-01-16T11:16:22.212Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
 [2026-01-16T12:01:33.349Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
 [2026-01-16T14:11:34.292Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T14:47:12.269Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T14:57:14.547Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T14:59:08.568Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T15:27:38.388Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T15:41:59.231Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T16:24:19.497Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T18:00:23.753Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T18:52:26.933Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T19:17:13.762Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T19:33:22.176Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-16T19:33:59.932Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T03:44:54.539Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T05:38:38.708Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T05:40:00.255Z] User:23e63861-b371-423d-9f11-36ead5822116 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T05:41:22.459Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T05:42:49.783Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T06:10:43.781Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:student | IP:unknown | Details:{"name":"John Chiyeke","classId":"71c1bfb6-95f3-4407-84d4-bfef002b3838"}
+[2026-01-17T06:21:00.266Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T07:51:02.652Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"3bcb8822-6eeb-4bb9-98cd-63318fa4f9a7","name":"8"}
+[2026-01-17T07:51:29.196Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"3bcb8822-6eeb-4bb9-98cd-63318fa4f9a7","name":"8"}
+[2026-01-17T09:34:47.779Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:UPDATE | Resource:school | IP:unknown | Details:{"id":"c4a22062-a8ce-4023-9d98-5730154138dc","logo":"/uploads/1768642487639-727728736.jpg"}
+[2026-01-17T10:30:02.978Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T10:47:09.393Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"ce0c592f-4231-4350-8ed0-d2bc477e223f","name":"KG"}
+[2026-01-17T10:47:56.007Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"66a579d3-0dce-4352-acb6-d526911f4517","name":"First"}
+[2026-01-17T10:48:07.627Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"ce0c592f-4231-4350-8ed0-d2bc477e223f","name":"KG"}
+[2026-01-17T10:48:15.211Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"ce0c592f-4231-4350-8ed0-d2bc477e223f","name":"KG"}
+[2026-01-17T10:48:28.628Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"66a579d3-0dce-4352-acb6-d526911f4517","name":"First"}
+[2026-01-17T10:48:34.160Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"66a579d3-0dce-4352-acb6-d526911f4517","name":"First"}
+[2026-01-17T10:48:46.048Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"b61c9cbb-d5d0-4af4-b564-8344a4ee056d","name":"Second"}
+[2026-01-17T10:48:52.115Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"a29321a0-fb90-4259-b473-1e8aadbd36ee","name":"Third"}
+[2026-01-17T10:48:58.170Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"18585796-61c8-4d6e-b92b-b9fb64ab0c6a","name":"Fourth"}
+[2026-01-17T10:49:02.779Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"80af8d75-ac46-4bd3-805a-c6d3e48cfa52","name":"Fifth"}
+[2026-01-17T10:49:07.529Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"6bfe6f74-4731-4dbe-9302-9bf316224ce7","name":"Sixth"}
+[2026-01-17T10:49:12.872Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"7dd01c9d-780f-48ee-a19f-c1a56857b55c","name":"Seventh"}
+[2026-01-17T10:49:17.654Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"ef138ea8-1709-49af-b913-66f78bbac483","name":"Eight"}
+[2026-01-17T10:49:24.065Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"9d9250bd-c6b9-4539-8137-3ea970218f09","name":"Ninth"}
+[2026-01-17T10:49:34.534Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"3fd6146f-5ef3-4faf-a8c2-b16335450b62","name":"High School"}
+[2026-01-17T10:49:48.100Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"33954a89-18d1-43a3-ac27-e266c77bf0a6","name":"Eleventh"}
+[2026-01-17T10:49:57.773Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class | IP:unknown | Details:{"id":"931946a2-bece-4569-ad5e-996de95385ab","name":"Senior secondary"}
+[2026-01-17T10:50:16.636Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"b61c9cbb-d5d0-4af4-b564-8344a4ee056d","name":"Second"}
+[2026-01-17T10:50:23.433Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"b61c9cbb-d5d0-4af4-b564-8344a4ee056d","name":"Second"}
+[2026-01-17T10:50:32.689Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"a29321a0-fb90-4259-b473-1e8aadbd36ee","name":"Third"}
+[2026-01-17T10:50:55.626Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"a29321a0-fb90-4259-b473-1e8aadbd36ee","name":"Third"}
+[2026-01-17T10:51:07.522Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"18585796-61c8-4d6e-b92b-b9fb64ab0c6a","name":"Fourth"}
+[2026-01-17T10:51:14.520Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"18585796-61c8-4d6e-b92b-b9fb64ab0c6a","name":"Fourth"}
+[2026-01-17T10:51:28.222Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"80af8d75-ac46-4bd3-805a-c6d3e48cfa52","name":"Fifth"}
+[2026-01-17T10:51:32.361Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"80af8d75-ac46-4bd3-805a-c6d3e48cfa52","name":"Fifth"}
+[2026-01-17T10:51:41.015Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"6bfe6f74-4731-4dbe-9302-9bf316224ce7","name":"Sixth"}
+[2026-01-17T10:51:44.745Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"6bfe6f74-4731-4dbe-9302-9bf316224ce7","name":"Sixth"}
+[2026-01-17T10:51:52.366Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"7dd01c9d-780f-48ee-a19f-c1a56857b55c","name":"Seventh"}
+[2026-01-17T10:51:55.575Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"7dd01c9d-780f-48ee-a19f-c1a56857b55c","name":"Seventh"}
+[2026-01-17T10:52:09.665Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"ef138ea8-1709-49af-b913-66f78bbac483","name":"Eight"}
+[2026-01-17T10:52:27.017Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"ef138ea8-1709-49af-b913-66f78bbac483","name":"Eight"}
+[2026-01-17T10:52:43.906Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"9d9250bd-c6b9-4539-8137-3ea970218f09","name":"Ninth"}
+[2026-01-17T10:52:51.010Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"9d9250bd-c6b9-4539-8137-3ea970218f09","name":"Ninth"}
+[2026-01-17T10:52:57.889Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"9d9250bd-c6b9-4539-8137-3ea970218f09","name":"Ninth"}
+[2026-01-17T10:53:08.476Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"9d9250bd-c6b9-4539-8137-3ea970218f09","name":"Ninth"}
+[2026-01-17T10:53:34.463Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"3fd6146f-5ef3-4faf-a8c2-b16335450b62","name":"High School"}
+[2026-01-17T10:53:40.042Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"3fd6146f-5ef3-4faf-a8c2-b16335450b62","name":"High School"}
+[2026-01-17T10:53:46.658Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"3fd6146f-5ef3-4faf-a8c2-b16335450b62","name":"High School"}
+[2026-01-17T10:53:52.942Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"3fd6146f-5ef3-4faf-a8c2-b16335450b62","name":"High School"}
+[2026-01-17T10:54:11.056Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"33954a89-18d1-43a3-ac27-e266c77bf0a6","name":"Eleventh"}
+[2026-01-17T10:54:19.117Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"33954a89-18d1-43a3-ac27-e266c77bf0a6","name":"Eleventh"}
+[2026-01-17T10:54:25.677Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"33954a89-18d1-43a3-ac27-e266c77bf0a6","name":"Eleventh"}
+[2026-01-17T10:54:31.421Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"33954a89-18d1-43a3-ac27-e266c77bf0a6","name":"Eleventh"}
+[2026-01-17T10:54:40.533Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"931946a2-bece-4569-ad5e-996de95385ab","name":"Senior secondary"}
+[2026-01-17T10:54:45.787Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"931946a2-bece-4569-ad5e-996de95385ab","name":"Senior secondary"}
+[2026-01-17T10:54:50.989Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"931946a2-bece-4569-ad5e-996de95385ab","name":"Senior secondary"}
+[2026-01-17T10:55:05.152Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:UPDATE | Resource:class | IP:unknown | Details:{"id":"931946a2-bece-4569-ad5e-996de95385ab","name":"Senior secondary"}
+[2026-01-17T17:43:19.558Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T18:34:50.616Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T18:38:43.867Z] User:b149d331-0dce-4a7d-bcb7-49efe6b897fe | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T18:41:45.342Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_FAILED | Resource:auth | IP:unknown | Details:"Invalid credentials"
+[2026-01-17T18:42:18.479Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-17T18:44:23.532Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T09:36:44.588Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T09:38:17.184Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T09:39:16.772Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T09:43:35.586Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T14:12:48.546Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T14:40:11.086Z] User:b740c18f-a9be-4f67-886c-821ea495378f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T14:41:03.380Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T14:42:29.480Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T14:46:39.559Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T14:50:58.996Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:student | IP:unknown | Details:{"name":"Aadhya Aggarwal","classId":"3fd6146f-5ef3-4faf-a8c2-b16335450b62"}
+[2026-01-18T14:51:54.815Z] User:2e0c92d0-72af-4b28-b01d-dce79120b91a | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T15:02:43.504Z] User:2e0c92d0-72af-4b28-b01d-dce79120b91a | Action:ACCESS_DENIED | Resource:group_study:manage | IP:unknown | Details:"Role student missing permission"
+[2026-01-18T15:03:02.208Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T15:03:28.627Z] User:b740c18f-a9be-4f67-886c-821ea495378f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T15:05:38.808Z] User:2e0c92d0-72af-4b28-b01d-dce79120b91a | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T15:53:42.149Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T16:46:02.819Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_FAILED | Resource:auth | IP:unknown | Details:"Invalid credentials"
+[2026-01-18T16:46:20.517Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_FAILED | Resource:auth | IP:unknown | Details:"Invalid credentials"
+[2026-01-18T16:46:39.022Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_FAILED | Resource:auth | IP:unknown | Details:"Invalid credentials"
+[2026-01-18T16:47:08.380Z] User:b740c18f-a9be-4f67-886c-821ea495378f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T16:47:40.254Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T16:48:15.767Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class_subject | IP:unknown | Details:{"id":"ce4c896a-158a-4ff8-b490-c4683e594c4e","classId":"931946a2-bece-4569-ad5e-996de95385ab","teacherUserId":"b740c18f-a9be-4f67-886c-821ea495378f"}
+[2026-01-18T17:00:45.404Z] User:b740c18f-a9be-4f67-886c-821ea495378f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T17:16:30.662Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:radio_program | IP:unknown | Details:{"id":"f6007c27-6ea8-4a22-aac7-04118a1ad734","title":"This is test"}

@@ -10,6 +10,8 @@ import {
   DollarSign,
   MessageSquare,
   Activity,
+  BookOpen,
+  Radio,
 } from 'lucide-react';
 import ParentDashboard from './ParentDashboard';
 import api from '../utils/api';
@@ -36,10 +38,12 @@ const StatCard = ({
   buttonLabel,
   link,
 }) => {
+  const isClickable = !!link;
+
   const content = (
     <>
       <div
-        className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colorFrom} ${colorTo} opacity-[0.08] rounded-bl-[100px] -mr-8 -mt-8 transition-all duration-500 group-hover:scale-110 group-hover:opacity-10`}
+        className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colorFrom} ${colorTo} opacity-40 rounded-bl-[100px] -mr-8 -mt-8 transition-all duration-500 group-hover:scale-110 group-hover:opacity-60`}
       />
 
       <div className="flex items-start justify-between mb-4 relative z-10">
@@ -70,26 +74,30 @@ const StatCard = ({
     </>
   );
 
-  if (link) {
-    return (
-      <Link
-        to={link}
-        className="group relative bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 shadow-soft border border-white/40 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden block"
-      >
-        {content}
-      </Link>
-    );
-  }
-
-  return (
-    <div className="group relative bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 shadow-soft border border-white/40 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+  return isClickable ? (
+    <Link
+      to={link}
+      className="group relative bg-white rounded-[2rem] p-6 shadow-soft border border-slate-100 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden block cursor-pointer min-h-[210px]"
+    >
+      {content}
+    </Link>
+  ) : (
+    <div className="group relative bg-white rounded-[2rem] p-6 shadow-soft border border-slate-100 overflow-hidden min-h-[210px]">
       {content}
     </div>
   );
 };
 
 const Dashboard = () => {
-  const { currentUser } = useOutletContext() || {};
+  const { currentUser, formatCurrencyFromBase } = useOutletContext() || {};
+
+  const formatCurrency = (amount) => {
+    if (typeof formatCurrencyFromBase === 'function') {
+      return formatCurrencyFromBase(amount);
+    }
+    const numeric = Number(amount || 0);
+    return `ZMW ${numeric.toLocaleString()}`;
+  };
 
   const [stats, setStats] = useState({
     students: 0,
@@ -114,7 +122,12 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    if (currentUser?.role === 'admin' || currentUser?.role === 'super_admin') {
+    if (
+      currentUser?.role === 'admin' ||
+      currentUser?.role === 'super_admin' ||
+      currentUser?.role === 'school_admin' ||
+      currentUser?.role === 'teacher'
+    ) {
       const load = async () => {
         try {
           const response = await api.get('/stats');
@@ -254,13 +267,23 @@ const Dashboard = () => {
           <h2 className="text-3xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 tracking-tight">
             Dashboard Overview
           </h2>
-          <p className="text-slate-500 mt-1">
-            Welcome back,
-            <span className="bg-gradient-to-r from-brand-600 to-secondary-600 bg-clip-text text-transparent font-bold ml-1">
-              {currentUser?.firstName || 'Guest'}
-            </span>
-            ! Here&apos;s what&apos;s happening today.
-          </p>
+          {currentUser?.role === 'school_admin' && currentUser?.school?.name ? (
+            <p className="text-slate-500 mt-1">
+              Welcome back,
+              <span className="bg-gradient-to-r from-brand-600 to-secondary-600 bg-clip-text text-transparent font-bold ml-1">
+                {currentUser.school.name}
+              </span>
+              ! Here&apos;s what&apos;s happening today.
+            </p>
+          ) : (
+            <p className="text-slate-500 mt-1">
+              Welcome back,
+              <span className="bg-gradient-to-r from-brand-600 to-secondary-600 bg-clip-text text-transparent font-bold ml-1">
+                {currentUser?.firstName || 'Guest'}
+              </span>
+              ! Here&apos;s what&apos;s happening today.
+            </p>
+          )}
         </div>
         <div className="text-sm font-medium text-slate-500 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm border border-white/50 hover:bg-white transition-colors">
           {new Date().toLocaleDateString('en-US', {
@@ -286,17 +309,18 @@ const Dashboard = () => {
           />
           <StatCard
             icon={Users}
-            title="Total Users"
+            title="School Admins"
             count={stats.users}
             colorFrom="from-secondary-500"
             colorTo="to-pink-500"
             iconColor="shadow-secondary-500/40"
             buttonLabel="View All"
+            link="/schools"
           />
           <StatCard
             icon={DollarSign}
             title="Total Revenue"
-            count={`$${stats.revenue.toLocaleString()}`}
+            count={formatCurrency(stats.revenue)}
             colorFrom="from-emerald-500"
             colorTo="to-teal-400"
             iconColor="shadow-emerald-500/40"
@@ -311,6 +335,50 @@ const Dashboard = () => {
             colorTo="to-orange-500"
             iconColor="shadow-amber-500/40"
             buttonLabel="View Logs"
+            link="/messages"
+          />
+        </div>
+      ) : currentUser?.role === 'student' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            icon={GraduationCap}
+            title="My subject"
+            count=""
+            colorFrom="from-brand-500"
+            colorTo="to-brand-400"
+            iconColor="shadow-brand-500/40"
+            buttonLabel="Open"
+            link="/subjects"
+          />
+          <StatCard
+            icon={Users}
+            title="Group studies"
+            count=""
+            colorFrom="from-secondary-500"
+            colorTo="to-pink-500"
+            iconColor="shadow-secondary-500/40"
+            buttonLabel="Open"
+            link="/group-studies"
+          />
+          <StatCard
+            icon={BookOpen}
+            title="E-learning"
+            count=""
+            colorFrom="from-emerald-500"
+            colorTo="to-teal-400"
+            iconColor="shadow-emerald-500/40"
+            buttonLabel="Open"
+            link="/e-learning"
+          />
+          <StatCard
+            icon={Radio}
+            title="Radio"
+            count=""
+            colorFrom="from-amber-500"
+            colorTo="to-orange-500"
+            iconColor="shadow-amber-500/40"
+            buttonLabel="Listen"
+            link="/radio"
           />
         </div>
       ) : (
@@ -344,20 +412,33 @@ const Dashboard = () => {
             colorFrom="from-emerald-500"
             colorTo="to-teal-400"
             iconColor="shadow-emerald-500/40"
-            buttonLabel={currentUser?.role === 'student' ? 'My Subjects' : 'View All'}
-            link={currentUser?.role === 'student' ? '/subjects' : '/classes'}
+            buttonLabel="View All"
+            link="/classes"
           />
           {(!currentUser || currentUser.role !== 'teacher') && (
-            <StatCard
-              icon={CreditCard}
-              title="Total Parents"
-              count={stats.parents}
-              colorFrom="from-amber-500"
-              colorTo="to-orange-500"
-              iconColor="shadow-amber-500/40"
-              buttonLabel="Finance"
-              link="/finance"
-            />
+            currentUser?.role === 'school_admin' ? (
+              <StatCard
+                icon={DollarSign}
+                title="Total Revenue"
+                count={formatCurrency(stats.revenue)}
+                colorFrom="from-amber-500"
+                colorTo="to-orange-500"
+                iconColor="shadow-amber-500/40"
+                buttonLabel="Finance"
+                link="/finance"
+              />
+            ) : (
+              <StatCard
+                icon={CreditCard}
+                title="Total Parents"
+                count={stats.parents}
+                colorFrom="from-amber-500"
+                colorTo="to-orange-500"
+                iconColor="shadow-amber-500/40"
+                buttonLabel="Finance"
+                link="/finance"
+              />
+            )
           )}
         </div>
       )}

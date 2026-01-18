@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import Modal from '../../components/Modal';
 import api from '../../utils/api';
 import { CreditCard, Search, Plus, ListChecks, Printer, Trash2 } from 'lucide-react';
@@ -7,6 +8,16 @@ import Select from '../../components/Select';
 const FEE_AMOUNT = 1200;
 
 export default function Finance() {
+  const { formatCurrencyFromBase, convertAmountToBase, currencyConfig } = useOutletContext() || {};
+
+  const formatCurrency = (amount) => {
+    if (typeof formatCurrencyFromBase === 'function') {
+      return formatCurrencyFromBase(amount);
+    }
+    const numeric = Number(amount || 0);
+    return `ZMW ${numeric.toLocaleString()}`;
+  };
+
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
   const [payments, setPayments] = useState({});
@@ -144,9 +155,11 @@ export default function Finance() {
     if (!amt || amt <= 0) return;
     
     try {
+      const baseAmount =
+        typeof convertAmountToBase === 'function' ? convertAmountToBase(amt) : amt;
       await api.post('/finance/payments', {
         studentId: activeStudent.id,
-        amount: amt,
+        amount: baseAmount,
         method,
         date,
         reference
@@ -177,21 +190,27 @@ export default function Finance() {
             <CreditCard className="text-gray-500" size={20} />
             <span className="text-sm text-gray-500">Total Due</span>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-gray-800">ZMW {totals.due.toLocaleString()}</div>
+          <div className="mt-2 text-2xl font-semibold text-gray-800">
+            {formatCurrency(totals.due)}
+          </div>
         </div>
         <div className="bg-white rounded-xl shadow-soft p-6">
           <div className="flex items-center gap-3">
             <CreditCard className="text-green-600" size={20} />
             <span className="text-sm text-gray-500">Total Paid</span>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-gray-800">ZMW {totals.paid.toLocaleString()}</div>
+          <div className="mt-2 text-2xl font-semibold text-gray-800">
+            {formatCurrency(totals.paid)}
+          </div>
         </div>
         <div className="bg-white rounded-xl shadow-soft p-6">
           <div className="flex items-center gap-3">
             <CreditCard className="text-red-600" size={20} />
             <span className="text-sm text-gray-500">Outstanding</span>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-gray-800">ZMW {totals.balance.toLocaleString()}</div>
+          <div className="mt-2 text-2xl font-semibold text-gray-800">
+            {formatCurrency(totals.balance)}
+          </div>
         </div>
       </div>
 
@@ -301,9 +320,15 @@ export default function Finance() {
                       <div className="text-xs text-gray-500">{s.section}</div>
                     </td>
                     <td className="px-4 py-2 border-b text-gray-700">{klassLabel(s.klass)}</td>
-                    <td className="px-4 py-2 border-b text-right text-gray-700">ZMW {FEE_AMOUNT.toLocaleString()}</td>
-                    <td className="px-4 py-2 border-b text-right text-gray-700">ZMW {paid.toLocaleString()}</td>
-                    <td className="px-4 py-2 border-b text-right text-gray-700">ZMW {balance.toLocaleString()}</td>
+                    <td className="px-4 py-2 border-b text-right text-gray-700">
+                      {formatCurrency(FEE_AMOUNT)}
+                    </td>
+                    <td className="px-4 py-2 border-b text-right text-gray-700">
+                      {formatCurrency(paid)}
+                    </td>
+                    <td className="px-4 py-2 border-b text-right text-gray-700">
+                      {formatCurrency(balance)}
+                    </td>
                     <td className="px-4 py-2 border-b text-gray-700">{last || '-'}</td>
                     <td className="px-4 py-2 border-b">
                       <span
@@ -353,7 +378,9 @@ export default function Finance() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Amount (ZMW)</label>
+              <label className="block text-sm text-gray-600 mb-1">
+                Amount ({currencyConfig?.code || 'ZMW'})
+              </label>
               <input
                 type="number"
                 min="0"
@@ -423,15 +450,32 @@ export default function Finance() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white rounded-xl shadow-soft p-5 border">
                 <div className="text-sm text-gray-500">Amount Due (Current Term)</div>
-                <div className="mt-2 text-2xl font-semibold text-gray-800">ZMW {FEE_AMOUNT.toLocaleString()}</div>
+                <div className="mt-2 text-2xl font-semibold text-gray-800">
+                  {formatCurrency(FEE_AMOUNT)}
+                </div>
               </div>
               <div className="bg-white rounded-xl shadow-soft p-5 border">
                 <div className="text-sm text-gray-500">Paid (Current Term)</div>
-                <div className="mt-2 text-2xl font-semibold text-gray-800">ZMW {totalPaidForTerm(activeStudent.id, selectedTermLabel()).toLocaleString()}</div>
+                <div className="mt-2 text-2xl font-semibold text-gray-800">
+                  {formatCurrency(
+                    totalPaidForTerm(activeStudent.id, selectedTermLabel())
+                  )}
+                </div>
               </div>
               <div className="bg-white rounded-xl shadow-soft p-5 border">
                 <div className="text-sm text-gray-500">Balance (Current Term)</div>
-                <div className="mt-2 text-2xl font-semibold text-gray-800">ZMW {Math.max(FEE_AMOUNT - totalPaidForTerm(activeStudent.id, selectedTermLabel()), 0).toLocaleString()}</div>
+                <div className="mt-2 text-2xl font-semibold text-gray-800">
+                  {formatCurrency(
+                    Math.max(
+                      FEE_AMOUNT -
+                        totalPaidForTerm(
+                          activeStudent.id,
+                          selectedTermLabel()
+                        ),
+                      0
+                    )
+                  )}
+                </div>
               </div>
             </div>
 
@@ -469,8 +513,12 @@ export default function Finance() {
                             <td className="px-4 py-2 border-b text-gray-700">{p.date}</td>
                             <td className="px-4 py-2 border-b text-gray-700">{termLabelFromDate(p.date)}</td>
                             <td className="px-4 py-2 border-b text-gray-700">{p.method}</td>
-                            <td className="px-4 py-2 border-b text-gray-700">{p.reference || '-'}</td>
-                            <td className="px-4 py-2 border-b text-right text-gray-700">ZMW {Number(p.amount).toLocaleString()}</td>
+                            <td className="px-4 py-2 border-b text-gray-700">
+                              {p.reference || '-'}
+                            </td>
+                            <td className="px-4 py-2 border-b text-right text-gray-700">
+                              {formatCurrency(Number(p.amount))}
+                            </td>
                             <td className="px-4 py-2 border-b">
                               <button
                                 className="px-2 py-1 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 text-xs flex items-center gap-1"
@@ -490,7 +538,9 @@ export default function Finance() {
               <div className="mt-4 flex items-center justify-end">
                 <div className="text-sm">
                   <span className="text-gray-600">Total Paid:</span>{' '}
-                  <span className="font-semibold text-gray-800">ZMW {totalPaidFor(activeStudent.id).toLocaleString()}</span>
+                  <span className="font-semibold text-gray-800">
+                    {formatCurrency(totalPaidFor(activeStudent.id))}
+                  </span>
                 </div>
               </div>
             </div>

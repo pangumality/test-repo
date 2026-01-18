@@ -33,22 +33,29 @@ import {
   CheckCheck,
   Image as ImageIcon,
   ArrowUp,
-  Bot
+  Bot,
+  Shield
 } from 'lucide-react';
 import clsx from 'clsx';
 import { seedAll } from '../utils/seed';
 import MobileDashboardHome from '../components/MobileDashboardHome';
 import api from '../utils/api';
 
+const CURRENCY_OPTIONS = [
+  { code: 'USD', label: 'US Dollar', symbol: '$', rateFromZMW: 0.055 },
+  { code: 'INR', label: 'Indian Rupee', symbol: '₹', rateFromZMW: 4.5 },
+  { code: 'ZMW', label: 'Zambian Kwacha', symbol: 'ZMW', rateFromZMW: 1 },
+];
+
 const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) => {
   const activeClasses =
-    'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 scale-[1.02]';
+    'bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-500 text-white shadow-lg shadow-indigo-500/40 scale-[1.02]';
 
   const inactiveClasses =
-    'bg-transparent text-slate-700 hover:bg-slate-50 hover:shadow-md hover:shadow-slate-200/60 hover:text-slate-900 hover:translate-x-1';
+    'bg-transparent text-slate-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:via-sky-50 hover:to-emerald-50 hover:shadow-md hover:shadow-indigo-100 hover:text-slate-900 hover:translate-x-1';
 
   const inactiveIconClasses =
-    'bg-slate-100 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-900';
+    'bg-gradient-to-br from-slate-100 via-sky-100 to-indigo-100 text-indigo-500 group-hover:from-indigo-100 group-hover:via-sky-100 group-hover:to-emerald-100 group-hover:text-indigo-700';
 
   return (
     <Link
@@ -86,7 +93,7 @@ const MENU_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
   { icon: Calendar, label: 'Attendance', to: '/attendance', allowedRoles: ['student','teacher','admin','school_admin'] },
   { icon: MessageSquare, label: 'Messages', to: '/messages', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: Bell, label: 'Notice Board', to: '/notices', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: Bell, label: 'Notice Board', to: '/notices', allowedRoles: ['student','teacher','school_admin','parent'] },
   { icon: Newspaper, label: 'Newsletters', to: '/newsletters', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
   { icon: ImageIcon, label: 'Gallery', to: '/gallery', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
   { icon: FileCheck, label: 'Leaves', to: '/leaves', allowedRoles: ['student','parent','admin','school_admin','teacher'] },
@@ -99,14 +106,16 @@ const MENU_ITEMS = [
   { icon: BookOpen, label: 'Exams', to: '/exams', excludedRoles: ['student','parent'] },
   { icon: FileText, label: 'My Exams', to: '/student/exams', allowedRoles: ['student'] },
   { icon: CreditCard, label: 'Finance', to: '/finance', excludedRoles: ['student','teacher','parent'] },
-  { icon: Library, label: 'Library', to: '/library', allowedRoles: ['student','admin','school_admin'] },
-  { icon: Home, label: 'Hostel', to: '/hostel', allowedRoles: ['student','admin','school_admin'] },
-  { icon: Bus, label: 'Transport', to: '/transport', excludedRoles: ['student','teacher','parent'] },
+  { icon: Library, label: 'Library', to: '/library', departmentKey: 'library' },
+  { icon: Home, label: 'Hostel', to: '/hostel', departmentKey: 'hostel' },
+  { icon: Bus, label: 'Transport', to: '/transport', departmentKey: 'transport' },
   { icon: Radio, label: 'E-Learning', to: '/e-learning', allowedRoles: ['student','teacher','admin','school_admin'] },
+  { icon: Radio, label: 'Radio', to: '/radio', allowedRoles: ['student','teacher','admin','school_admin'] },
   { icon: BookOpen, label: 'Subjects', to: '/subjects', allowedRoles: ['student','teacher','admin','school_admin'] },
   { icon: Trophy, label: 'Sports', to: '/sports', excludedRoles: ['student','teacher','parent'] },
   { icon: Users, label: 'Group Studies', to: '/group-studies', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: Package, label: 'Inventory', to: '/inventory', excludedRoles: ['student','teacher','parent'] },
+  { icon: Package, label: 'Inventory', to: '/inventory', departmentKey: 'inventory' },
+  { icon: Shield, label: 'Departments', to: '/departments', allowedRoles: ['school_admin'] },
 ];
 
 const DashboardLayout = ({ theme = 'light', setTheme }) => {
@@ -117,11 +126,35 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [currency, setCurrency] = useState(() => localStorage.getItem('currency') || 'USD');
+  const [departmentAccess, setDepartmentAccess] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
   const isMobile = window.innerWidth < 768;
   const logoUrl = import.meta.env.VITE_LOGO_URL || '/logo.jpg';
+
+  const currencyConfig =
+    CURRENCY_OPTIONS.find((c) => c.code === currency) ||
+    CURRENCY_OPTIONS.find((c) => c.code === 'ZMW');
+
+  const formatCurrencyFromBase = (amount) => {
+    const numeric = Number(amount || 0);
+    const factor = currencyConfig?.rateFromZMW || 1;
+    const converted = numeric * factor;
+    const symbol = currencyConfig?.symbol || 'ZMW';
+    return `${symbol} ${converted.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
+  const convertAmountToBase = (amount) => {
+    const numeric = Number(amount || 0);
+    const factor = currencyConfig?.rateFromZMW || 1;
+    if (!factor) return numeric;
+    return numeric / factor;
+  };
 
   const scrollToTopAll = (behavior = 'auto') => {
     const el = scrollContainerRef.current;
@@ -178,6 +211,22 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
   }, [navigate]);
 
   useEffect(() => {
+    const fetchDepartmentsForUser = async () => {
+      if (!currentUser) {
+        setDepartmentAccess([]);
+        return;
+      }
+      try {
+        const { data } = await api.get('/me/departments');
+        setDepartmentAccess(Array.isArray(data) ? data : []);
+      } catch {
+        setDepartmentAccess([]);
+      }
+    };
+    fetchDepartmentsForUser();
+  }, [currentUser]);
+
+  useEffect(() => {
     scrollToTopAll('auto');
     requestAnimationFrame(() => scrollToTopAll('auto'));
   }, [location.pathname, location.search]);
@@ -189,6 +238,12 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
       return () => clearInterval(interval);
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (currency) {
+      localStorage.setItem('currency', currency);
+    }
+  }, [currency]);
 
   const fetchNotifications = async () => {
     try {
@@ -271,20 +326,38 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                  <Menu size={24} />
                </button>
                {currentUser?.school?.logo ? (
-                 <img src={currentUser.school.logo} alt="school logo" className="w-10 h-10 rounded-full object-cover border border-white/30 bg-white" />
+                 <img src={currentUser.school.logo} alt="school logo" className="w-10 h-10 rounded-full object-cover shadow-lg shadow-black/20" />
                ) : logoUrl ? (
-                 <img src={logoUrl} alt="logo" className="w-8 h-8 rounded-full object-cover border border-white/30" />
+                 <img src={logoUrl} alt="logo" className="w-8 h-8 rounded-full object-cover shadow-lg shadow-black/20" />
                ) : null}
                <span className="font-medium text-lg truncate max-w-[200px]">
                  {currentUser?.school?.name || 'doonITes ERP'}
                </span>
             </div>
-            {/* Optional: Add notification or user icon here if needed */}
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="uppercase tracking-wide text-indigo-100">Currency</span>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="bg-white/10 border border-white/40 text-[11px] px-2 py-1 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-white/60"
+              >
+                {CURRENCY_OPTIONS.map((opt) => (
+                  <option key={opt.code} value={opt.code}>
+                    {opt.code}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           
           <div className="text-center">
             <h1 className="text-2xl font-light mb-1">
-              Hi! {currentUser ? currentUser.firstName : 'User'}
+              Hi!{' '}
+              {currentUser?.role === 'school_admin'
+                ? currentUser?.school?.name || currentUser?.firstName || 'User'
+                : currentUser
+                  ? currentUser.firstName
+                  : 'User'}
             </h1>
             <p className="text-sm opacity-90">
               Role: {currentUser ? currentUser.role : '...'}
@@ -298,57 +371,99 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
         {/* Mobile Sidebar Drawer */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-50 flex">
-            {/* Backdrop */}
             <div 
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setMobileMenuOpen(false)}
             />
             
-            {/* Drawer Content */}
-            <div className="relative bg-white w-[80%] max-w-sm h-full shadow-2xl flex flex-col animate-slide-in">
-              <div className="p-4 bg-[#0f172a] text-white flex justify-between items-center">
-                <span className="font-bold text-lg">Menu</span>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-1 hover:bg-white/10 rounded">
-                  <X size={24} />
+            <div className="relative bg-slate-900 text-slate-100 w-[80%] max-w-sm h-full shadow-2xl flex flex-col animate-slide-in">
+              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {currentUser?.school?.logo ? (
+                    <img
+                      src={currentUser.school.logo}
+                      alt="school logo"
+                      className="w-9 h-9 rounded-full object-cover shadow-md shadow-black/40"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center">
+                      <SchoolIcon size={18} className="text-slate-100" />
+                    </div>
+                  )}
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold leading-tight">
+                      {currentUser?.school?.name || 'School Software'}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {currentUser?.role ? currentUser.role.replace('_', ' ') : 'Admin Dashboard'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 rounded-full hover:bg-slate-800 transition-colors"
+                >
+                  <X size={20} />
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-4">
-                 {MENU_ITEMS.map((item) => (
-                   <SidebarItem 
-                     key={item.to}
-                     icon={item.icon} 
-                     label={item.label} 
-                     to={item.to} 
-                     active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))}
-                     onClick={() => {
-                       setMobileMenuOpen(false);
-                       scrollToTopAll('auto');
-                     }}
-                   />
-                 ))}
+              <div className="flex-1 overflow-y-auto py-3">
+                 {MENU_ITEMS.map((item) => {
+                   if (item.allowedRoles && (!currentUser || !item.allowedRoles.includes(currentUser.role))) return null;
+                   if (item.excludedRoles && currentUser && item.excludedRoles.includes(currentUser.role)) return null;
+                   if (item.departmentKey) {
+                     const role = currentUser?.role;
+                     const isGlobal = role === 'admin' || role === 'school_admin';
+                     const hasDept = departmentAccess.includes(item.departmentKey);
+                     if (!isGlobal && !hasDept) return null;
+                   }
+
+                   return (
+                     <Link
+                       key={item.to}
+                       to={item.to}
+                       onClick={() => {
+                         setMobileMenuOpen(false);
+                         scrollToTopAll('auto');
+                       }}
+                       className={clsx(
+                         'flex items-center gap-3 px-4 py-2.5 text-sm',
+                         location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))
+                           ? 'bg-slate-800 text-white'
+                           : 'text-slate-200 hover:bg-slate-800/70'
+                       )}
+                     >
+                       <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-200">
+                         <item.icon size={18} />
+                       </div>
+                       <span className="font-medium">{item.label}</span>
+                     </Link>
+                   );
+                 })}
               </div>
 
-              <div className="p-4 border-t bg-gray-50">
+              <div className="p-4 border-t border-slate-800 bg-slate-950/80">
                 <Link 
                   to="/profile" 
                   onClick={() => {
                     setMobileMenuOpen(false);
                     scrollToTopAll('auto');
                   }}
-                  className="flex items-center gap-3 mb-4 hover:bg-gray-100 p-2 rounded-lg -mx-2 transition-colors"
+                  className="flex items-center gap-3 mb-4 hover:bg-slate-800 p-2 rounded-lg -mx-2 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
+                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-100 font-bold">
                     {currentUser?.firstName?.[0] || 'U'}
                   </div>
                   <div>
-                    <p className="font-medium text-sm">{currentUser?.firstName} {currentUser?.lastName}</p>
-                    <p className="text-xs text-gray-500 capitalize">{currentUser?.role}</p>
+                    <p className="font-medium text-sm text-slate-100">
+                      {currentUser?.firstName} {currentUser?.lastName}
+                    </p>
+                    <p className="text-xs text-slate-400 capitalize">{currentUser?.role}</p>
                   </div>
                 </Link>
-                <button className="flex items-center gap-2 text-red-500 w-full p-2 hover:bg-red-50 rounded">
+                <button className="flex items-center gap-2 text-red-400 w-full p-2 hover:bg-red-900/40 rounded">
                   <LogOut size={18} />
-                  <span>Logout</span>
+                  <span className="text-sm font-medium">Logout</span>
                 </button>
               </div>
             </div>
@@ -358,7 +473,11 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
         {/* Mobile Content */}
         <main ref={scrollContainerRef} className="flex-1 -mt-6 z-20 px-2 overflow-y-auto pb-20">
           {location.pathname === '/' ? (
-            <MobileDashboardHome />
+            <MobileDashboardHome
+              currentUser={currentUser}
+              currencyConfig={currencyConfig}
+              formatCurrencyFromBase={formatCurrencyFromBase}
+            />
           ) : (
              <div className="bg-white rounded-t-3xl min-h-full p-4 shadow-inner">
                <Outlet />
@@ -385,12 +504,25 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
     );
   }
 
+  const isSuperAdmin = currentUser?.role === 'admin';
+
   const appBgClass = 'bg-slate-50';
 
-  const topBottomBackground = 'linear-gradient(90deg, #05081a 0%, #0b1029 100%)';
+  const topBottomBackground = isSuperAdmin
+    ? 'linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%)'
+    : 'linear-gradient(90deg, #05081a 0%, #0b1029 100%)';
+
+  const themeVars = isSuperAdmin
+    ? {
+        '--ui-accent-strong': '#1d4ed8',
+        '--ui-accent': '#3b82f6',
+        '--ui-accent-soft': '#dbeafe',
+        '--ui-accent-secondary': '#ffffff',
+      }
+    : {};
 
   return (
-    <div className={clsx('min-h-screen flex flex-col font-sans', appBgClass)}>
+    <div className={clsx('min-h-screen flex flex-col font-sans', appBgClass)} style={themeVars}>
       {/* Top Navigation Bar */}
       <header
         className="h-16 flex items-center justify-between px-6 shadow-md z-20 sticky top-0 text-white"
@@ -398,9 +530,9 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
       >
         <div className="flex items-center gap-4">
            {currentUser?.school?.logo ? (
-             <img src={currentUser.school.logo} alt="school logo" className="w-10 h-10 rounded-full object-cover shadow-lg shadow-indigo-500/30 bg-white" />
+             <img src={currentUser.school.logo} alt="school logo" className="w-10 h-10 rounded-full object-cover shadow-lg shadow-indigo-500/40" />
            ) : logoUrl ? (
-             <img src={logoUrl} alt="logo" className="w-8 h-8 rounded-full object-cover shadow-lg shadow-indigo-500/30" />
+             <img src={logoUrl} alt="logo" className="w-8 h-8 rounded-full object-cover shadow-lg shadow-indigo-500/40" />
            ) : (
              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                <SchoolIcon size={18} className="text-white" />
@@ -431,6 +563,20 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
           >
             {theme === 'dark' ? '🌙' : '☀️'}
           </button>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="uppercase tracking-wide text-indigo-100">Currency</span>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="bg-white/10 border border-white/30 text-xs px-2 py-1 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-white/60"
+            >
+              {CURRENCY_OPTIONS.map((opt) => (
+                <option key={opt.code} value={opt.code}>
+                  {opt.code}
+                </option>
+              ))}
+            </select>
+          </div>
            <div className="relative">
              <button 
                className="relative hover:text-gray-300 focus:outline-none"
@@ -544,6 +690,12 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
              {MENU_ITEMS.map((item) => {
                if (item.allowedRoles && (!currentUser || !item.allowedRoles.includes(currentUser.role))) return null;
                if (item.excludedRoles && currentUser && item.excludedRoles.includes(currentUser.role)) return null;
+               if (item.departmentKey) {
+                 const role = currentUser?.role;
+                 const isGlobal = role === 'admin' || role === 'school_admin';
+                 const hasDept = departmentAccess.includes(item.departmentKey);
+                 if (!isGlobal && !hasDept) return null;
+               }
 
                return (
                  <SidebarItem 
@@ -566,7 +718,15 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
           className="flex-1 overflow-y-auto p-6 scroll-smooth"
           onScroll={handleScroll}
         >
-           <Outlet context={{ currentUser }} />
+           <Outlet
+             context={{
+               currentUser,
+               currency,
+               currencyConfig,
+               formatCurrencyFromBase,
+               convertAmountToBase,
+             }}
+           />
         </main>
 
         {/* Scroll to Top Button */}
@@ -583,15 +743,48 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
       </div>
       
       <footer
-        className="w-full py-4 px-6 text-center text-sm border-t border-slate-900/40"
+        className="w-full py-4 px-6 text-sm border-t border-slate-900/40"
         style={{ backgroundImage: topBottomBackground }}
       >
-        <p className="text-slate-200">
-          © 2025 doonITes ERP.{' '}
-          <span className="font-semibold" style={{ color: 'var(--ui-accent)' }}>
-            Made with ❤️ for Education.
-          </span>
-        </p>
+        <div className="max-w-6xl mx-auto flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 text-xs text-slate-300 items-center sm:items-start justify-center sm:justify-center">
+            <div>
+              <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">Contact us</div>
+              <div>
+                Call{' '}
+                <a href="tel:+919258622022" className="hover:underline">
+                  +919258622022
+                </a>
+              </div>
+              <div>
+                Write us{' '}
+                <a href="mailto:erp@geenie.org" className="hover:underline">
+                  erp@geenie.org
+                </a>
+              </div>
+            </div>
+            <div>
+              <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">About us</div>
+              <div className="max-w-xs">
+                doonITes ERP is a comprehensive school management solution designed to simplify daily
+                operations and enhance teaching, learning, and communication across the campus.
+              </div>
+            </div>
+          </div>
+          <p className="text-slate-200 text-xs sm:text-center">
+            <a
+              href="https://geenie.org"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold hover:underline"
+            >
+              © 2025 doonITes ERP.
+            </a>{' '}
+            <span className="font-semibold" style={{ color: 'var(--ui-accent)' }}>
+              Made with ❤️ for Education.
+            </span>
+          </p>
+        </div>
       </footer>
     </div>
   );

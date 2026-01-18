@@ -3,6 +3,14 @@ import { Plus, Trash2, Calendar, Image as ImageIcon, X, Upload, ChevronLeft, Che
 import api from '../../utils/api';
 import Modal from '../../components/Modal';
 
+const toSameOriginUploadsUrl = (value) => {
+  if (!value || typeof value !== 'string') return value;
+  if (value.startsWith('/uploads/')) return value;
+  const idx = value.indexOf('/uploads/');
+  if (idx === -1) return value;
+  return value.slice(idx);
+};
+
 export default function Gallery() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -168,7 +176,7 @@ export default function Gallery() {
                 onClick={() => setSelectedGroup(group)}
               >
                 <img 
-                  src={group.imageUrl} 
+                  src={toSameOriginUploadsUrl(group.imageUrl)} 
                   alt={group.title}
                   className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                   onError={(e) => { 
@@ -390,7 +398,7 @@ export default function Gallery() {
                                 onClick={() => setSelectedImage(img)}
                             >
                                 <img 
-                                    src={img.imageUrl} 
+                                    src={toSameOriginUploadsUrl(img.imageUrl)} 
                                     alt={img.title}
                                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                                     onError={(e) => { 
@@ -434,7 +442,7 @@ export default function Gallery() {
           </button>
           <div className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col items-center" onClick={e => e.stopPropagation()}>
             <img 
-              src={selectedImage.imageUrl} 
+              src={toSameOriginUploadsUrl(selectedImage.imageUrl)} 
               alt={selectedImage.title}
               className="w-auto h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
             />

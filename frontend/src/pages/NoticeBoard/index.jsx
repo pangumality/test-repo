@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Calendar, Users, Bell } from 'lucide-react';
+import { Plus, Trash2, Calendar, Users, Bell, Pencil } from 'lucide-react';
 import api from '../../utils/api';
 import { useOutletContext } from 'react-router-dom';
 
@@ -26,6 +26,8 @@ const NoticeBoard = () => {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNotice, setEditingNotice] = useState(null);
+  const [selectedNotice, setSelectedNotice] = useState(null);
   const [newNotice, setNewNotice] = useState({
     title: '',
     content: '',
@@ -47,16 +49,21 @@ const NoticeBoard = () => {
     }
   };
 
-  const handleCreate = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/notices', newNotice);
+      if (editingNotice) {
+        await api.put(`/notices/${editingNotice.id}`, newNotice);
+      } else {
+        await api.post('/notices', newNotice);
+      }
       setIsModalOpen(false);
+      setEditingNotice(null);
       setNewNotice({ title: '', content: '', audience: 'ALL' });
       fetchNotices();
     } catch (error) {
-      console.error('Failed to create notice:', error);
-      alert('Failed to create notice');
+      console.error('Failed to save notice:', error);
+      alert('Failed to save notice');
     }
   };
 
@@ -71,7 +78,7 @@ const NoticeBoard = () => {
     }
   };
 
-  const canManage = ['admin', 'school_admin', 'teacher'].includes(currentUser?.role);
+  const canManage = currentUser?.role === 'school_admin';
 
   return (
     <div className="space-y-6">
@@ -82,7 +89,11 @@ const NoticeBoard = () => {
         </div>
         {canManage && (
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setEditingNotice(null);
+              setNewNotice({ title: '', content: '', audience: 'ALL' });
+              setIsModalOpen(true);
+            }}
             className="flex items-center gap-2 btn-primary"
           >
             <Plus size={20} />
@@ -106,7 +117,11 @@ const NoticeBoard = () => {
         ) : (
           <div className="grid gap-6">
             {notices.map((notice) => (
-            <div key={notice.id} className="bg-white/80 rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+            <div
+              key={notice.id}
+              onClick={() => setSelectedNotice(notice)}
+              className="bg-white/80 rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden cursor-pointer"
+            >
               <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-[2rem]"
                    style={{ backgroundImage: 'linear-gradient(to bottom right, var(--ui-accent-strong), var(--ui-accent-soft))' }} />
               <div className="flex justify-between items-start mb-4">
@@ -124,12 +139,32 @@ const NoticeBoard = () => {
                   </div>
                 </div>
                 {canManage && (
-                  <button
-                    onClick={() => handleDelete(notice.id)}
-                    className="text-rose-500 hover:text-rose-600"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingNotice(notice);
+                        setNewNotice({
+                          title: notice.title || '',
+                          content: notice.content || '',
+                          audience: notice.audience || 'ALL'
+                        });
+                        setIsModalOpen(true);
+                      }}
+                      className="text-slate-500 hover:text-slate-700"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(notice.id);
+                      }}
+                      className="text-rose-500 hover:text-rose-600"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 )}
               </div>
               <p className="text-slate-700 whitespace-pre-line">{notice.content}</p>
@@ -141,10 +176,13 @@ const NoticeBoard = () => {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Create New Notice"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingNotice(null);
+        }}
+        title={editingNotice ? 'Edit Notice' : 'Create New Notice'}
       >
-        <form onSubmit={handleCreate} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
             <input
@@ -183,7 +221,10 @@ const NoticeBoard = () => {
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingNotice(null);
+              }}
               className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
             >
               Cancel
@@ -192,10 +233,66 @@ const NoticeBoard = () => {
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Post Notice
+              Save Notice
             </button>
           </div>
         </form>
+      </Modal>
+      
+      <Modal
+        isOpen={!!selectedNotice}
+        onClose={() => setSelectedNotice(null)}
+        title={selectedNotice?.title || 'Notice Details'}
+      >
+        {selectedNotice && (
+          <div className="space-y-4">
+            <div className="flex items-start justify-between text-sm text-slate-500">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1">
+                  <Calendar size={14} />
+                  {new Date(selectedNotice.createdAt).toLocaleDateString()}
+                </span>
+                <span className="flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded-full text-xs font-medium text-indigo-700 border border-indigo-100">
+                  <Users size={12} />
+                  {selectedNotice.audience}
+                </span>
+              </div>
+              {canManage && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingNotice(selectedNotice);
+                      setNewNotice({
+                        title: selectedNotice.title || '',
+                        content: selectedNotice.content || '',
+                        audience: selectedNotice.audience || 'ALL'
+                      });
+                      setSelectedNotice(null);
+                      setIsModalOpen(true);
+                    }}
+                    className="text-slate-500 hover:text-slate-700"
+                    title="Edit notice"
+                  >
+                    <Pencil size={18} />
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await handleDelete(selectedNotice.id);
+                      setSelectedNotice(null);
+                    }}
+                    className="text-rose-500 hover:text-rose-600"
+                    title="Delete notice"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              )}
+            </div>
+            <p className="text-slate-700 whitespace-pre-line">
+              {selectedNotice.content}
+            </p>
+          </div>
+        )}
       </Modal>
     </div>
   );

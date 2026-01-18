@@ -24,7 +24,8 @@ export const getBuses = async (req, res) => {
 
     res.json(buses);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch buses' });
+    console.error('Error fetching buses:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch buses' });
   }
 };
 

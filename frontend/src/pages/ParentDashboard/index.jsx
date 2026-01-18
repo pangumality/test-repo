@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import api from '../../utils/api';
 import { 
   Users, 
@@ -16,6 +16,15 @@ import {
 import clsx from 'clsx';
 
 const ParentDashboard = () => {
+  const { formatCurrencyFromBase } = useOutletContext() || {};
+
+  const formatCurrency = (amount) => {
+    if (typeof formatCurrencyFromBase === 'function') {
+      return formatCurrencyFromBase(amount);
+    }
+    const numeric = Number(amount || 0);
+    return `ZMW ${numeric.toLocaleString()}`;
+  };
   const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -253,7 +262,7 @@ const ParentDashboard = () => {
               <div className="bg-gradient-to-r from-violet-50 to-purple-50 p-5 rounded-xl border border-violet-100 flex justify-between items-center">
                 <span className="text-violet-700 font-bold text-sm">Outstanding</span>
                 <span className="text-2xl font-black text-violet-800">
-                  ${childData.fees?.outstanding?.toLocaleString() || 0}
+                  {formatCurrency(childData.fees?.outstanding || 0)}
                 </span>
               </div>
               
@@ -266,7 +275,9 @@ const ParentDashboard = () => {
                         <div className="font-bold text-slate-700">{tx.description || 'Fee Payment'}</div>
                         <div className="text-xs text-slate-400 font-medium">{new Date(tx.date).toLocaleDateString()}</div>
                       </div>
-                      <span className="font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-100 shadow-sm">${tx.amount}</span>
+                      <span className="font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-100 shadow-sm">
+                        {formatCurrency(tx.amount)}
+                      </span>
                     </div>
                   ))
                 ) : (

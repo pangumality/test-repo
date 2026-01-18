@@ -6,10 +6,11 @@ import morgan from 'morgan';
 import prisma from './config/db.js';
 import jwt from 'jsonwebtoken';
 import { authenticate } from './middleware/authMiddleware.js';
-import { requirePermission } from './middleware/rbacMiddleware.js';
+import { requirePermission, requirePermissionOrDepartmentStaff } from './middleware/rbacMiddleware.js';
 import { PERMISSIONS, ROLES } from './config/rbac.js';
 import { logAudit } from './utils/auditLogger.js';
 import { getDepartmentStaff, setDepartmentStaff, listDepartments } from './config/departmentsStore.js';
+import { getRadioPrograms, saveRadioPrograms } from './config/radioStore.js';
 import { createNotification, createBulkNotifications } from './utils/notification.js';
 import { upload } from './middleware/uploadMiddleware.js';
 import path from 'path';
@@ -26,6 +27,7 @@ import schoolRoutes from './routes/schoolRoutes.js';
 import aiTutorRoutes from './routes/aiTutorRoutes.js';
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
+import PDFDocument from 'pdfkit';
 
 const app = express();
 
@@ -163,35 +165,31 @@ app.get('/api/stats', authenticate, requirePermission(PERMISSIONS.STATS_VIEW_ALL
     const { schoolId, role } = req.user;
 
     if (role === ROLES.SUPER_ADMIN) {
-       const [schools, users, revenue, messages] = await Promise.all([
-         prisma.school.count(),
-         prisma.user.count(),
-         prisma.payment.aggregate({ _sum: { amount: true } }),
-         prisma.message.count()
-       ]);
-       
-       return res.json({
-         schools,
-         users,
-         revenue: revenue._sum.amount || 0,
-         messages,
-         role: ROLES.SUPER_ADMIN
-       });
+      const [schools, users, revenue, messages] = await Promise.all([
+        prisma.school.count(),
+        prisma.user.count({ where: { role: ROLES.SCHOOL_ADMIN } }),
+        prisma.payment.aggregate({ _sum: { amount: true } }),
+        prisma.message.count()
+      ]);
+
+      return res.json({
+        schools,
+        users,
+        revenue: revenue._sum.amount || 0,
+        messages,
+        role: ROLES.SUPER_ADMIN
+      });
     }
 
-    // Existing logic for Admin / Teacher
-    // Note: Teacher might only see their own classes/students if we wanted to be strict, 
-    // but the current requirement implies a dashboard overview.
-    // For now we keep the existing logic found in the analysis phase (implied).
-    
-    const [students, teachers, classes, parents] = await Promise.all([
+    const [students, teachers, classes, parents, revenueAgg] = await Promise.all([
       prisma.student.count({ where: { schoolId } }),
-      prisma.user.count({ where: { schoolId, role: 'teacher' } }), 
+      prisma.user.count({ where: { schoolId, role: ROLES.TEACHER } }),
       prisma.class.count({ where: { schoolId } }),
-      // Parents logic: Count users with role parent linked to this school?
-      // Since schema doesn't link Parent->School directly, we can count distinct parents of students in this school.
-      // Or simpler: User with role parent and schoolId (if schoolId is set on User for parents).
-      prisma.user.count({ where: { schoolId, role: 'parent' } }) 
+      prisma.user.count({ where: { schoolId, role: ROLES.PARENT } }),
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: { student: { schoolId } }
+      })
     ]);
 
     res.json({
@@ -199,9 +197,9 @@ app.get('/api/stats', authenticate, requirePermission(PERMISSIONS.STATS_VIEW_ALL
       teachers,
       classes,
       parents,
-      role: role
+      revenue: revenueAgg._sum.amount || 0,
+      role
     });
-
   } catch (error) {
     console.error('Failed to fetch stats:', error);
     res.status(500).json({ error: 'Failed to fetch stats' });
@@ -246,6 +244,7 @@ app.get('/api/classes', authenticate, async (req, res) => {
     const formatted = classes.map(c => ({
       id: c.id,
       name: c.name,
+      sections: Array.isArray(c.sections) ? c.sections : (c.sections ?? []),
     }));
     res.json(formatted);
   } catch (error) {
@@ -253,6 +252,129 @@ app.get('/api/classes', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch classes', details: error.message });
   }
 });
+
+app.post(
+  '/api/classes',
+  authenticate,
+  requirePermission(PERMISSIONS.CLASS_CREATE),
+  async (req, res) => {
+    try {
+      const { name, sections } = req.body;
+      const { schoolId } = req.user;
+
+      if (!schoolId) {
+        return res.status(400).json({ error: 'Missing schoolId on user' });
+      }
+
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: 'Class name is required' });
+      }
+
+      const klass = await prisma.class.create({
+        data: {
+          id: randomUUID(),
+          schoolId,
+          name: name.trim(),
+          sections: Array.isArray(sections) ? sections : [],
+        },
+      });
+
+      await logAudit(req.user.id, 'CREATE', 'class', { id: klass.id, name: klass.name });
+
+      res.status(201).json({
+        id: klass.id,
+        name: klass.name,
+        sections: Array.isArray(klass.sections) ? klass.sections : (klass.sections ?? []),
+      });
+    } catch (error) {
+      console.error('Error creating class:', error);
+      res.status(500).json({ error: 'Failed to create class' });
+    }
+  },
+);
+
+app.put(
+  '/api/classes/:id',
+  authenticate,
+  requirePermission(PERMISSIONS.CLASS_UPDATE),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, sections } = req.body;
+      const { schoolId } = req.user;
+
+      if (!schoolId) {
+        return res.status(400).json({ error: 'Missing schoolId on user' });
+      }
+
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: 'Class name is required' });
+      }
+
+      const existing = await prisma.class.findFirst({
+        where: { id: String(id), schoolId },
+      });
+
+      if (!existing) {
+        return res.status(404).json({ error: 'Class not found' });
+      }
+
+      const updated = await prisma.class.update({
+        where: { id: existing.id },
+        data: {
+          name: name.trim(),
+          sections: Array.isArray(sections) ? sections : [],
+        },
+      });
+
+      await logAudit(req.user.id, 'UPDATE', 'class', { id: updated.id, name: updated.name });
+
+      res.json({
+        id: updated.id,
+        name: updated.name,
+        sections: Array.isArray(updated.sections) ? updated.sections : (updated.sections ?? []),
+      });
+    } catch (error) {
+      console.error('Error updating class:', error);
+      res.status(500).json({ error: 'Failed to update class' });
+    }
+  },
+);
+
+app.delete(
+  '/api/classes/:id',
+  authenticate,
+  requirePermission(PERMISSIONS.CLASS_DELETE),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { schoolId } = req.user;
+
+      if (!schoolId) {
+        return res.status(400).json({ error: 'Missing schoolId on user' });
+      }
+
+      const existing = await prisma.class.findFirst({
+        where: { id: String(id), schoolId },
+      });
+
+      if (!existing) {
+        return res.status(404).json({ error: 'Class not found' });
+      }
+
+      await prisma.class.delete({
+        where: { id: existing.id },
+      });
+
+      await logAudit(req.user.id, 'DELETE', 'class', { id: existing.id, name: existing.name });
+
+      res.json({ message: 'Class deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      res.status(500).json({ error: 'Failed to delete class' });
+    }
+  },
+);
 
 app.get('/api/students', authenticate, async (req, res) => {
   const { classId } = req.query;
@@ -935,13 +1057,12 @@ app.get('/api/parents/children/:studentId/fees', authenticate, requirePermission
             orderBy: { paidAt: 'desc' }
         });
 
-        // Mocking outstanding
-        const outstanding = 5000; // Example
+        const outstanding = 5000;
         
         res.json({
             history: payments,
             outstanding,
-            currency: 'KES'
+            currency: 'ZMW'
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch fees' });
@@ -959,9 +1080,9 @@ app.post('/api/upload', authenticate, upload.single('image'), (req, res) => {
 
 app.post('/api/upload-multiple', authenticate, upload.array('images', 10), (req, res) => {
   if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ error: 'No files uploaded' });
+    return res.status(400).json({ error: 'No files uploaded' });
   }
-  const urls = req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`);
+  const urls = req.files.map(file => `/uploads/${file.filename}`);
   res.json({ urls });
 });
 
@@ -1147,7 +1268,7 @@ app.post('/api/group-studies/:id/live', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const { isLive } = req.body;
-    const { id: userId } = req.user;
+    const { id: userId, role: currentRole } = req.user;
 
     const study = await prisma.groupStudy.findUnique({ where: { id } });
     if (!study) return res.status(404).json({ error: 'Study not found' });
@@ -1595,21 +1716,21 @@ app.get('/api/teachers', authenticate, requirePermission(PERMISSIONS.TEACHER_MAN
     const teachers = await prisma.user.findMany({
       where: whereClause,
       include: {
-        teacher: true // Include the teacher profile
+        teacher: true
       },
       orderBy: { lastName: 'asc' }
     });
 
     const formatted = teachers.map(t => ({
       id: t.id,
+      teacherId: t.teacher?.id,
       name: `${t.firstName} ${t.lastName}`,
       email: t.email,
       phone: t.phone,
       portrait: t.portrait,
       workExperience: t.teacher?.workExperience,
       qualifications: t.teacher?.qualifications,
-      // Mapping employeeNumber to subject as a workaround for schema restrictions
-      subject: t.teacher?.employeeNumber || 'General' 
+      subject: t.teacher?.employeeNumber || 'General'
     }));
 
     res.json(formatted);
@@ -2389,7 +2510,7 @@ app.delete('/api/subjects/:id', authenticate, requirePermission(PERMISSIONS.SUBJ
 // Messages & Conversations
 app.get('/api/conversations', authenticate, async (req, res) => {
   try {
-    const { id: userId } = req.user;
+    const { id: userId, role: currentRole } = req.user;
     // Find conversations where user is a participant
     const participations = await prisma.conversationParticipant.findMany({
       where: { userId },
@@ -2399,7 +2520,13 @@ app.get('/api/conversations', authenticate, async (req, res) => {
             participants: {
               include: {
                 user: {
-                  select: { id: true, firstName: true, lastName: true, role: true }
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    role: true,
+                    school: { select: { name: true } }
+                  }
                 }
               }
             },
@@ -2421,9 +2548,14 @@ app.get('/api/conversations', authenticate, async (req, res) => {
       // Determine conversation title/name
       let name = 'Group Chat';
       if (otherParticipants.length === 1) {
-        name = `${otherParticipants[0].firstName} ${otherParticipants[0].lastName}`;
+        const other = otherParticipants[0];
+        if (currentRole === ROLES.SUPER_ADMIN && other.role === ROLES.SCHOOL_ADMIN) {
+          name = other.school?.name || other.firstName || 'School';
+        } else {
+          name = `${other.firstName} ${other.lastName}`.trim();
+        }
       } else if (otherParticipants.length === 0) {
-          name = 'Me';
+        name = 'Me';
       }
 
       // Calculate unread count
@@ -2563,7 +2695,13 @@ app.get('/api/conversations/:id/messages', authenticate, async (req, res) => {
             where: { conversationId: id },
             include: {
                 sender: {
-                    select: { id: true, firstName: true, lastName: true }
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        role: true,
+                        school: { select: { name: true } }
+                    }
                 }
             },
             orderBy: { sentAt: 'asc' }
@@ -2632,17 +2770,18 @@ app.post('/api/messages', authenticate, async (req, res) => {
         if (req.user.role === ROLES.STUDENT && recipient.role === ROLES.SCHOOL_ADMIN) {
             return res.status(403).json({ error: 'Not allowed' });
         }
-        // 1:1 Message Logic
-        // Check if conversation exists between these two
-        // This is complex in Prisma without raw query, so we'll do a basic check
-        // Find conversations I am in
+
+        const convSchoolId = schoolId || recipient.schoolId;
+        if (!convSchoolId) {
+            return res.status(400).json({ error: 'School not set for conversation' });
+        }
+
         const myConvos = await prisma.conversationParticipant.findMany({
             where: { userId: senderId },
             select: { conversationId: true }
         });
         const myConvoIds = myConvos.map(c => c.conversationId);
         
-        // Find if recipient is in any of these
         const sharedConvo = await prisma.conversationParticipant.findFirst({
             where: {
                 userId: recipientId,
@@ -2650,13 +2789,7 @@ app.post('/api/messages', authenticate, async (req, res) => {
             }
         });
 
-        // We also need to ensure it's a 1:1 chat (2 participants) if we want to reuse strict 1:1
-        // For MVP, if they share a conversation, reuse it? No, might be a group.
-        // Let's create a new one if not found or if existing ones are groups.
-        // Simplifying: Create new if not exists.
-        
         if (sharedConvo) {
-             // Check if it has exactly 2 participants
              const count = await prisma.conversationParticipant.count({
                  where: { conversationId: sharedConvo.conversationId }
              });
@@ -2666,16 +2799,14 @@ app.post('/api/messages', authenticate, async (req, res) => {
         }
 
         if (!conversationId) {
-            // Create new conversation
             const newConvo = await prisma.conversation.create({
                 data: {
                     id: randomUUID(),
-                    schoolId
+                    schoolId: convSchoolId
                 }
             });
             conversationId = newConvo.id;
             
-            // Add participants
             await prisma.conversationParticipant.createMany({
                 data: [
                     { conversationId, userId: senderId },
@@ -2684,8 +2815,6 @@ app.post('/api/messages', authenticate, async (req, res) => {
             });
         }
     } else {
-        // Fallback: School General Chat (Legacy support or broadcast)
-        // Not implementing broadcast for now to encourage 1:1
         return res.status(400).json({ error: 'Recipient is required' });
     }
 
@@ -2698,7 +2827,6 @@ app.post('/api/messages', authenticate, async (req, res) => {
       }
     });
 
-    // Send Notification
     await createNotification(
       recipientId,
       message.id,
@@ -2836,6 +2964,23 @@ app.get('/api/departments', authenticate, async (req, res) => {
   }
 });
 
+app.get('/api/me/departments', authenticate, async (req, res) => {
+  try {
+    const { schoolId, id } = req.user;
+    if (!schoolId || !id) {
+      return res.json([]);
+    }
+    const departments = listDepartments();
+    const memberOf = departments.filter((d) => {
+      const ids = getDepartmentStaff(d, schoolId);
+      return Array.isArray(ids) && ids.includes(id);
+    });
+    res.json(memberOf);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch departments for user' });
+  }
+});
+
 app.get('/api/departments/:name/staff', authenticate, async (req, res) => {
   try {
     if (req.user.role !== ROLES.SCHOOL_ADMIN && req.user.role !== ROLES.SUPER_ADMIN) {
@@ -2846,7 +2991,11 @@ app.get('/api/departments/:name/staff', authenticate, async (req, res) => {
     const ids = getDepartmentStaff(name, req.user.schoolId);
     if (ids.length === 0) return res.json([]);
     const users = await prisma.user.findMany({
-      where: { id: { in: ids }, schoolId: req.user.schoolId, role: ROLES.SCHOOL_ADMIN },
+      where: {
+        id: { in: ids },
+        schoolId: req.user.schoolId,
+        role: { in: [ROLES.SCHOOL_ADMIN, ROLES.TEACHER] },
+      },
       select: { id: true, firstName: true, lastName: true, role: true }
     });
     res.json(users);
@@ -2870,6 +3019,143 @@ app.post('/api/departments/:name/staff', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Failed to update department staff' });
   }
 });
+
+app.get('/api/radio/programs', authenticate, async (req, res) => {
+  try {
+    const { schoolId } = req.user;
+    if (!schoolId) return res.json([]);
+    const programs = getRadioPrograms(schoolId);
+    res.json(programs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch radio programs' });
+  }
+});
+
+app.post(
+  '/api/radio/programs',
+  authenticate,
+  requirePermissionOrDepartmentStaff(PERMISSIONS.ELEARNING_MANAGE, 'radio'),
+  async (req, res) => {
+    try {
+      const { schoolId } = req.user;
+      if (!schoolId) {
+        return res.status(400).json({ error: 'Missing school context' });
+      }
+
+      const { title, description, text, startMinute, durationMinutes } = req.body || {};
+      if (!title || typeof title !== 'string') {
+        return res.status(400).json({ error: 'title is required' });
+      }
+
+      const start = Number(startMinute);
+      const duration = Number(durationMinutes);
+      if (!Number.isFinite(start) || start < 0 || start >= 24 * 60) {
+        return res.status(400).json({ error: 'Invalid startMinute' });
+      }
+      if (!Number.isFinite(duration) || duration <= 0) {
+        return res.status(400).json({ error: 'Invalid durationMinutes' });
+      }
+
+      const existing = getRadioPrograms(schoolId);
+      const id = randomUUID();
+      const program = {
+        id,
+        title,
+        description: description || '',
+        text: text || '',
+        startMinute: start,
+        durationMinutes: duration,
+      };
+      const saved = saveRadioPrograms(schoolId, [...existing, program]);
+      await logAudit(req.user.id, 'CREATE', 'radio_program', { id, title });
+      res.status(201).json(program);
+    } catch (error) {
+      console.error('Failed to create radio program', error);
+      res.status(500).json({ error: 'Failed to create radio program' });
+    }
+  }
+);
+
+app.put(
+  '/api/radio/programs/:id',
+  authenticate,
+  requirePermissionOrDepartmentStaff(PERMISSIONS.ELEARNING_MANAGE, 'radio'),
+  async (req, res) => {
+    try {
+      const { schoolId } = req.user;
+      const { id } = req.params;
+      if (!schoolId) {
+        return res.status(400).json({ error: 'Missing school context' });
+      }
+
+      const { title, description, text, startMinute, durationMinutes } = req.body || {};
+      const existing = getRadioPrograms(schoolId);
+      const index = existing.findIndex((p) => p.id === id);
+      if (index === -1) {
+        return res.status(404).json({ error: 'Radio program not found' });
+      }
+
+      const original = existing[index];
+      const next = { ...original };
+
+      if (title !== undefined) next.title = title;
+      if (description !== undefined) next.description = description;
+      if (text !== undefined) next.text = text;
+      if (startMinute !== undefined) {
+        const start = Number(startMinute);
+        if (!Number.isFinite(start) || start < 0 || start >= 24 * 60) {
+          return res.status(400).json({ error: 'Invalid startMinute' });
+        }
+        next.startMinute = start;
+      }
+      if (durationMinutes !== undefined) {
+        const duration = Number(durationMinutes);
+        if (!Number.isFinite(duration) || duration <= 0) {
+          return res.status(400).json({ error: 'Invalid durationMinutes' });
+        }
+        next.durationMinutes = duration;
+      }
+
+      const updatedList = [...existing];
+      updatedList[index] = next;
+      saveRadioPrograms(schoolId, updatedList);
+      await logAudit(req.user.id, 'UPDATE', 'radio_program', { id, title: next.title });
+      res.json(next);
+    } catch (error) {
+      console.error('Failed to update radio program', error);
+      res.status(500).json({ error: 'Failed to update radio program' });
+    }
+  }
+);
+
+app.delete(
+  '/api/radio/programs/:id',
+  authenticate,
+  requirePermissionOrDepartmentStaff(PERMISSIONS.ELEARNING_MANAGE, 'radio'),
+  async (req, res) => {
+    try {
+      const { schoolId } = req.user;
+      const { id } = req.params;
+      if (!schoolId) {
+        return res.status(400).json({ error: 'Missing school context' });
+      }
+
+      const existing = getRadioPrograms(schoolId);
+      const index = existing.findIndex((p) => p.id === id);
+      if (index === -1) {
+        return res.status(404).json({ error: 'Radio program not found' });
+      }
+
+      const [removed] = existing.splice(index, 1);
+      saveRadioPrograms(schoolId, existing);
+      await logAudit(req.user.id, 'DELETE', 'radio_program', { id, title: removed?.title });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to delete radio program', error);
+      res.status(500).json({ error: 'Failed to delete radio program' });
+    }
+  }
+);
 // Helper to find people to message
 app.get('/api/recipients', authenticate, async (req, res) => {
     try {
@@ -2879,9 +3165,22 @@ app.get('/api/recipients', authenticate, async (req, res) => {
         if (role === ROLES.SUPER_ADMIN) {
             const admins = await prisma.user.findMany({
                 where: { role: ROLES.SCHOOL_ADMIN },
-                select: { id: true, firstName: true, lastName: true, role: true }
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    role: true,
+                    school: { select: { name: true } }
+                }
             });
-            const finalAdmins = admins.filter(u => u.id !== userId);
+            const finalAdmins = admins
+                .filter(u => u.id !== userId)
+                .map(u => ({
+                    id: u.id,
+                    firstName: u.school?.name || u.firstName,
+                    lastName: '',
+                    role: u.role
+                }));
             return res.json(finalAdmins);
         }
         if (role === ROLES.SCHOOL_ADMIN) {
@@ -3971,6 +4270,111 @@ app.post('/api/certificates', authenticate, requirePermission(PERMISSIONS.CERTIF
     }
 });
 
+app.get('/api/certificates/:id/pdf', authenticate, requirePermission(PERMISSIONS.CERTIFICATE_VIEW), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { schoolId, role, id: userId } = req.user;
+
+        const cert = await prisma.certificate.findUnique({
+            where: { id },
+            include: {
+                student: {
+                    include: {
+                        user: true,
+                        klass: true,
+                        school: true
+                    }
+                },
+                issuer: {
+                    include: {
+                        school: true
+                    }
+                },
+                school: true
+            }
+        });
+
+        if (!cert) {
+            return res.status(404).json({ error: 'Certificate not found' });
+        }
+
+        if (role === ROLES.STUDENT) {
+            const student = await prisma.student.findUnique({ where: { userId } });
+            if (!student || cert.studentId !== student.id) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+        } else if (role === ROLES.PARENT) {
+            const parent = await prisma.parent.findUnique({ where: { userId } });
+            if (!parent) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+            const children = await prisma.parentStudents.findMany({ where: { parentId: parent.id } });
+            const allowedStudentIds = children.map(c => c.studentId);
+            if (!allowedStudentIds.includes(cert.studentId)) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+        } else if (role === ROLES.SCHOOL_ADMIN || role === ROLES.TEACHER || role === ROLES.ADMIN) {
+            if (cert.schoolId !== schoolId) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+        } else if (role !== ROLES.SUPER_ADMIN) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        const doc = new PDFDocument({ size: 'A4', margin: 50 });
+
+        const filenameBase = (cert.referenceNumber || cert.id || 'certificate').toString().replace(/[^a-zA-Z0-9_-]/g, '_');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="certificate-${filenameBase}.pdf"`);
+
+        doc.pipe(res);
+
+        const schoolName =
+            cert.school?.name ||
+            cert.student?.school?.name ||
+            cert.issuer?.school?.name ||
+            'School Certificate';
+        const studentName = `${cert.student?.user?.firstName || ''} ${cert.student?.user?.lastName || ''}`.trim() || 'Student';
+        const issuedDate = new Date(cert.issuedAt).toLocaleDateString('en-GB');
+        const typeLabel = cert.type.replace(/_/g, ' ');
+
+        doc.fontSize(20).text(schoolName, { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(16).text('Official Certificate', { align: 'center' });
+        doc.moveDown(2);
+
+        doc.fontSize(12).text(`Certificate Type: ${typeLabel}`);
+        doc.text(`Student: ${studentName}`);
+
+        if (cert.student?.klass?.name) {
+            const classLine = `${cert.student.klass.name}${cert.student.section ? ` - ${cert.student.section}` : ''}`;
+            doc.text(`Class: ${classLine}`);
+        }
+
+        doc.text(`Issued on: ${issuedDate}`);
+
+        if (cert.referenceNumber) {
+            doc.text(`Reference: ${cert.referenceNumber}`);
+        }
+
+        if (cert.metadata && typeof cert.metadata.remarks === 'string' && cert.metadata.remarks.trim().length > 0) {
+            doc.moveDown();
+            doc.text('Remarks:');
+            doc.text(cert.metadata.remarks);
+        }
+
+        doc.moveDown(2);
+        doc.text('This is a system-generated certificate.', { oblique: true });
+
+        doc.end();
+    } catch (error) {
+        console.error(error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to generate certificate PDF' });
+        }
+    }
+});
+
 // --- Gallery ---
 app.post('/api/upload', authenticate, upload.single('image'), (req, res) => {
     if (!req.file) {
@@ -4025,34 +4429,6 @@ app.delete('/api/gallery/:id', authenticate, requirePermission(PERMISSIONS.GALLE
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to delete gallery item' });
-    }
-});
-
-// --- Dashboard Stats ---
-app.get('/api/stats', authenticate, requirePermission(PERMISSIONS.STATS_VIEW_ALL), async (req, res) => {
-    try {
-        const { schoolId } = req.user;
-        
-        const [students, teachers, classes, parents] = await Promise.all([
-            prisma.student.count({ where: { schoolId } }),
-            prisma.teacher.count(), // Teacher table doesn't have schoolId directly but User does. 
-            // Better: prisma.user.count({ where: { schoolId, role: 'teacher' } })
-            prisma.class.count({ where: { schoolId } }),
-            prisma.parent.count() // similar issue, check User
-        ]);
-        
-        // Teacher count via User
-        const teacherCount = await prisma.user.count({ where: { schoolId, role: 'teacher' } });
-        const parentCount = await prisma.user.count({ where: { schoolId, role: 'parent' } });
-
-        res.json({
-            students,
-            teachers: teacherCount,
-            classes,
-            parents: parentCount
-        });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch stats' });
     }
 });
 

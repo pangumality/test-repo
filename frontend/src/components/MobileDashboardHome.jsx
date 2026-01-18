@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -18,8 +18,45 @@ import {
   Image as ImageIcon,
   Newspaper
 } from 'lucide-react';
+import api from '../utils/api';
 
-const MobileDashboardHome = ({ currentUser }) => {
+const MobileDashboardHome = ({ currentUser, currencyConfig, formatCurrencyFromBase }) => {
+  const [stats, setStats] = useState({
+    students: 0,
+    teachers: 0,
+    classes: 0,
+    parents: 0,
+    revenue: 0,
+  });
+
+  const formatCurrency = (amount) => {
+    if (typeof formatCurrencyFromBase === 'function') {
+      return formatCurrencyFromBase(amount);
+    }
+    const numeric = Number(amount || 0);
+    const symbol = currencyConfig?.symbol || 'ZMW';
+    return `${symbol} ${numeric.toLocaleString()}`;
+  };
+
+  useEffect(() => {
+    if (
+      currentUser &&
+      (currentUser.role === 'admin' ||
+        currentUser.role === 'super_admin' ||
+        currentUser.role === 'school_admin' ||
+        currentUser.role === 'teacher')
+    ) {
+      const load = async () => {
+        try {
+          const res = await api.get('/stats');
+          setStats(prev => ({ ...prev, ...res.data }));
+        } catch {
+        }
+      };
+      load();
+    }
+  }, [currentUser]);
+
   const menuItems = [
     { icon: CreditCard, label: 'Pay Fees', to: '/finance', excludedRoles: ['teacher'] },
     { icon: Calendar, label: 'Attendance', to: '/attendance' },
@@ -43,7 +80,30 @@ const MobileDashboardHome = ({ currentUser }) => {
 
   return (
     <div className="bg-slate-50 min-h-[calc(100vh-140px)] pb-24">
-      <div className="p-4 grid grid-cols-3 gap-3">
+      {currentUser?.role === 'school_admin' && (
+        <div className="p-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-emerald-500 text-white p-4 flex flex-col justify-between">
+            <div className="text-xs font-semibold uppercase">Students</div>
+            <div className="text-2xl font-bold mt-2">{stats.students}</div>
+          </div>
+          <div className="rounded-xl bg-sky-500 text-white p-4 flex flex-col justify-between">
+            <div className="text-xs font-semibold uppercase">Teachers</div>
+            <div className="text-2xl font-bold mt-2">{stats.teachers}</div>
+          </div>
+          <div className="rounded-xl bg-indigo-500 text-white p-4 flex flex-col justify-between">
+            <div className="text-xs font-semibold uppercase">Classes</div>
+            <div className="text-2xl font-bold mt-2">{stats.classes}</div>
+          </div>
+          <div className="rounded-xl bg-amber-500 text-white p-4 flex flex-col justify-between">
+            <div className="text-xs font-semibold uppercase">Revenue</div>
+            <div className="text-xl font-bold mt-2">
+              {formatCurrency(stats.revenue || 0)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="px-4 pt-2 grid grid-cols-3 gap-3">
         {menuItems.map((item, index) => {
           if (item.excludedRoles && currentUser && item.excludedRoles.includes(currentUser.role)) return null;
           

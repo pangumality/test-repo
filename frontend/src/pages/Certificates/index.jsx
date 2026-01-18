@@ -21,20 +21,22 @@ const Certificates = () => {
   const canManage = ['admin', 'school_admin'].includes(currentUser?.role);
 
   const CERT_TYPES = [
-    { value: 'transfer_certificate', label: 'Transfer Certificate (TC)' },
-    { value: 'progress_card', label: 'Progress Card' },
-    { value: 'medical_certificate', label: 'Medical Certificate' },
-    { value: 'migration_certificate', label: 'Migration Certificate' },
-    { value: 'report_card', label: 'Report Card' },
-    { value: 'character_certificate', label: 'Character Certificate' }
+    { value: 'TC', label: 'Transfer Certificate (TC)' },
+    { value: 'PROGRESS_CARD', label: 'Progress Card' },
+    { value: 'MEDICAL', label: 'Medical Certificate' },
+    { value: 'MIGRATION', label: 'Migration Certificate' },
+    { value: 'REPORT_CARD', label: 'Report Card' }
   ];
 
   useEffect(() => {
     fetchCertificates();
+  }, []);
+
+  useEffect(() => {
     if (canManage) {
       fetchStudents();
     }
-  }, []);
+  }, [canManage]);
 
   const fetchCertificates = async () => {
     try {
@@ -71,21 +73,46 @@ const Certificates = () => {
     }
   };
 
-  const filteredStudents = students.filter(s => 
-    s.user?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.user?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.admissionNo?.includes(searchTerm)
-  );
+  const filteredStudents = students.filter(s => {
+    const term = searchTerm.toLowerCase();
+    return (
+      s.name?.toLowerCase().includes(term) ||
+      s.firstName?.toLowerCase().includes(term) ||
+      s.lastName?.toLowerCase().includes(term) ||
+      s.rollNumber?.toLowerCase().includes(term) ||
+      s.className?.toLowerCase().includes(term) ||
+      s.section?.toLowerCase().includes(term)
+    );
+  });
 
   const getCertificateColor = (type) => {
     const colors = {
-      transfer_certificate: 'bg-red-50 text-red-700 border-red-200',
-      progress_card: 'bg-blue-50 text-blue-700 border-blue-200',
-      medical_certificate: 'bg-green-50 text-green-700 border-green-200',
-      migration_certificate: 'bg-purple-50 text-purple-700 border-purple-200',
-      report_card: 'bg-yellow-50 text-yellow-700 border-yellow-200'
+      TC: 'bg-red-50 text-red-700 border-red-200',
+      PROGRESS_CARD: 'bg-blue-50 text-blue-700 border-blue-200',
+      MEDICAL: 'bg-green-50 text-green-700 border-green-200',
+      MIGRATION: 'bg-purple-50 text-purple-700 border-purple-200',
+      REPORT_CARD: 'bg-yellow-50 text-yellow-700 border-yellow-200'
     };
     return colors[type] || 'bg-gray-50 text-gray-700 border-gray-200';
+  };
+
+  const handleDownloadPdf = async (certificateId) => {
+    try {
+      const response = await api.get(`/certificates/${certificateId}/pdf`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `certificate-${certificateId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Failed to download certificate PDF');
+    }
   };
 
   return (
@@ -126,6 +153,24 @@ const Certificates = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Student</label>
+
+                <div className="mb-3">
+                  <select
+                    value={formData.studentId}
+                    onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                    className="w-full border rounded-lg p-2"
+                  >
+                    <option value="">Select student...</option>
+                    {students.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()}
+                        {s.className ? ` - ${s.className}${s.section ? ` (${s.section})` : ''}` : ''}
+                        {s.rollNumber ? ` [${s.rollNumber}]` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="relative">
                   <input
                     type="text"
@@ -139,13 +184,15 @@ const Certificates = () => {
                 <select
                   required
                   value={formData.studentId}
-                  onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
                   className="w-full border rounded-lg p-2"
                   size={5}
                 >
                   {filteredStudents.map(s => (
                     <option key={s.id} value={s.id}>
-                      {s.user?.firstName} {s.user?.lastName} ({s.admissionNo})
+                      {s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()}
+                      {s.className ? ` - ${s.className}${s.section ? ` (${s.section})` : ''}` : ''}
+                      {s.rollNumber ? ` [${s.rollNumber}]` : ''}
                     </option>
                   ))}
                 </select>
@@ -222,7 +269,10 @@ const Certificates = () => {
               )}
             </div>
 
-            <button className="w-full flex items-center justify-center gap-2 py-2 border border-teal-600 text-teal-600 rounded-lg hover:bg-teal-50 transition-colors">
+            <button
+              onClick={() => handleDownloadPdf(cert.id)}
+              className="w-full flex items-center justify-center gap-2 py-2 border border-teal-600 text-teal-600 rounded-lg hover:bg-teal-50 transition-colors"
+            >
               <Download size={18} /> Download PDF
             </button>
           </div>

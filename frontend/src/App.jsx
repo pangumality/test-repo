@@ -16,10 +16,12 @@ import Library from './pages/Library';
 import Hostel from './pages/Hostel';
 import Transport from './pages/Transport';
 import ELearning from './pages/ELearning';
+import ELearningSubjects from './pages/ELearning/SubjectsPage';
 import ELearningSubject from './pages/ELearning/Subject';
 import ElearningItemForm from './pages/ELearning/ElearningItemForm';
 import ExamSetup from './pages/Exams/Setup';
 import Sports from './pages/Sports';
+import Departments from './pages/Departments';
 import GroupStudies from './pages/GroupStudies';
 import LiveRoom from './pages/GroupStudies/LiveRoom';
 import Inventory from './pages/Inventory';
@@ -51,7 +53,11 @@ function App({ theme, setTheme }) {
           <Route path="profile" element={<Profile />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="messages" element={<Messages />} />
-          <Route path="notices" element={<NoticeBoard />} />
+          <Route path="notices" element={
+            <RequireRole roles={['student', 'teacher', 'school_admin', 'parent']}>
+              <NoticeBoard />
+            </RequireRole>
+          } />
           <Route path="newsletters" element={<Newsletter />} />
           <Route path="gallery" element={<Gallery />} />
           <Route path="leaves" element={<Leaves />} />
@@ -91,17 +97,17 @@ function App({ theme, setTheme }) {
             </RequireRole>
           } />
           <Route path="library" element={
-            <RequireRole roles={['admin', 'school_admin']}>
+            <RequireRole roles={['admin', 'school_admin', 'teacher']}>
               <Library />
             </RequireRole>
           } />
           <Route path="hostel" element={
-            <RequireRole roles={['admin', 'school_admin']}>
+            <RequireRole roles={['admin', 'school_admin', 'teacher']}>
               <Hostel />
             </RequireRole>
           } />
           <Route path="transport" element={
-            <RequireRole roles={['admin', 'school_admin']}>
+            <RequireRole roles={['admin', 'school_admin', 'teacher']}>
               <Transport />
             </RequireRole>
           } />
@@ -110,14 +116,19 @@ function App({ theme, setTheme }) {
               <Sports />
             </RequireRole>
           } />
+          <Route path="departments" element={
+            <RequireRole roles={['school_admin']}>
+              <Departments />
+            </RequireRole>
+          } />
           <Route path="inventory" element={
-            <RequireRole roles={['admin', 'school_admin']}>
+            <RequireRole roles={['admin', 'school_admin', 'teacher']}>
               <Inventory />
             </RequireRole>
           } />
 
-          <Route path="radio" element={<Navigate to="/e-learning" replace />} />
-          <Route path="e-learning" element={<ELearning />} />
+          <Route path="radio" element={<ELearning />} />
+          <Route path="e-learning" element={<ELearningSubjects />} />
           <Route path="e-learning/:subjectId" element={<ELearningSubject />} />
           <Route path="e-learning/:subjectId/:type/form" element={<ElearningItemForm />} />
           <Route path="subjects" element={<Subjects />} />

@@ -66,7 +66,7 @@ const ConversationItem = ({ conversation, isActive, onClick, currentUserId }) =>
   );
 };
 
-const ChatMessage = ({ message, isOwn, participants, currentUserId }) => {
+const ChatMessage = ({ message, isOwn, participants, currentUserId, currentUserRole }) => {
   // Determine read status
   // A message is read if AT LEAST ONE other participant has read it (since 1:1 focus)
   // Logic: Exists a participant P where P.userId != currentUserId AND P.lastReadAt >= message.sentAt
@@ -77,6 +77,14 @@ const ChatMessage = ({ message, isOwn, participants, currentUserId }) => {
     new Date(p.lastReadAt) >= new Date(message.sentAt)
   );
 
+  const displayName = (() => {
+    if (!message.sender) return '';
+    if (currentUserRole === 'admin' && message.sender.role === 'school_admin') {
+      return message.sender.school?.name || message.sender.firstName;
+    }
+    return message.sender.firstName;
+  })();
+
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
       <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${
@@ -84,7 +92,7 @@ const ChatMessage = ({ message, isOwn, participants, currentUserId }) => {
           ? 'bg-blue-600 text-white rounded-tr-none' 
           : 'bg-gray-100 text-gray-800 rounded-tl-none'
       }`}>
-        {!isOwn && <p className="text-xs font-bold mb-1 text-gray-500">{message.sender?.firstName}</p>}
+        {!isOwn && <p className="text-xs font-bold mb-1 text-gray-500">{displayName}</p>}
         <p className="text-sm">{message.content}</p>
         <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isOwn ? 'text-blue-200' : 'text-gray-400'}`}>
           {formatTime(message.sentAt)}
@@ -610,6 +618,7 @@ export default function Messages() {
                   isOwn={msg.senderId === currentUser.id}
                   participants={participants}
                   currentUserId={currentUser.id}
+                  currentUserRole={currentUser.role}
                 />
               ))}
               <div ref={messagesEndRef} />
