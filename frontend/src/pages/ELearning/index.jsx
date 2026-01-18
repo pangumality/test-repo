@@ -66,6 +66,7 @@ export default function ELearning() {
   const stoppedManuallyRef = useRef(false);
 
   const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [isRadioDeptStaff, setIsRadioDeptStaff] = useState(false);
 
   useEffect(() => {
     const fetchSubjects = async () => {
@@ -91,6 +92,18 @@ export default function ELearning() {
       }
     };
     loadRole();
+  }, []);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const { data } = await api.get('/me/departments');
+        setIsRadioDeptStaff(Array.isArray(data) && data.includes('radio'));
+      } catch {
+        setIsRadioDeptStaff(false);
+      }
+    };
+    fetchDepartments();
   }, []);
 
   useEffect(() => {
@@ -194,7 +207,8 @@ export default function ELearning() {
 
   const isRadioManager =
     currentUserRole === 'school_admin' ||
-    currentUserRole === 'admin';
+    currentUserRole === 'admin' ||
+    isRadioDeptStaff;
 
   const resetForm = () => {
     setForm({

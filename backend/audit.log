@@ -557,3 +557,6 @@
 [2026-01-18T16:48:15.767Z] User:94971ff8-0899-497e-bd14-93ed027f64dc | Action:CREATE | Resource:class_subject | IP:unknown | Details:{"id":"ce4c896a-158a-4ff8-b490-c4683e594c4e","classId":"931946a2-bece-4569-ad5e-996de95385ab","teacherUserId":"b740c18f-a9be-4f67-886c-821ea495378f"}
 [2026-01-18T17:00:45.404Z] User:b740c18f-a9be-4f67-886c-821ea495378f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
 [2026-01-18T17:16:30.662Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:radio_program | IP:unknown | Details:{"id":"f6007c27-6ea8-4a22-aac7-04118a1ad734","title":"This is test"}
+[2026-01-18T17:30:46.250Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-18T18:03:06.405Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:radio_program | IP:unknown | Details:{"id":"b7e61438-b6ed-4990-a4f9-e35f98f58d0f","title":"test"}
+[2026-01-18T19:25:54.169Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:radio_program | IP:unknown | Details:{"id":"1ec9cacc-716b-4a9f-8823-9d9fef5e8440","title":"test"}

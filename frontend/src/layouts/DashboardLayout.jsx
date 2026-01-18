@@ -747,30 +747,6 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
         style={{ backgroundImage: topBottomBackground }}
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row gap-3 text-xs text-slate-300 items-center sm:items-start justify-center sm:justify-center">
-            <div>
-              <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">Contact us</div>
-              <div>
-                Call{' '}
-                <a href="tel:+919258622022" className="hover:underline">
-                  +919258622022
-                </a>
-              </div>
-              <div>
-                Write us{' '}
-                <a href="mailto:erp@geenie.org" className="hover:underline">
-                  erp@geenie.org
-                </a>
-              </div>
-            </div>
-            <div>
-              <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">About us</div>
-              <div className="max-w-xs">
-                doonITes ERP is a comprehensive school management solution designed to simplify daily
-                operations and enhance teaching, learning, and communication across the campus.
-              </div>
-            </div>
-          </div>
           <p className="text-slate-200 text-xs sm:text-center">
             <a
               href="https://geenie.org"
