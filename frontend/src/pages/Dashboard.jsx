@@ -305,7 +305,7 @@ const Dashboard = () => {
             colorTo="to-brand-400"
             iconColor="shadow-brand-500/40"
             buttonLabel="Manage"
-            link="/schools"
+            link="/dashboard/schools"
           />
           <StatCard
             icon={Users}
@@ -315,7 +315,7 @@ const Dashboard = () => {
             colorTo="to-pink-500"
             iconColor="shadow-secondary-500/40"
             buttonLabel="View All"
-            link="/schools"
+            link="/dashboard/schools"
           />
           <StatCard
             icon={DollarSign}
@@ -325,7 +325,7 @@ const Dashboard = () => {
             colorTo="to-teal-400"
             iconColor="shadow-emerald-500/40"
             buttonLabel="Finance"
-            link="/finance"
+            link="/dashboard/finance"
           />
           <StatCard
             icon={MessageSquare}
@@ -335,7 +335,7 @@ const Dashboard = () => {
             colorTo="to-orange-500"
             iconColor="shadow-amber-500/40"
             buttonLabel="View Logs"
-            link="/messages"
+            link="/dashboard/messages"
           />
         </div>
       ) : currentUser?.role === 'student' ? (
@@ -348,7 +348,7 @@ const Dashboard = () => {
             colorTo="to-brand-400"
             iconColor="shadow-brand-500/40"
             buttonLabel="Open"
-            link="/subjects"
+            link="/dashboard/subjects"
           />
           <StatCard
             icon={Users}
@@ -358,7 +358,7 @@ const Dashboard = () => {
             colorTo="to-pink-500"
             iconColor="shadow-secondary-500/40"
             buttonLabel="Open"
-            link="/group-studies"
+            link="/dashboard/group-studies"
           />
           <StatCard
             icon={BookOpen}
@@ -368,7 +368,7 @@ const Dashboard = () => {
             colorTo="to-teal-400"
             iconColor="shadow-emerald-500/40"
             buttonLabel="Open"
-            link="/e-learning"
+            link="/dashboard/e-learning"
           />
           <StatCard
             icon={Radio}
@@ -378,7 +378,7 @@ const Dashboard = () => {
             colorTo="to-orange-500"
             iconColor="shadow-amber-500/40"
             buttonLabel="Listen"
-            link="/radio"
+            link="/dashboard/radio"
           />
         </div>
       ) : (
@@ -391,7 +391,7 @@ const Dashboard = () => {
             colorTo="to-brand-400"
             iconColor="shadow-brand-500/40"
             buttonLabel="View All"
-            link="/students"
+            link="/dashboard/students"
           />
           {(!currentUser || currentUser.role !== 'teacher') && (
             <StatCard
@@ -402,7 +402,7 @@ const Dashboard = () => {
               colorTo="to-pink-500"
               iconColor="shadow-secondary-500/40"
               buttonLabel="View All"
-              link="/teachers"
+              link="/dashboard/teachers"
             />
           )}
           <StatCard
@@ -413,7 +413,7 @@ const Dashboard = () => {
             colorTo="to-teal-400"
             iconColor="shadow-emerald-500/40"
             buttonLabel="View All"
-            link="/classes"
+            link="/dashboard/classes"
           />
           {(!currentUser || currentUser.role !== 'teacher') && (
             currentUser?.role === 'school_admin' ? (
@@ -425,7 +425,7 @@ const Dashboard = () => {
                 colorTo="to-orange-500"
                 iconColor="shadow-amber-500/40"
                 buttonLabel="Finance"
-                link="/finance"
+                link="/dashboard/finance"
               />
             ) : (
               <StatCard
@@ -436,7 +436,7 @@ const Dashboard = () => {
                 colorTo="to-orange-500"
                 iconColor="shadow-amber-500/40"
                 buttonLabel="Finance"
-                link="/finance"
+                link="/dashboard/finance"
               />
             )
           )}

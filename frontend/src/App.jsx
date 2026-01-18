@@ -37,14 +37,18 @@ import TimeTable from './pages/TimeTable';
 import Certificates from './pages/Certificates';
 import Profile from './pages/Profile';
 import NoticeBoard from './pages/NoticeBoard';
+import LandingPage from './pages/LandingPage';
+import Contact from './pages/Contact';
 
 function App({ theme, setTheme }) {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         
-        <Route path="/" element={
+        <Route path="/dashboard" element={
           <ProtectedRoute>
             <DashboardLayout theme={theme} setTheme={setTheme} />
           </ProtectedRoute>

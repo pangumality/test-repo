@@ -90,32 +90,32 @@ const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) =>
 };
 
 const MENU_ITEMS = [
-  { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
-  { icon: Calendar, label: 'Attendance', to: '/attendance', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: MessageSquare, label: 'Messages', to: '/messages', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: Bell, label: 'Notice Board', to: '/notices', allowedRoles: ['student','teacher','school_admin','parent'] },
-  { icon: Newspaper, label: 'Newsletters', to: '/newsletters', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: ImageIcon, label: 'Gallery', to: '/gallery', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: FileCheck, label: 'Leaves', to: '/leaves', allowedRoles: ['student','parent','admin','school_admin','teacher'] },
-  { icon: Clock, label: 'Time Table', to: '/timetable', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: Award, label: 'Certificates', to: '/certificates', allowedRoles: ['student','parent','admin','school_admin'] },
-  { icon: Users, label: 'Teachers', to: '/teachers', excludedRoles: ['student','teacher','parent'] },
-  { icon: GraduationCap, label: 'Students', to: '/students', allowedRoles: ['admin','school_admin'] },
-  { icon: Home, label: 'Classes', to: '/classes', allowedRoles: ['teacher','admin','school_admin'] },
-  { icon: SchoolIcon, label: 'Schools', to: '/schools', allowedRoles: ['admin'] },
-  { icon: BookOpen, label: 'Exams', to: '/exams', excludedRoles: ['student','parent'] },
-  { icon: FileText, label: 'My Exams', to: '/student/exams', allowedRoles: ['student'] },
-  { icon: CreditCard, label: 'Finance', to: '/finance', excludedRoles: ['student','teacher','parent'] },
-  { icon: Library, label: 'Library', to: '/library', departmentKey: 'library' },
-  { icon: Home, label: 'Hostel', to: '/hostel', departmentKey: 'hostel' },
-  { icon: Bus, label: 'Transport', to: '/transport', departmentKey: 'transport' },
-  { icon: Radio, label: 'E-Learning', to: '/e-learning', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: Radio, label: 'Radio', to: '/radio', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: BookOpen, label: 'Subjects', to: '/subjects', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: Trophy, label: 'Sports', to: '/sports', excludedRoles: ['student','teacher','parent'] },
-  { icon: Users, label: 'Group Studies', to: '/group-studies', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: Package, label: 'Inventory', to: '/inventory', departmentKey: 'inventory' },
-  { icon: Shield, label: 'Departments', to: '/departments', allowedRoles: ['school_admin'] },
+  { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
+  { icon: Calendar, label: 'Attendance', to: '/dashboard/attendance', allowedRoles: ['student','teacher','admin','school_admin'] },
+  { icon: MessageSquare, label: 'Messages', to: '/dashboard/messages', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: Bell, label: 'Notice Board', to: '/dashboard/notices', allowedRoles: ['student','teacher','school_admin','parent'] },
+  { icon: Newspaper, label: 'Newsletters', to: '/dashboard/newsletters', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: ImageIcon, label: 'Gallery', to: '/dashboard/gallery', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: FileCheck, label: 'Leaves', to: '/dashboard/leaves', allowedRoles: ['student','parent','admin','school_admin','teacher'] },
+  { icon: Clock, label: 'Time Table', to: '/dashboard/timetable', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
+  { icon: Award, label: 'Certificates', to: '/dashboard/certificates', allowedRoles: ['student','parent','admin','school_admin'] },
+  { icon: Users, label: 'Teachers', to: '/dashboard/teachers', excludedRoles: ['student','teacher','parent'] },
+  { icon: GraduationCap, label: 'Students', to: '/dashboard/students', allowedRoles: ['admin','school_admin'] },
+  { icon: Home, label: 'Classes', to: '/dashboard/classes', allowedRoles: ['teacher','admin','school_admin'] },
+  { icon: SchoolIcon, label: 'Schools', to: '/dashboard/schools', allowedRoles: ['admin'] },
+  { icon: BookOpen, label: 'Exams', to: '/dashboard/exams', excludedRoles: ['student','parent'] },
+  { icon: FileText, label: 'My Exams', to: '/dashboard/student/exams', allowedRoles: ['student'] },
+  { icon: CreditCard, label: 'Finance', to: '/dashboard/finance', excludedRoles: ['student','teacher','parent'] },
+  { icon: Library, label: 'Library', to: '/dashboard/library', departmentKey: 'library' },
+  { icon: Home, label: 'Hostel', to: '/dashboard/hostel', departmentKey: 'hostel' },
+  { icon: Bus, label: 'Transport', to: '/dashboard/transport', departmentKey: 'transport' },
+  { icon: Radio, label: 'E-Learning', to: '/dashboard/e-learning', allowedRoles: ['student','teacher','admin','school_admin'] },
+  { icon: Radio, label: 'Radio', to: '/dashboard/radio', allowedRoles: ['student','teacher','admin','school_admin'] },
+  { icon: BookOpen, label: 'Subjects', to: '/dashboard/subjects', allowedRoles: ['student','teacher','admin','school_admin'] },
+  { icon: Trophy, label: 'Sports', to: '/dashboard/sports', excludedRoles: ['student','teacher','parent'] },
+  { icon: Users, label: 'Group Studies', to: '/dashboard/group-studies', allowedRoles: ['student','teacher','admin','school_admin'] },
+  { icon: Package, label: 'Inventory', to: '/dashboard/inventory', departmentKey: 'inventory' },
+  { icon: Shield, label: 'Departments', to: '/dashboard/departments', allowedRoles: ['school_admin'] },
 ];
 
 const DashboardLayout = ({ theme = 'light', setTheme }) => {
@@ -282,11 +282,11 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
     }
     
     if (notification.activityType === 'MESSAGE') {
-      navigate('/messages');
+      navigate('/dashboard/messages');
     } else if (notification.activityType === 'LEAVE_REQUEST') {
-      navigate('/leaves');
+      navigate('/dashboard/leaves');
     } else if (notification.activityType === 'HOMEWORK') {
-      navigate('/e-learning');
+      navigate('/dashboard/e-learning');
     }
     // Add other navigations as needed
     
@@ -487,7 +487,7 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
 
         {/* Mobile Bottom Navigation */}
         <div className="fixed bottom-0 left-0 right-0 bg-[#0f172a] text-white h-16 flex items-center justify-between px-8 shadow-lg z-50">
-          <Link to="/" className="flex flex-col items-center gap-1 opacity-90 hover:opacity-100">
+          <Link to="/dashboard" className="flex flex-col items-center gap-1 opacity-90 hover:opacity-100">
             <Home size={24} />
           </Link>
           <button onClick={() => navigate(-1)} className="flex flex-col items-center gap-1 opacity-90 hover:opacity-100">
@@ -522,7 +522,7 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
     : {};
 
   return (
-    <div className={clsx('min-h-screen flex flex-col font-sans', appBgClass)} style={themeVars}>
+    <div className={clsx('h-screen flex flex-col font-sans', appBgClass)} style={themeVars}>
       {/* Top Navigation Bar */}
       <header
         className="h-16 flex items-center justify-between px-6 shadow-md z-20 sticky top-0 text-white"
@@ -715,18 +715,66 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
         {/* Main Content */}
         <main 
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto p-6 scroll-smooth"
+          className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth bg-slate-50/50"
           onScroll={handleScroll}
         >
-           <Outlet
-             context={{
-               currentUser,
-               currency,
-               currencyConfig,
-               formatCurrencyFromBase,
-               convertAmountToBase,
-             }}
-           />
+           <div className="min-h-full flex flex-col">
+             <div className="flex-1 p-6">
+               <Outlet
+                 context={{
+                   currentUser,
+                   currency,
+                   currencyConfig,
+                   formatCurrencyFromBase,
+                   convertAmountToBase,
+                 }}
+               />
+             </div>
+             <footer
+               className="w-full py-4 px-6 text-sm border-t border-slate-900/40 mt-auto"
+               style={{ backgroundImage: topBottomBackground }}
+             >
+               <div className="max-w-6xl mx-auto flex flex-col gap-3">
+                 <div className="flex flex-col sm:flex-row gap-3 text-xs text-slate-300 items-center sm:items-start justify-center sm:justify-center">
+                   <div>
+                     <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">Contact us</div>
+                     <div>
+                       Call{' '}
+                       <a href="tel:+919258622022" className="hover:underline">
+                         +919258622022
+                       </a>
+                     </div>
+                     <div>
+                       Write us{' '}
+                       <a href="mailto:erp@geenie.org" className="hover:underline">
+                         erp@geenie.org
+                       </a>
+                     </div>
+                   </div>
+                   <div>
+                     <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">About us</div>
+                     <div className="max-w-xs">
+                       doonITes ERP is a comprehensive school management solution designed to simplify daily
+                       operations and enhance teaching, learning, and communication across the campus.
+                     </div>
+                   </div>
+                 </div>
+                 <p className="text-slate-200 text-xs sm:text-center">
+                   <a
+                     href="https://geenie.org"
+                     target="_blank"
+                     rel="noreferrer"
+                     className="font-semibold hover:underline"
+                   >
+                     © 2025 doonITes ERP.
+                   </a>{' '}
+                   <span className="font-semibold" style={{ color: 'var(--ui-accent)' }}>
+                     Made with ❤️ for Education.
+                   </span>
+                 </p>
+               </div>
+             </footer>
+           </div>
         </main>
 
         {/* Scroll to Top Button */}
@@ -742,50 +790,7 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
         </button>
       </div>
       
-      <footer
-        className="w-full py-4 px-6 text-sm border-t border-slate-900/40"
-        style={{ backgroundImage: topBottomBackground }}
-      >
-        <div className="max-w-6xl mx-auto flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row gap-3 text-xs text-slate-300 items-center sm:items-start justify-center sm:justify-center">
-            <div>
-              <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">Contact us</div>
-              <div>
-                Call{' '}
-                <a href="tel:+919258622022" className="hover:underline">
-                  +919258622022
-                </a>
-              </div>
-              <div>
-                Write us{' '}
-                <a href="mailto:erp@geenie.org" className="hover:underline">
-                  erp@geenie.org
-                </a>
-              </div>
-            </div>
-            <div>
-              <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">About us</div>
-              <div className="max-w-xs">
-                doonITes ERP is a comprehensive school management solution designed to simplify daily
-                operations and enhance teaching, learning, and communication across the campus.
-              </div>
-            </div>
-          </div>
-          <p className="text-slate-200 text-xs sm:text-center">
-            <a
-              href="https://geenie.org"
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold hover:underline"
-            >
-              © 2025 doonITes ERP.
-            </a>{' '}
-            <span className="font-semibold" style={{ color: 'var(--ui-accent)' }}>
-              Made with ❤️ for Education.
-            </span>
-          </p>
-        </div>
-      </footer>
+
     </div>
   );
 };

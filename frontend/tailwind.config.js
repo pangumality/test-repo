@@ -8,6 +8,13 @@ export default {
   theme: {
     extend: {
       colors: {
+        landing: {
+          primary: '#032D2B', // Dark Green background
+          secondary: '#0D9488', // Teal accent
+          accent: '#14B8A6', // Lighter teal
+          text: '#F0FDFA', // Off-white text
+          muted: '#CCFBF1', // Muted text
+        },
         brand: {
           50: '#eef2ff',
           100: '#e0e7ff',

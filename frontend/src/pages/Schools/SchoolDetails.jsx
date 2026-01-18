@@ -78,7 +78,7 @@ const SchoolDetails = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <button 
-          onClick={() => navigate('/schools')}
+          onClick={() => navigate('/dashboard/schools')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft size={20} />

@@ -122,7 +122,7 @@ export default function ExamSetup() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <Link to={`/exams`} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">
+          <Link to={`/dashboard/exams`} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">
             <ArrowLeft size={16} />
           </Link>
           <h1 className="text-2xl font-bold text-gray-800">Exam Setup: {exam.name}</h1>

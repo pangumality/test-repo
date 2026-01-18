@@ -205,7 +205,7 @@ const LiveRoom = () => {
         if (isHost) {
              api.post(`/group-studies/${roomId}/live`, { isLive: false });
         }
-        navigate('/group-studies');
+        navigate('/dashboard/group-studies');
     };
 
     if (error) {

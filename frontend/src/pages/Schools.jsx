@@ -169,7 +169,7 @@ const Schools = () => {
         {schools.map((school) => (
           <div 
             key={school.id} 
-            onClick={() => navigate(`/schools/${school.id}`)}
+            onClick={() => navigate(`/dashboard/schools/${school.id}`)}
             className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer"
           >
             <div className="flex justify-between items-start mb-4">
