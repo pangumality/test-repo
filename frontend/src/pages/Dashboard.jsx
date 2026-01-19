@@ -54,7 +54,7 @@ const StatCard = ({
         </div>
         {buttonLabel && (
           <span
-            className={`text-[10px] font-bold px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm group-hover:bg-white shadow-sm transition-all border border-slate-100/50 bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent uppercase tracking-wider`}
+            className={`text-[10px] font-bold px-3 py-1 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm group-hover:bg-white dark:group-hover:bg-slate-700 shadow-sm transition-all border border-slate-100/50 dark:border-slate-700/50 bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent uppercase tracking-wider`}
           >
             {buttonLabel}
           </span>
@@ -62,7 +62,7 @@ const StatCard = ({
       </div>
 
       <div className="relative z-10">
-        <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1 opacity-80">
+        <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-1 opacity-80">
           {title}
         </h3>
         <span
@@ -77,12 +77,12 @@ const StatCard = ({
   return isClickable ? (
     <Link
       to={link}
-      className="group relative bg-white rounded-[2rem] p-6 shadow-soft border border-slate-100 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden block cursor-pointer min-h-[210px]"
+      className="group relative bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-soft border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden block cursor-pointer min-h-[210px]"
     >
       {content}
     </Link>
   ) : (
-    <div className="group relative bg-white rounded-[2rem] p-6 shadow-soft border border-slate-100 overflow-hidden min-h-[210px]">
+    <div className="group relative bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-soft border border-slate-100 dark:border-slate-800 overflow-hidden min-h-[210px]">
       {content}
     </div>
   );
@@ -264,7 +264,7 @@ const Dashboard = () => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 tracking-tight">
+          <h2 className="text-3xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400 tracking-tight">
             Dashboard Overview
           </h2>
           {currentUser?.role === 'school_admin' && currentUser?.school?.name ? (
@@ -285,7 +285,7 @@ const Dashboard = () => {
             </p>
           )}
         </div>
-        <div className="text-sm font-medium text-slate-500 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm border border-white/50 hover:bg-white transition-colors">
+        <div className="text-sm font-medium text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm border border-white/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 transition-colors">
           {new Date().toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
@@ -554,8 +554,8 @@ const Dashboard = () => {
               return (
                 <div
                   key={day}
-                  className={`h-24 border-r border-b border-slate-100/60 last:border-r-0 p-1 relative transition-colors group cursor-pointer ${
-                    isWeekend ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-white/60'
+                  className={`h-24 border-r border-b border-slate-100/60 dark:border-slate-700/60 last:border-r-0 p-1 relative transition-colors group cursor-pointer ${
+                    isWeekend ? 'bg-red-50/40 dark:bg-red-900/10 hover:bg-red-50/70 dark:hover:bg-red-900/20' : 'hover:bg-white/60 dark:hover:bg-slate-700/60'
                   }`}
                   onClick={() => {
                     if (!hasEvents) return;
@@ -570,8 +570,8 @@ const Dashboard = () => {
                         : hasEvents
                         ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md shadow-indigo-500/20 scale-105'
                         : isWeekend
-                        ? 'text-red-500 group-hover:bg-red-50'
-                        : 'text-slate-500 group-hover:bg-slate-100'
+                        ? 'text-red-500 dark:text-red-400 group-hover:bg-red-50 dark:group-hover:bg-red-900/30'
+                        : 'text-slate-500 dark:text-slate-400 group-hover:bg-slate-100 dark:group-hover:bg-slate-800'
                     }`}
                   >
                     {day}

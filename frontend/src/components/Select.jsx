@@ -67,8 +67,8 @@ export default function Select({ value, onChange, options, className, buttonClas
                 aria-selected={selected}
                 className={
                   'px-3 py-2 text-sm flex items-center justify-between cursor-pointer ' +
-                  (active ? 'bg-gray-100 ' : '') +
-                  (selected ? 'text-gray-900 ' : 'text-gray-700 ')
+                  (active ? 'bg-gray-100 dark:bg-slate-800 ' : '') +
+                  (selected ? 'text-gray-900 dark:text-slate-100 ' : 'text-gray-700 dark:text-slate-300 ')
                 }
                 onMouseEnter={() => setActiveIndex(i)}
                 onClick={() => {

@@ -591,8 +591,8 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
              </button>
 
              {showNotifications && (
-               <div className="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-md shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
-                 <div className="p-3 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
+               <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 rounded-md shadow-lg border border-gray-200 dark:border-slate-700 z-50 max-h-96 overflow-y-auto">
+                 <div className="p-3 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900">
                    <h3 className="font-semibold text-sm">Notifications</h3>
                    {unreadCount > 0 && (
                      <button 
@@ -715,7 +715,7 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
         {/* Main Content */}
         <main 
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth bg-slate-50/50"
+          className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth bg-slate-50/50 dark:bg-slate-950"
           onScroll={handleScroll}
         >
            <div className="min-h-full flex flex-col">
@@ -731,7 +731,7 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                />
              </div>
              <footer
-               className="w-full py-4 px-6 text-sm border-t border-slate-900/40 mt-auto"
+               className="w-full py-4 px-6 text-sm border-t border-slate-900/40 dark:border-slate-700/40 mt-auto"
                style={{ backgroundImage: topBottomBackground }}
              >
                <div className="max-w-6xl mx-auto flex flex-col gap-3">

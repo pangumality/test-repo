@@ -22,21 +22,21 @@
   }
 
   .dark body {
-    @apply bg-slate-900 text-slate-100;
+    @apply bg-slate-950 text-slate-200;
     background-image: 
-      radial-gradient(at 0% 0%, rgba(129, 140, 248, 0.3) 0px, transparent 55%),
-      radial-gradient(at 100% 0%, rgba(244, 114, 182, 0.3) 0px, transparent 55%),
-      radial-gradient(at 100% 100%, rgba(45, 212, 191, 0.25) 0px, transparent 55%);
+      radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.4) 0px, transparent 55%),
+      radial-gradient(at 100% 0%, rgba(15, 23, 42, 0.4) 0px, transparent 55%),
+      radial-gradient(at 100% 100%, rgba(30, 41, 59, 0.4) 0px, transparent 55%);
   }
 
   /* Typography Enhancements */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight text-slate-900 dark:text-white;
+    @apply font-display tracking-tight text-slate-900 dark:text-slate-50;
   }
   
   /* Form Elements */
   input, select, textarea {
-    @apply transition-shadow duration-200 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none;
+    @apply transition-shadow duration-200 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:focus:ring-brand-500/40;
   }
 }
 
@@ -46,7 +46,7 @@
   }
   
   .glass-dark {
-    @apply dark:bg-slate-900/70 dark:backdrop-blur-lg dark:border-white/5 dark:shadow-glass;
+    @apply dark:bg-slate-900/80 dark:backdrop-blur-xl dark:border-white/10 dark:shadow-xl;
   }
 
   .card-hover {
