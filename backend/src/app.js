@@ -10,7 +10,6 @@ import { requirePermission, requirePermissionOrDepartmentStaff } from './middlew
 import { PERMISSIONS, ROLES } from './config/rbac.js';
 import { logAudit } from './utils/auditLogger.js';
 import { getDepartmentStaff, setDepartmentStaff, listDepartments } from './config/departmentsStore.js';
-import { getRadioPrograms, saveRadioPrograms } from './config/radioStore.js';
 import { createNotification, createBulkNotifications } from './utils/notification.js';
 import { upload } from './middleware/uploadMiddleware.js';
 import path from 'path';
@@ -3024,10 +3023,14 @@ app.get('/api/radio/programs', authenticate, async (req, res) => {
   try {
     const { schoolId } = req.user;
     if (!schoolId) return res.json([]);
-    const programs = getRadioPrograms(schoolId);
+    const programs = await prisma.radioProgram.findMany({
+      where: { schoolId },
+      orderBy: { startMinute: 'asc' },
+    });
     res.json(programs);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch radio programs' });
+    console.error('Failed to fetch radio programs', error);
+    res.status(500).json({ error: error?.message || 'Failed to fetch radio programs' });
   }
 });
 
@@ -3056,17 +3059,18 @@ app.post(
         return res.status(400).json({ error: 'Invalid durationMinutes' });
       }
 
-      const existing = getRadioPrograms(schoolId);
       const id = randomUUID();
-      const program = {
-        id,
-        title,
-        description: description || '',
-        text: text || '',
-        startMinute: start,
-        durationMinutes: duration,
-      };
-      const saved = saveRadioPrograms(schoolId, [...existing, program]);
+      const program = await prisma.radioProgram.create({
+        data: {
+          id,
+          schoolId,
+          title,
+          description: description || '',
+          text: text || '',
+          startMinute: start,
+          durationMinutes: duration,
+        },
+      });
       await logAudit(req.user.id, 'CREATE', 'radio_program', { id, title });
       res.status(201).json(program);
     } catch (error) {
@@ -3089,38 +3093,39 @@ app.put(
       }
 
       const { title, description, text, startMinute, durationMinutes } = req.body || {};
-      const existing = getRadioPrograms(schoolId);
-      const index = existing.findIndex((p) => p.id === id);
-      if (index === -1) {
+      const existing = await prisma.radioProgram.findFirst({
+        where: { id, schoolId },
+      });
+      if (!existing) {
         return res.status(404).json({ error: 'Radio program not found' });
       }
 
-      const original = existing[index];
-      const next = { ...original };
+      const data = {};
 
-      if (title !== undefined) next.title = title;
-      if (description !== undefined) next.description = description;
-      if (text !== undefined) next.text = text;
+      if (title !== undefined) data.title = title;
+      if (description !== undefined) data.description = description;
+      if (text !== undefined) data.text = text;
       if (startMinute !== undefined) {
         const start = Number(startMinute);
         if (!Number.isFinite(start) || start < 0 || start >= 24 * 60) {
           return res.status(400).json({ error: 'Invalid startMinute' });
         }
-        next.startMinute = start;
+        data.startMinute = start;
       }
       if (durationMinutes !== undefined) {
         const duration = Number(durationMinutes);
         if (!Number.isFinite(duration) || duration <= 0) {
           return res.status(400).json({ error: 'Invalid durationMinutes' });
         }
-        next.durationMinutes = duration;
+        data.durationMinutes = duration;
       }
 
-      const updatedList = [...existing];
-      updatedList[index] = next;
-      saveRadioPrograms(schoolId, updatedList);
-      await logAudit(req.user.id, 'UPDATE', 'radio_program', { id, title: next.title });
-      res.json(next);
+      const updated = await prisma.radioProgram.update({
+        where: { id },
+        data,
+      });
+      await logAudit(req.user.id, 'UPDATE', 'radio_program', { id, title: updated.title });
+      res.json(updated);
     } catch (error) {
       console.error('Failed to update radio program', error);
       res.status(500).json({ error: 'Failed to update radio program' });
@@ -3140,15 +3145,17 @@ app.delete(
         return res.status(400).json({ error: 'Missing school context' });
       }
 
-      const existing = getRadioPrograms(schoolId);
-      const index = existing.findIndex((p) => p.id === id);
-      if (index === -1) {
+      const existing = await prisma.radioProgram.findFirst({
+        where: { id, schoolId },
+      });
+      if (!existing) {
         return res.status(404).json({ error: 'Radio program not found' });
       }
 
-      const [removed] = existing.splice(index, 1);
-      saveRadioPrograms(schoolId, existing);
-      await logAudit(req.user.id, 'DELETE', 'radio_program', { id, title: removed?.title });
+      await prisma.radioProgram.delete({
+        where: { id },
+      });
+      await logAudit(req.user.id, 'DELETE', 'radio_program', { id, title: existing.title });
       res.json({ success: true });
     } catch (error) {
       console.error('Failed to delete radio program', error);
