@@ -545,7 +545,7 @@ export default function ELearning() {
             {subjects.map((s, index) => (
               <Link
                 key={s.id}
-                to={`/e-learning/${s.id}`}
+                to={`/dashboard/e-learning/${s.id}`}
                 className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white/70 transition-all duration-300 shadow-sm hover:shadow-lg flex items-center justify-between px-4 py-4"
               >
                 <div className="flex items-center gap-3">

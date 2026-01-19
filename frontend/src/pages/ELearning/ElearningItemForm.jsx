@@ -254,7 +254,7 @@ export default function ElearningItemForm() {
             <div className="pt-4 flex items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => navigate(`/e-learning/${subjectId}`)}
+                onClick={() => navigate(`/dashboard/e-learning/${subjectId}`)}
                 className="px-6 py-2.5 text-gray-600 font-medium hover:bg-gray-50 rounded-lg transition-colors"
               >
                 Cancel

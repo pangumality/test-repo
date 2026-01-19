@@ -66,7 +66,7 @@ export default function TakeExam() {
     try {
       await api.post(`/student/papers/${paperId}/submit`, { answers });
       alert(auto ? 'Time is up! Exam submitted automatically.' : 'Exam submitted successfully!');
-      navigate('/student/exams');
+      navigate('/dashboard/student/exams');
     } catch (error) {
       console.error('Submission failed', error);
       alert('Failed to submit exam. Please try again.');

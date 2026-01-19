@@ -58,24 +58,24 @@ const MobileDashboardHome = ({ currentUser, currencyConfig, formatCurrencyFromBa
   }, [currentUser]);
 
   const menuItems = [
-    { icon: CreditCard, label: 'Pay Fees', to: '/finance', excludedRoles: ['teacher'] },
-    { icon: Calendar, label: 'Attendance', to: '/attendance' },
-    { icon: BookOpen, label: 'Subjects', to: '/subjects' },
-    { icon: BookOpen, label: 'Learn @ Home', to: '/library', excludedRoles: ['teacher'] }, // Using Library as placeholder
-    { icon: Users, label: 'Teachers', to: '/teachers', excludedRoles: ['teacher'] },
-    { icon: Activity, label: 'Time-Table', to: '/classes' }, // Placeholder
-    { icon: MessageSquare, label: 'Messages', to: '/messages' },
-    { icon: BookOpen, label: 'Study Material', to: '/library', excludedRoles: ['teacher'] },
-    { icon: Radio, label: 'E-Learning', to: '/radio' },
-    { icon: Calendar, label: 'Datesheet', to: '/exams' },
+    { icon: CreditCard, label: 'Pay Fees', to: '/dashboard/finance', excludedRoles: ['teacher'] },
+    { icon: Calendar, label: 'Attendance', to: '/dashboard/attendance' },
+    { icon: BookOpen, label: 'Subjects', to: '/dashboard/subjects' },
+    { icon: BookOpen, label: 'Learn @ Home', to: '/dashboard/library', excludedRoles: ['teacher'] }, // Using Library as placeholder
+    { icon: Users, label: 'Teachers', to: '/dashboard/teachers', excludedRoles: ['teacher'] },
+    { icon: Activity, label: 'Time-Table', to: '/dashboard/classes' }, // Placeholder
+    { icon: MessageSquare, label: 'Messages', to: '/dashboard/messages' },
+    { icon: BookOpen, label: 'Study Material', to: '/dashboard/library', excludedRoles: ['teacher'] },
+    { icon: Radio, label: 'E-Learning', to: '/dashboard/radio' },
+    { icon: Calendar, label: 'Datesheet', to: '/dashboard/exams' },
     { icon: Calendar, label: 'Activity Calendar', to: '/dashboard' }, // Placeholder
-    { icon: Newspaper, label: 'Newsletter', to: '/newsletters' },
-    { icon: Trophy, label: 'Events', to: '/sports', excludedRoles: ['teacher'] },
-    { icon: ImageIcon, label: 'Gallery', to: '/gallery' },
-    { icon: GraduationCap, label: 'Class Remarks', to: '/students' },
-    { icon: Bus, label: 'Transport', to: '/transport', excludedRoles: ['teacher'] },
-    { icon: Users, label: 'Group Studies', to: '/group-studies' },
-    { icon: Home, label: 'Hostel', to: '/hostel', excludedRoles: ['teacher'] },
+    { icon: Newspaper, label: 'Newsletter', to: '/dashboard/newsletters' },
+    { icon: Trophy, label: 'Events', to: '/dashboard/sports', excludedRoles: ['teacher'] },
+    { icon: ImageIcon, label: 'Gallery', to: '/dashboard/gallery' },
+    { icon: GraduationCap, label: 'Class Remarks', to: '/dashboard/students' },
+    { icon: Bus, label: 'Transport', to: '/dashboard/transport', excludedRoles: ['teacher'] },
+    { icon: Users, label: 'Group Studies', to: '/dashboard/group-studies' },
+    { icon: Home, label: 'Hostel', to: '/dashboard/hostel', excludedRoles: ['teacher'] },
   ];
 
   return (

@@ -337,7 +337,7 @@ export default function Subject() {
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 text-white">
         <div className="flex items-center gap-3 mb-6">
-          <Link to="/e-learning" className="p-2 bg-white/10 hover:bg-white/20 rounded-full">
+          <Link to="/dashboard/e-learning" className="p-2 bg-white/10 hover:bg-white/20 rounded-full">
             <ArrowLeft size={20} className="text-white" />
           </Link>
           <div>
@@ -442,8 +442,8 @@ export default function Subject() {
             title="Class Work"
             icon={Briefcase}
             classes={classes}
-            onAdd={() => navigate(`/e-learning/${subjectId}/class-work/form`)}
-            onEdit={(item) => navigate(`/e-learning/${subjectId}/class-work/form?id=${item.id}`)}
+            onAdd={() => navigate(`/dashboard/e-learning/${subjectId}/class-work/form`)}
+            onEdit={(item) => navigate(`/dashboard/e-learning/${subjectId}/class-work/form?id=${item.id}`)}
             fields={[
               { name: 'title', label: 'Title', required: true },
               { name: 'description', label: 'Description', type: 'textarea' },
@@ -514,8 +514,8 @@ export default function Subject() {
             title="Syllabus"
             icon={FileText}
             classes={classes}
-            onAdd={() => navigate(`/e-learning/${subjectId}/syllabus/form`)}
-            onEdit={(item) => navigate(`/e-learning/${subjectId}/syllabus/form?id=${item.id}`)}
+            onAdd={() => navigate(`/dashboard/e-learning/${subjectId}/syllabus/form`)}
+            onEdit={(item) => navigate(`/dashboard/e-learning/${subjectId}/syllabus/form?id=${item.id}`)}
             fields={[
               { name: 'title', label: 'Title', required: true },
               { name: 'term', label: 'Term (e.g. First Term)' },

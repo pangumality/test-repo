@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
@@ -10,6 +10,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem('authToken')) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,7 +40,7 @@ const Login = () => {
       localStorage.setItem('current_demo_user_id', user.id);
       
       // Redirect
-      navigate('/');
+      navigate('/dashboard');
       
       // Force reload to ensure context picks up new user (simple way for now)
       window.location.reload();
