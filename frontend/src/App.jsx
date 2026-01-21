@@ -25,6 +25,7 @@ import Departments from './pages/Departments';
 import GroupStudies from './pages/GroupStudies';
 import LiveRoom from './pages/GroupStudies/LiveRoom';
 import Inventory from './pages/Inventory';
+import Academic from './pages/Academic';
 import Schools from './pages/Schools';
 import SchoolDetails from './pages/Schools/SchoolDetails';
 import Subjects from './pages/Subjects';
@@ -128,6 +129,12 @@ function App({ theme, setTheme }) {
           <Route path="inventory" element={
             <RequireRole roles={['admin', 'school_admin', 'teacher']}>
               <Inventory />
+            </RequireRole>
+          } />
+
+          <Route path="academic" element={
+            <RequireRole roles={['admin', 'school_admin', 'teacher', 'student']}>
+              <Academic />
             </RequireRole>
           } />
 

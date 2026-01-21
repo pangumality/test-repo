@@ -19,14 +19,14 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  // Accept images and documents (pdf, doc, docx, xls, xlsx, ppt, pptx)
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|pdf|doc|docx|xls|xlsx|ppt|pptx)$/i)) {
-    return cb(new Error('Only images and document files (pdf, doc, docx, xls, xlsx, ppt, pptx) are allowed!'), false);
+  // Accept Excel/CSV files
+  if (!file.originalname.match(/\.(xlsx|xls|csv)$/)) {
+    return cb(new Error('Only Excel or CSV files are allowed!'), false);
   }
   cb(null, true);
 };
 
-export const upload = multer({ 
+export const uploadExcel = multer({ 
   storage: storage,
   fileFilter: fileFilter,
   limits: {

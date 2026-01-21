@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, FileText, Edit2, Volume2, Play, Pause, StopCircle, Calendar, Image as ImageIcon, BookOpen, Clock, Briefcase, List, Bot } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, FileText, Edit2, Volume2, Play, Pause, StopCircle, Calendar, Image as ImageIcon, BookOpen, Clock, Briefcase, List, Bot, Download } from 'lucide-react';
 import api from '../../utils/api';
 import AITutor from './components/AITutor';
 
@@ -46,12 +46,20 @@ const GenericCrud = ({
       setLoading(true);
       setError(null);
       console.log(`Fetching ${endpoint} for subjectId: ${subjectId}`);
-      const { data } = await api.get(`/${endpoint}?subjectId=${subjectId}`);
+      const url = endpoint.includes('?') 
+        ? `/${endpoint}&subjectId=${subjectId}`
+        : `/${endpoint}?subjectId=${subjectId}`;
+      const { data } = await api.get(url);
       console.log(`Fetched ${data.length} items for ${endpoint}`);
       setItems(data);
     } catch (error) {
       console.error(`Failed to fetch ${endpoint}:`, error);
-      setError('Failed to load items. Please try refreshing.');
+      // If 404 (not found), just treat as empty
+      if (error.response && error.response.status === 404) {
+          setItems([]);
+      } else {
+          setError('Failed to load items.');
+      }
     } finally {
       setLoading(false);
     }
@@ -60,10 +68,11 @@ const GenericCrud = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const [base] = endpoint.split('?');
       if (editingItem) {
-        await api.put(`/${endpoint}/${editingItem.id}`, { ...formData, subjectId });
+        await api.put(`/${base}/${editingItem.id}`, { ...formData, subjectId });
       } else {
-        await api.post(`/${endpoint}`, { ...formData, subjectId });
+        await api.post(`/${base}`, { ...formData, subjectId });
       }
       setShowModal(false);
       setEditingItem(null);
@@ -78,7 +87,8 @@ const GenericCrud = ({
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure?')) return;
     try {
-      await api.delete(`/${endpoint}/${id}`);
+      const [base] = endpoint.split('?');
+      await api.delete(`/${base}/${id}`);
       fetchItems();
     } catch (error) {
       console.error('Failed to delete:', error);
@@ -227,6 +237,7 @@ export default function Subject() {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [newNote, setNewNote] = useState({ title: '', content: '' });
+  const [file, setFile] = useState(null);
 
   // Exams state
   const [exams, setExams] = useState([]);
@@ -251,10 +262,11 @@ export default function Subject() {
       const isAdmin = user?.role === 'admin' || user?.role === 'school_admin';
       setCanManage(isAdmin || isTeacher);
 
-      const { data: notesData } = await api.get(`/class-notes?subjectId=${subjectId}`);
+      // Student filtering is now handled by the backend
+      const { data: notesData } = await api.get(`/academic/notes?subjectId=${subjectId}`);
       setNotes(notesData);
       
-      const { data: examsData } = await api.get('/exams');
+      const { data: examsData } = await api.get('/academic/exams');
       setExams(examsData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -274,15 +286,26 @@ export default function Subject() {
   const handleNoteSubmit = async (e) => {
     e.preventDefault();
     try {
+      let attachments = [];
+      if (file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const upRes = await api.post('/academic/upload', formData);
+        if (upRes.data.url) {
+            attachments.push({ name: file.name, url: upRes.data.url });
+        }
+      }
+
       if (editingNoteId) {
-        await api.put(`/class-notes/${editingNoteId}`, { ...newNote, subjectId });
+        await api.put(`/academic/notes/${editingNoteId}`, { ...newNote, subjectId, attachments });
       } else {
-        await api.post('/class-notes', { ...newNote, subjectId });
+        await api.post('/academic/notes', { ...newNote, subjectId, attachments });
       }
       setNewNote({ title: '', content: '' });
+      setFile(null);
       setEditingNoteId(null);
       setShowNoteModal(false);
-      const { data } = await api.get(`/class-notes?subjectId=${subjectId}`);
+      const { data } = await api.get(`/academic/notes?subjectId=${subjectId}`);
       setNotes(data);
     } catch (error) {
       alert('Failed to save note');
@@ -292,8 +315,8 @@ export default function Subject() {
   const handleNoteDelete = async (id) => {
     if (!window.confirm('Are you sure?')) return;
     try {
-      await api.delete(`/class-notes/${id}`);
-      const { data } = await api.get(`/class-notes?subjectId=${subjectId}`);
+      await api.delete(`/academic/notes/${id}`);
+      const { data } = await api.get(`/academic/notes?subjectId=${subjectId}`);
       setNotes(data);
     } catch (error) {
       console.error(error);
@@ -304,7 +327,7 @@ export default function Subject() {
   const handleCreateExam = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/exams', newExam);
+      const res = await api.post('/academic/exams', newExam);
       const created = res.data;
       setShowExamModal(false);
       setNewExam({ name: '', term: '', year: new Date().getFullYear() });
@@ -349,10 +372,11 @@ export default function Subject() {
         {/* Tabs */}
         <div className="flex flex-wrap gap-2">
           <TabButton active={activeTab === 'notes'} onClick={() => setActiveTab('notes')} icon={FileText} label="Notes" />
-          <TabButton active={activeTab === 'class-work'} onClick={() => setActiveTab('class-work')} icon={Briefcase} label="Class Work" />
+          <TabButton active={activeTab === 'assignments'} onClick={() => setActiveTab('assignments')} icon={Briefcase} label="Assignments" />
           <TabButton active={activeTab === 'homework'} onClick={() => setActiveTab('homework')} icon={BookOpen} label="Homework" />
           <TabButton active={activeTab === 'syllabus'} onClick={() => setActiveTab('syllabus')} icon={FileText} label="Syllabus" />
-          <TabButton active={activeTab === 'exams'} onClick={() => setActiveTab('exams')} icon={Edit2} label="Exams" />
+          <TabButton active={activeTab === 'exams'} onClick={() => setActiveTab('exams')} icon={Edit2} label="Exam" />
+          <TabButton active={activeTab === 'past-papers'} onClick={() => setActiveTab('past-papers')} icon={FileText} label="Past Papers" />
           <TabButton active={activeTab === 'ai-tutor'} onClick={() => setActiveTab('ai-tutor')} icon={Bot} label="AI Tutor" />
         </div>
       </div>
@@ -406,6 +430,15 @@ export default function Subject() {
                      <button onClick={() => speakNote(note)} className="text-indigo-600 hover:text-indigo-800"><Volume2 size={18}/></button>
                    </div>
                    <p className="text-gray-600 text-sm line-clamp-3 whitespace-pre-wrap">{note.content}</p>
+                   {note.attachments && note.attachments.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-gray-100 flex flex-wrap gap-2">
+                             {note.attachments.map((att, idx) => (
+                                <a key={idx} href={att.url} target="_blank" download className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors">
+                                    <Download size={14} /> {att.name || 'Download File'}
+                                </a>
+                             ))}
+                        </div>
+                   )}
                    {canManage && (
                       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded shadow-sm">
                         <button onClick={() => { setEditingNoteId(note.id); setNewNote({title: note.title, content: note.content}); setShowNoteModal(true); }} className="p-1 text-blue-600"><Edit2 size={14}/></button>
@@ -422,6 +455,10 @@ export default function Subject() {
                     <h2 className="text-xl font-bold mb-4">{editingNoteId ? 'Edit Note' : 'Add Note'}</h2>
                     <form onSubmit={handleNoteSubmit}>
                       <input className="w-full mb-4 px-3 py-2 border rounded-lg" placeholder="Title" value={newNote.title} onChange={e => setNewNote({...newNote, title: e.target.value})} required />
+                      <div className="mb-4">
+                        <label className="block text-sm text-gray-600 mb-1">Upload File (Optional)</label>
+                        <input type="file" className="w-full px-3 py-2 border rounded-lg" onChange={e => setFile(e.target.files[0])} />
+                      </div>
                       <textarea className="w-full mb-4 px-3 py-2 border rounded-lg h-32" placeholder="Content" value={newNote.content} onChange={e => setNewNote({...newNote, content: e.target.value})} required />
                       <div className="flex justify-end gap-2">
                         <button type="button" onClick={() => setShowNoteModal(false)} className="px-4 py-2 text-gray-600">Cancel</button>
@@ -434,12 +471,12 @@ export default function Subject() {
           </div>
         )}
 
-        {activeTab === 'class-work' && (
+        {activeTab === 'assignments' && (
           <GenericCrud
-            endpoint="class-work"
+            endpoint="academic/assignments?type=classwork"
             subjectId={subjectId}
             canManage={canManage}
-            title="Class Work"
+            title="Assignments"
             icon={Briefcase}
             classes={classes}
             onAdd={() => navigate(`/dashboard/e-learning/${subjectId}/class-work/form`)}
@@ -455,6 +492,15 @@ export default function Subject() {
                 <h4 className="font-semibold text-gray-800">{item.title}</h4>
                 <div className="text-xs text-gray-500 mb-2">{new Date(item.date).toLocaleDateString()}</div>
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{item.description}</p>
+                {item.attachments && item.attachments.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-gray-100 flex flex-wrap gap-2">
+                         {item.attachments.map((att, idx) => (
+                            <a key={idx} href={att.url} target="_blank" download className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors">
+                                <Download size={14} /> {att.name || 'Download File'}
+                            </a>
+                         ))}
+                    </div>
+                )}
                 {item.questions && Array.isArray(item.questions) && item.questions.length > 0 && (
                    <div className="mt-3 pt-2 border-t border-gray-100">
                      <p className="text-xs font-semibold text-gray-500 mb-2">Questions:</p>
@@ -472,7 +518,7 @@ export default function Subject() {
 
         {activeTab === 'homework' && (
           <GenericCrud
-            endpoint="homework"
+            endpoint="academic/assignments?type=homework"
             subjectId={subjectId}
             canManage={canManage}
             title="Homework"
@@ -491,6 +537,15 @@ export default function Subject() {
                 <h4 className="font-semibold text-gray-800">{item.title}</h4>
                 <div className="text-xs text-red-500 mb-2">Due: {new Date(item.dueDate).toLocaleDateString()}</div>
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{item.description}</p>
+                {item.attachments && item.attachments.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-gray-100 flex flex-wrap gap-2">
+                         {item.attachments.map((att, idx) => (
+                            <a key={idx} href={att.url} target="_blank" download className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors">
+                                <Download size={14} /> {att.name || 'Download File'}
+                            </a>
+                         ))}
+                    </div>
+                )}
                 {item.questions && Array.isArray(item.questions) && item.questions.length > 0 && (
                    <div className="mt-3 pt-2 border-t border-gray-100">
                      <p className="text-xs font-semibold text-gray-500 mb-2">Questions:</p>
@@ -508,7 +563,7 @@ export default function Subject() {
 
         {activeTab === 'syllabus' && (
           <GenericCrud
-            endpoint="syllabus"
+            endpoint="academic/syllabus?type=SYLLABUS"
             subjectId={subjectId}
             canManage={canManage}
             title="Syllabus"
@@ -529,6 +584,44 @@ export default function Subject() {
                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">{item.term}</span>
                 </div>
                 <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap">{item.content}</p>
+                {item.fileUrl && (
+                    <a href={item.fileUrl} target="_blank" download className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors">
+                        <Download size={14} /> Download File
+                    </a>
+                )}
+              </div>
+            )}
+          />
+        )}
+
+        {activeTab === 'past-papers' && (
+          <GenericCrud
+            endpoint="academic/syllabus?type=PAST_PAPER"
+            subjectId={subjectId}
+            canManage={canManage}
+            title="Past Papers"
+            icon={FileText}
+            classes={classes}
+            onAdd={() => navigate(`/dashboard/e-learning/${subjectId}/past-paper/form`)}
+            onEdit={(item) => navigate(`/dashboard/e-learning/${subjectId}/past-paper/form?id=${item.id}`)}
+            fields={[
+              { name: 'title', label: 'Title', required: true },
+              { name: 'term', label: 'Term/Year' },
+              { name: 'content', label: 'Description', type: 'textarea' },
+              { name: 'classId', label: 'Class (Optional)', type: 'select' }
+            ]}
+            renderItem={(item) => (
+              <div>
+                <div className="flex justify-between">
+                   <h4 className="font-semibold text-gray-800">{item.title}</h4>
+                   <span className="text-xs bg-gray-100 px-2 py-1 rounded">{item.term}</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap">{item.content}</p>
+                {item.fileUrl && (
+                    <a href={item.fileUrl} target="_blank" download className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors">
+                        <Download size={14} /> Download Paper
+                    </a>
+                )}
               </div>
             )}
           />

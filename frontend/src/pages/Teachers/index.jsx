@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import api from '../../utils/api';
+import Toast from '../../components/Toast';
 
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -17,6 +18,47 @@ export default function Teachers() {
   const [classes, setClasses] = useState([]);
   const [assignClassId, setAssignClassId] = useState('');
   const [assignSubjectId, setAssignSubjectId] = useState('');
+  const fileInputRef = useRef(null);
+  const [toast, setToast] = useState(null); // { message, type }
+
+  const handleBulkUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!window.confirm(`Upload ${file.name}? This will create teachers from the Excel file.`)) {
+        e.target.value = '';
+        return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await api.post('/teachers/bulk-upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const { results } = res.data;
+      const msg = `Upload Complete! Success: ${results.success}, Failed: ${results.failed}`;
+      setToast({ message: msg, type: results.failed > 0 ? 'error' : 'success' });
+      
+      if (results.errors.length > 0) {
+        console.table(results.errors);
+      }
+      fetchTeachers();
+    } catch (err) {
+      console.error('Bulk upload failed', err);
+      setToast({ message: 'Bulk upload failed: ' + (err.response?.data?.error || err.message), type: 'error' });
+    } finally {
+      setLoading(false);
+      e.target.value = '';
+    }
+  };
 
   const fetchTeachers = async () => {
     setLoading(true);
@@ -159,6 +201,13 @@ export default function Teachers() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
       <h2 className="text-xl font-bold text-gray-700 uppercase">Teachers</h2>
 
       {error && (
@@ -176,6 +225,20 @@ export default function Teachers() {
           >
             {loading ? 'Processing...' : 'Add Teacher'}
           </button>
+          <button
+            className="px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            onClick={handleBulkUploadClick}
+            disabled={loading}
+          >
+            Bulk Upload
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept=".xlsx,.xls,.csv" 
+            onChange={handleFileChange} 
+          />
           <button
             className="px-3 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
             onClick={fetchTeachers}
