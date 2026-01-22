@@ -24,6 +24,7 @@ import inventoryRoutes from './routes/inventoryRoutes.js';
 import transportRoutes from './routes/transportRoutes.js';
 import schoolRoutes from './routes/schoolRoutes.js';
 import aiTutorRoutes from './routes/aiTutorRoutes.js';
+import radioRoutes from './routes/radioRoutes.js';
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import PDFDocument from 'pdfkit';
@@ -136,6 +137,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api/schools', schoolRoutes);
 app.use('/api/ai-tutor', aiTutorRoutes);
+app.use('/api/radio', radioRoutes);
 
 // Routes
 app.get('/', (req, res) => {
@@ -3019,150 +3021,6 @@ app.post('/api/departments/:name/staff', authenticate, async (req, res) => {
   }
 });
 
-app.get('/api/radio/programs', authenticate, async (req, res) => {
-  try {
-    const { schoolId } = req.user;
-    if (!schoolId) return res.json([]);
-    const programs = await prisma.radioProgram.findMany({
-      where: { schoolId },
-      orderBy: { startMinute: 'asc' },
-    });
-    res.json(programs);
-  } catch (error) {
-    console.error('Failed to fetch radio programs', error);
-    res.status(500).json({ error: error?.message || 'Failed to fetch radio programs' });
-  }
-});
-
-app.post(
-  '/api/radio/programs',
-  authenticate,
-  requirePermissionOrDepartmentStaff(PERMISSIONS.ELEARNING_MANAGE, 'radio'),
-  async (req, res) => {
-    try {
-      const { schoolId } = req.user;
-      if (!schoolId) {
-        return res.status(400).json({ error: 'Missing school context' });
-      }
-
-      const { title, description, text, startMinute, durationMinutes } = req.body || {};
-      if (!title || typeof title !== 'string') {
-        return res.status(400).json({ error: 'title is required' });
-      }
-
-      const start = Number(startMinute);
-      const duration = Number(durationMinutes);
-      if (!Number.isFinite(start) || start < 0 || start >= 24 * 60) {
-        return res.status(400).json({ error: 'Invalid startMinute' });
-      }
-      if (!Number.isFinite(duration) || duration <= 0) {
-        return res.status(400).json({ error: 'Invalid durationMinutes' });
-      }
-
-      const id = randomUUID();
-      const program = await prisma.radioProgram.create({
-        data: {
-          id,
-          schoolId,
-          title,
-          description: description || '',
-          text: text || '',
-          startMinute: start,
-          durationMinutes: duration,
-        },
-      });
-      await logAudit(req.user.id, 'CREATE', 'radio_program', { id, title });
-      res.status(201).json(program);
-    } catch (error) {
-      console.error('Failed to create radio program', error);
-      res.status(500).json({ error: 'Failed to create radio program' });
-    }
-  }
-);
-
-app.put(
-  '/api/radio/programs/:id',
-  authenticate,
-  requirePermissionOrDepartmentStaff(PERMISSIONS.ELEARNING_MANAGE, 'radio'),
-  async (req, res) => {
-    try {
-      const { schoolId } = req.user;
-      const { id } = req.params;
-      if (!schoolId) {
-        return res.status(400).json({ error: 'Missing school context' });
-      }
-
-      const { title, description, text, startMinute, durationMinutes } = req.body || {};
-      const existing = await prisma.radioProgram.findFirst({
-        where: { id, schoolId },
-      });
-      if (!existing) {
-        return res.status(404).json({ error: 'Radio program not found' });
-      }
-
-      const data = {};
-
-      if (title !== undefined) data.title = title;
-      if (description !== undefined) data.description = description;
-      if (text !== undefined) data.text = text;
-      if (startMinute !== undefined) {
-        const start = Number(startMinute);
-        if (!Number.isFinite(start) || start < 0 || start >= 24 * 60) {
-          return res.status(400).json({ error: 'Invalid startMinute' });
-        }
-        data.startMinute = start;
-      }
-      if (durationMinutes !== undefined) {
-        const duration = Number(durationMinutes);
-        if (!Number.isFinite(duration) || duration <= 0) {
-          return res.status(400).json({ error: 'Invalid durationMinutes' });
-        }
-        data.durationMinutes = duration;
-      }
-
-      const updated = await prisma.radioProgram.update({
-        where: { id },
-        data,
-      });
-      await logAudit(req.user.id, 'UPDATE', 'radio_program', { id, title: updated.title });
-      res.json(updated);
-    } catch (error) {
-      console.error('Failed to update radio program', error);
-      res.status(500).json({ error: 'Failed to update radio program' });
-    }
-  }
-);
-
-app.delete(
-  '/api/radio/programs/:id',
-  authenticate,
-  requirePermissionOrDepartmentStaff(PERMISSIONS.ELEARNING_MANAGE, 'radio'),
-  async (req, res) => {
-    try {
-      const { schoolId } = req.user;
-      const { id } = req.params;
-      if (!schoolId) {
-        return res.status(400).json({ error: 'Missing school context' });
-      }
-
-      const existing = await prisma.radioProgram.findFirst({
-        where: { id, schoolId },
-      });
-      if (!existing) {
-        return res.status(404).json({ error: 'Radio program not found' });
-      }
-
-      await prisma.radioProgram.delete({
-        where: { id },
-      });
-      await logAudit(req.user.id, 'DELETE', 'radio_program', { id, title: existing.title });
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Failed to delete radio program', error);
-      res.status(500).json({ error: 'Failed to delete radio program' });
-    }
-  }
-);
 // Helper to find people to message
 app.get('/api/recipients', authenticate, async (req, res) => {
     try {
