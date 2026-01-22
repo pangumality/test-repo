@@ -1,5 +1,12 @@
 import express from 'express';
-import { createProgram, getSchedule, getCurrentProgram, deleteProgram, updateProgram } from '../controllers/radioController.js';
+import {
+  createProgram,
+  getSchedule,
+  getCurrentProgram,
+  getLivePrograms,
+  deleteProgram,
+  updateProgram,
+} from '../controllers/radioController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
 import { getDepartmentStaff } from '../config/departmentsStore.js';
@@ -28,6 +35,7 @@ const requireRadioManage = (req, res, next) => {
 
 // Public/Student routes
 router.get('/current', authenticate, getCurrentProgram);
+router.get('/live', authenticate, getLivePrograms);
 router.get('/schedule', authenticate, getSchedule);
 router.get('/programs', authenticate, getSchedule);
 
