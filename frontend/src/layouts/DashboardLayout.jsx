@@ -115,6 +115,7 @@ const MENU_ITEMS = [
   { icon: Trophy, label: 'Sports', to: '/dashboard/sports', excludedRoles: ['student','teacher','parent'] },
   { icon: Users, label: 'Group Studies', to: '/dashboard/group-studies', allowedRoles: ['student','teacher','admin','school_admin'] },
   { icon: Package, label: 'Inventory', to: '/dashboard/inventory', departmentKey: 'inventory' },
+  { icon: BookOpen, label: 'Academic', to: '/dashboard/academic', allowedRoles: ['student', 'teacher', 'school_admin', 'admin'] },
   { icon: Shield, label: 'Departments', to: '/dashboard/departments', allowedRoles: ['school_admin'] },
 ];
 

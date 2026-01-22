@@ -1,9 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model AttendanceRecord {
@@ -58,6 +60,7 @@ model ClassNote {
   classId   String?
   title     String
   content   String
+  attachments Json?
   createdAt DateTime @default(now())
   klass     Class?   @relation(fields: [classId], references: [id])
   school    School   @relation(fields: [schoolId], references: [id])
@@ -602,6 +605,7 @@ model Syllabus {
   content   String?
   fileUrl   String?
   term      String?
+  type      String?  @default("SYLLABUS") // SYLLABUS, PAST_PAPER
   createdAt DateTime @default(now())
   klass     Class?   @relation(fields: [classId], references: [id])
   school    School   @relation(fields: [schoolId], references: [id])

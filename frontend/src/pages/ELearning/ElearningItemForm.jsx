@@ -10,6 +10,7 @@ export default function ElearningItemForm() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({});
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState([]);
   const [error, setError] = useState('');
@@ -19,33 +20,51 @@ export default function ElearningItemForm() {
   const config = {
     'class-work': {
       title: 'Class Work',
-      endpoint: 'class-work',
+      endpoint: 'academic/assignments',
+      extraPayload: { type: 'classwork' },
       fields: [
         { name: 'title', label: 'Title', required: true },
         { name: 'description', label: 'Description', type: 'textarea' },
         { name: 'questions', label: 'Questions', type: 'questions' },
         { name: 'date', label: 'Date', type: 'date', required: true },
+        { name: 'file', label: 'Upload File (Optional)', type: 'file' },
         { name: 'classId', label: 'Class (Optional)', type: 'select' }
       ]
     },
     'homework': {
       title: 'Homework',
-      endpoint: 'homework',
+      endpoint: 'academic/assignments',
+      extraPayload: { type: 'homework' },
       fields: [
         { name: 'title', label: 'Title', required: true },
         { name: 'description', label: 'Description', type: 'textarea' },
         { name: 'questions', label: 'Questions', type: 'questions' },
         { name: 'dueDate', label: 'Due Date', type: 'date', required: true },
+        { name: 'file', label: 'Upload File (Optional)', type: 'file' },
         { name: 'classId', label: 'Class (Optional)', type: 'select' }
       ]
     },
     'syllabus': {
       title: 'Syllabus',
-      endpoint: 'syllabus',
+      endpoint: 'academic/syllabus',
+      extraPayload: { type: 'SYLLABUS' },
       fields: [
         { name: 'title', label: 'Title', required: true },
         { name: 'term', label: 'Term (e.g. First Term)' },
         { name: 'content', label: 'Topics', type: 'textarea', required: true },
+        { name: 'file', label: 'Upload File (Optional)', type: 'file' },
+        { name: 'classId', label: 'Class (Optional)', type: 'select' }
+      ]
+    },
+    'past-paper': {
+      title: 'Past Paper',
+      endpoint: 'academic/syllabus',
+      extraPayload: { type: 'PAST_PAPER' },
+      fields: [
+        { name: 'title', label: 'Title', required: true },
+        { name: 'term', label: 'Term/Year' },
+        { name: 'content', label: 'Description', type: 'textarea' },
+        { name: 'file', label: 'Upload File (Optional)', type: 'file' },
         { name: 'classId', label: 'Class (Optional)', type: 'select' }
       ]
     }
@@ -102,7 +121,27 @@ export default function ElearningItemForm() {
 
     try {
       const payload = { ...formData, subjectId };
+      if (currentConfig.extraPayload) {
+        Object.assign(payload, currentConfig.extraPayload);
+      }
       
+      // Handle file upload
+      if (file) {
+        const data = new FormData();
+        data.append('image', file);
+        const upRes = await api.post('/academic/upload', data);
+        if (upRes.data.url) {
+            // For syllabus/past-paper
+            if (currentConfig.endpoint === 'academic/syllabus') {
+                payload.fileUrl = upRes.data.url;
+            }
+            // For assignments
+            if (currentConfig.endpoint === 'academic/assignments') {
+                payload.attachments = [{ name: file.name, url: upRes.data.url }];
+            }
+        }
+      }
+
       // Ensure dates are ISO strings for Prisma
       if (payload.date) payload.date = new Date(payload.date).toISOString();
       if (payload.dueDate) payload.dueDate = new Date(payload.dueDate).toISOString();
@@ -238,6 +277,12 @@ export default function ElearningItemForm() {
                       ▼
                     </div>
                   </div>
+                ) : field.type === 'file' ? (
+                  <input
+                    type="file"
+                    onChange={(e) => setFile(e.target.files[0])}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
                 ) : (
                   <input
                     type={field.type || 'text'}

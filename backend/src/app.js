@@ -24,10 +24,14 @@ import inventoryRoutes from './routes/inventoryRoutes.js';
 import transportRoutes from './routes/transportRoutes.js';
 import schoolRoutes from './routes/schoolRoutes.js';
 import aiTutorRoutes from './routes/aiTutorRoutes.js';
+import academicRoutes from './routes/academicRoutes.js';
 import radioRoutes from './routes/radioRoutes.js';
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import PDFDocument from 'pdfkit';
+import XLSX from 'xlsx';
+import { uploadExcel } from './middleware/excelUploadMiddleware.js';
+import fs from 'fs';
 
 const app = express();
 
@@ -136,6 +140,7 @@ app.use('/api/group-studies', groupStudyRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api/schools', schoolRoutes);
+app.use('/api/academic', academicRoutes);
 app.use('/api/ai-tutor', aiTutorRoutes);
 app.use('/api/radio', radioRoutes);
 
@@ -722,6 +727,18 @@ app.delete('/api/students/:id', authenticate, requirePermission(PERMISSIONS.STUD
     }
 
     await prisma.$transaction(async (prisma) => {
+       // Delete related records first
+       await prisma.attendanceRecord.deleteMany({ where: { studentId: id } });
+       await prisma.examResult.deleteMany({ where: { studentId: id } });
+       await prisma.parentStudents.deleteMany({ where: { studentId: id } });
+       await prisma.bookIssue.deleteMany({ where: { studentId: id } });
+       await prisma.certificate.deleteMany({ where: { studentId: id } });
+       await prisma.hostelAllocation.deleteMany({ where: { studentId: id } });
+       await prisma.leaveRequest.deleteMany({ where: { studentId: id } });
+       await prisma.payment.deleteMany({ where: { studentId: id } });
+       await prisma.sportTeamMember.deleteMany({ where: { studentId: id } });
+
+       // Finally delete student and user
        await prisma.student.delete({ where: { id } });
        await prisma.user.delete({ where: { id: student.userId } });
     });
@@ -4489,6 +4506,200 @@ app.put('/api/notifications/:id/read', authenticate, async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Failed to mark as read' });
     }
+});
+
+// --- Bulk Uploads ---
+
+app.post('/api/teachers/bulk-upload', authenticate, requirePermission(PERMISSIONS.TEACHER_MANAGE), uploadExcel.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(sheet);
+    
+    const results = { success: 0, failed: 0, errors: [] };
+    const { schoolId } = req.user;
+
+    for (const row of data) {
+      try {
+        const email = row.Email;
+        if (!email) throw new Error('Email is required');
+        
+        let user = await prisma.user.findUnique({ where: { email } });
+        if (user) {
+             throw new Error(`User with email ${email} already exists`);
+        }
+        
+        const password = 'Password@123';
+        user = await prisma.user.create({
+            data: {
+                id: randomUUID(),
+                schoolId,
+                firstName: row.FirstName || 'Unknown',
+                lastName: row.LastName || 'Unknown',
+                email,
+                password,
+                role: 'teacher',
+                phone: row.Phone ? String(row.Phone) : undefined,
+                gender: row.Gender ? row.Gender.toLowerCase() : undefined,
+                isActive: true
+            }
+        });
+
+        await prisma.teacher.create({
+            data: {
+                id: randomUUID(),
+                userId: user.id,
+                employeeNumber: row.EmployeeNumber ? String(row.EmployeeNumber) : undefined,
+                qualifications: row.Qualifications,
+                workExperience: row.WorkExperience
+            }
+        });
+        
+        results.success++;
+      } catch (err) {
+        results.failed++;
+        results.errors.push({ email: row.Email || 'Unknown', error: err.message });
+      }
+    }
+    
+    fs.unlinkSync(req.file.path);
+    res.json({ message: 'Bulk upload processed', results });
+  } catch (error) {
+    console.error('Bulk upload error:', error);
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: 'Failed to process bulk upload' });
+  }
+});
+
+app.post('/api/students/bulk-upload', authenticate, requirePermission(PERMISSIONS.STUDENT_MANAGE), uploadExcel.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(sheet);
+    
+    const results = { success: 0, failed: 0, errors: [] };
+    const { schoolId } = req.user;
+
+    const classes = await prisma.class.findMany({ where: { schoolId } });
+    
+    for (const row of data) {
+      try {
+        const firstName = row.FirstName;
+        const lastName = row.LastName;
+        if (!firstName || !lastName) throw new Error('Name is required');
+        
+        const email = row.Email;
+        if (email) {
+            const existing = await prisma.user.findUnique({ where: { email } });
+            if (existing) throw new Error(`User with email ${email} already exists`);
+        }
+        
+        let classId = null;
+        if (row.Class) {
+            const className = String(row.Class).trim();
+            let cls = classes.find(c => c.name.toLowerCase() === className.toLowerCase());
+            
+            if (!cls) {
+                // Create new class if it doesn't exist
+                cls = await prisma.class.create({
+                    data: {
+                        id: randomUUID(),
+                        schoolId,
+                        name: className
+                    }
+                });
+                // Add to local cache so we don't try to create it again in this loop
+                classes.push(cls);
+            }
+            classId = cls.id;
+        }
+        
+        const user = await prisma.user.create({
+            data: {
+                id: randomUUID(),
+                schoolId,
+                firstName,
+                lastName,
+                email: email || undefined,
+                password: 'Password@123', 
+                role: 'student',
+                phone: row.Phone ? String(row.Phone) : undefined,
+                gender: row.Gender ? row.Gender.toLowerCase() : undefined,
+                isActive: true
+            }
+        });
+
+        const student = await prisma.student.create({
+            data: {
+                id: randomUUID(),
+                userId: user.id,
+                schoolId,
+                classId,
+                section: row.Section ? String(row.Section) : undefined,
+                grade: row.Grade ? String(row.Grade) : undefined,
+                bloodGroup: row.BloodGroup,
+                dateOfBirth: row.DOB ? new Date(row.DOB) : undefined
+            }
+        });
+        
+        if (row.GuardianName && row.GuardianEmail) {
+            let parentUser = await prisma.user.findUnique({ where: { email: row.GuardianEmail } });
+            if (!parentUser) {
+                parentUser = await prisma.user.create({
+                    data: {
+                        id: randomUUID(),
+                        schoolId,
+                        firstName: row.GuardianName.split(' ')[0],
+                        lastName: row.GuardianName.split(' ').slice(1).join(' ') || 'Guardian',
+                        email: row.GuardianEmail,
+                        password: 'Password@123',
+                        role: 'parent',
+                        phone: row.GuardianPhone ? String(row.GuardianPhone) : undefined,
+                        isActive: true
+                    }
+                });
+            }
+            
+            let parent = await prisma.parent.findUnique({ where: { userId: parentUser.id } });
+            if (!parent) {
+                parent = await prisma.parent.create({
+                    data: {
+                        id: randomUUID(),
+                        userId: parentUser.id
+                    }
+                });
+            }
+            
+            await prisma.parentStudents.create({
+                data: {
+                    parentId: parent.id,
+                    studentId: student.id,
+                    relationship: 'Guardian',
+                    isPrimary: true
+                }
+            });
+        }
+
+        results.success++;
+      } catch (err) {
+        results.failed++;
+        results.errors.push({ name: `${row.FirstName} ${row.LastName}`, error: err.message });
+      }
+    }
+    
+    fs.unlinkSync(req.file.path);
+    res.json({ message: 'Bulk upload processed', results });
+  } catch (error) {
+    console.error('Bulk upload error:', error);
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: 'Failed to process bulk upload' });
+  }
 });
 
 // Global Error Handler

@@ -560,3 +560,8 @@
 [2026-01-18T17:30:46.250Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
 [2026-01-18T18:03:06.405Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:radio_program | IP:unknown | Details:{"id":"b7e61438-b6ed-4990-a4f9-e35f98f58d0f","title":"test"}
 [2026-01-18T19:25:54.169Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:CREATE | Resource:radio_program | IP:unknown | Details:{"id":"1ec9cacc-716b-4a9f-8823-9d9fef5e8440","title":"test"}
+[2026-01-21T00:45:37.527Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-21T01:27:04.217Z] User:3a5b69ac-fe7a-496c-8e09-74e1e9d05927 | Action:DELETE | Resource:teacher | IP:unknown | Details:{"id":"a6142255-447f-43ad-9c99-ddf7f9554646"}
+[2026-01-21T02:26:23.952Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
+[2026-01-21T02:46:35.708Z] User:9aca9fbc-8d33-4590-a3bc-f887cc070b59 | Action:CREATE | Resource:class-work | IP:unknown | Details:{"id":"009ce3ab-23de-4484-ac4f-9be57f101f87"}
+[2026-01-21T03:20:05.363Z] User:19a69668-70b0-4e5c-b5c3-2f8a95d2d55f | Action:LOGIN_SUCCESS | Resource:auth | IP:unknown | Details:""
