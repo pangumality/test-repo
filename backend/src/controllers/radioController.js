@@ -465,6 +465,57 @@ export const getCurrentProgram = async (req, res) => {
   }
 };
 
+export const getLivePrograms = async (req, res) => {
+  try {
+    const { schoolId } = req.user;
+    const now = new Date();
+
+    const recentPrograms = await radioFindMany({
+      schoolId,
+      scheduledForGte: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      scheduledForLte: now,
+      orderByScheduledFor: 'desc',
+    });
+
+    const live = [];
+    for (const program of recentPrograms) {
+      const startMs = new Date(program.scheduledFor).getTime();
+      const durationSeconds = Number(program.durationSeconds) || 300;
+      const endMs = startMs + durationSeconds * 1000;
+      if (now.getTime() >= startMs && now.getTime() < endMs) {
+        live.push(program);
+      }
+    }
+
+    const enriched = [];
+    for (const program of live) {
+      let current = program;
+
+      if (current.fileType === 'PDF' && !String(current.content || '').trim() && current.fileUrl) {
+        const diskPath = toUploadsDiskPath(current.fileUrl);
+        if (diskPath && fs.existsSync(diskPath)) {
+          const dataBuffer = fs.readFileSync(diskPath);
+          const extracted = await extractPdfText(dataBuffer);
+          if (String(extracted || '').trim()) {
+            current = { ...current, content: extracted };
+            await radioUpdate({ id: current.id, schoolId, data: { content: extracted } });
+          }
+        }
+      }
+
+      const startMs = new Date(current.scheduledFor).getTime();
+      const durationSeconds = Number(current.durationSeconds) || 300;
+      const offset = Math.max(0, Math.min(durationSeconds, (now.getTime() - startMs) / 1000));
+      enriched.push({ ...current, currentOffset: offset });
+    }
+
+    res.json(enriched);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to get live programs' });
+  }
+};
+
 export const deleteProgram = async (req, res) => {
     try {
         const { id } = req.params;

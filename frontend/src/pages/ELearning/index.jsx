@@ -18,8 +18,17 @@ const toDateTimeLocalValue = (dateLike) => {
 
 const getProgramEnd = (program) => {
   const start = new Date(program.scheduledFor);
-  const durationSeconds = Number(program.durationSeconds) || 0;
+  const durationSeconds = Number(program.durationSeconds) || 300;
   return new Date(start.getTime() + durationSeconds * 1000);
+};
+
+const withComputedOffset = (program, now) => {
+  if (!program) return program;
+  const durationSeconds = Number(program.durationSeconds) || 300;
+  const startMs = new Date(program.scheduledFor).getTime();
+  const offset = Number.isFinite(startMs) ? (now.getTime() - startMs) / 1000 : 0;
+  const currentOffset = Math.max(0, Math.min(durationSeconds, offset));
+  return { ...program, currentOffset };
 };
 
 const formatTimeRange = (program) => {
@@ -52,6 +61,8 @@ export default function ELearning() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentProgram, setCurrentProgram] = useState(null);
+  const [livePrograms, setLivePrograms] = useState([]);
+  const [selectedLiveProgramId, setSelectedLiveProgramId] = useState('');
   const [programs, setPrograms] = useState([]);
   const [loadingPrograms, setLoadingPrograms] = useState(false);
   const [savingProgram, setSavingProgram] = useState(false);
@@ -72,6 +83,7 @@ export default function ELearning() {
   const audioRef = useRef(null);
   const playbackProgramIdRef = useRef(null);
   const ttsStateRef = useRef({ words: [], index: 0, programId: null });
+  const selectedLiveProgramIdRef = useRef('');
 
   const [currentUserRole, setCurrentUserRole] = useState(null);
   const [isRadioDeptStaff, setIsRadioDeptStaff] = useState(false);
@@ -131,7 +143,28 @@ export default function ELearning() {
   }, [selectedDate]);
 
   useEffect(() => {
-    const fetchCurrent = async () => {
+    const fetchLive = async () => {
+      try {
+        const { data } = await api.get('/radio/live');
+        const live = Array.isArray(data) ? data : [];
+        if (live.length > 0) {
+          const preferredId = selectedLiveProgramIdRef.current;
+          const nextId =
+            preferredId && live.some((p) => p.id === preferredId)
+              ? preferredId
+              : live[0].id;
+
+          setLivePrograms(live);
+          setSelectedLiveProgramId(nextId);
+          setCurrentProgram(live.find((p) => p.id === nextId) || null);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+
+      setLivePrograms([]);
+      setSelectedLiveProgramId('');
       try {
         const { data } = await api.get('/radio/current');
         setCurrentProgram(data || null);
@@ -139,10 +172,15 @@ export default function ELearning() {
         setCurrentProgram(null);
       }
     };
-    fetchCurrent();
-    const id = setInterval(fetchCurrent, 15000);
+
+    fetchLive();
+    const id = setInterval(fetchLive, 15000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    selectedLiveProgramIdRef.current = selectedLiveProgramId;
+  }, [selectedLiveProgramId]);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -181,6 +219,13 @@ export default function ELearning() {
     playbackProgramIdRef.current = null;
     setIsPlaying(false);
     setIsPaused(false);
+  };
+
+  const selectLiveProgram = (programId) => {
+    setSelectedLiveProgramId(programId);
+    const picked = livePrograms.find((p) => p.id === programId) || null;
+    setCurrentProgram(picked);
+    setRadioPlaybackError('');
   };
 
   const speakNextChunk = () => {
@@ -320,10 +365,27 @@ export default function ELearning() {
 
     let program = currentProgram;
     try {
-      const { data } = await api.get('/radio/current');
-      if (data) {
-        program = data;
-        setCurrentProgram(data);
+      const { data } = await api.get('/radio/live');
+      const live = Array.isArray(data) ? data : [];
+      if (live.length > 0) {
+        const preferredId = selectedLiveProgramIdRef.current;
+        const nextId =
+          preferredId && live.some((p) => p.id === preferredId)
+            ? preferredId
+            : live[0].id;
+
+        setLivePrograms(live);
+        setSelectedLiveProgramId(nextId);
+        program = live.find((p) => p.id === nextId) || live[0];
+        setCurrentProgram(program);
+      } else {
+        setLivePrograms([]);
+        setSelectedLiveProgramId('');
+        const res = await api.get('/radio/current');
+        if (res.data) {
+          program = res.data;
+          setCurrentProgram(res.data);
+        }
       }
     } catch {
       // ignore
@@ -334,20 +396,25 @@ export default function ELearning() {
       return;
     }
 
-    const effectiveType = inferFileType(program);
+    const programWithOffset =
+      program.currentOffset !== undefined && program.currentOffset !== null
+        ? program
+        : withComputedOffset(program, new Date());
+
+    const effectiveType = inferFileType(programWithOffset);
     if (effectiveType === 'AUDIO') {
-      await startAudio(program);
+      await startAudio(programWithOffset);
       return;
     }
     if (!ttsAvailable) {
       setRadioPlaybackError('Text-to-speech is not supported in this browser.');
       return;
     }
-    if (!String(program.title || '').trim() && !String(program.content || '').trim()) {
+    if (!String(programWithOffset.title || '').trim() && !String(programWithOffset.content || '').trim()) {
       setRadioPlaybackError('This program has no readable text.');
       return;
     }
-    startTts(program);
+    startTts(programWithOffset);
   };
 
   const pauseRadio = () => {
@@ -538,6 +605,38 @@ export default function ELearning() {
 
         <div className="space-y-4">
           <div className="space-y-3">
+            {livePrograms.length > 1 && (
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-semibold text-slate-700 mb-2">Choose a live program</div>
+                <div className="space-y-2">
+                  {livePrograms.map((program) => (
+                    <label
+                      key={program.id}
+                      className="flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="liveProgram"
+                        value={program.id}
+                        checked={(selectedLiveProgramId || currentProgram?.id) === program.id}
+                        onChange={() => selectLiveProgram(program.id)}
+                        className="mt-0.5"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-xs font-semibold text-slate-800 truncate">{program.title}</div>
+                          <div className="text-[10px] text-slate-500 shrink-0">{formatTimeRange(program)}</div>
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                          <FileText size={11} />
+                          <span>{program.fileType || inferFileType(program) || 'PROGRAM'}</span>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             {currentProgram && (
               <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-4">
                 <div className="flex items-center justify-between gap-2 mb-2">
