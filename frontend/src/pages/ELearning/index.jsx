@@ -3,44 +3,55 @@ import { Link } from 'react-router-dom';
 import { Radio, Clock, FileText, Play, Pause, Square } from 'lucide-react';
 import api from '../../utils/api';
 
-const getMinuteOfDay = (date) => date.getHours() * 60 + date.getMinutes();
+const pad2 = (n) => String(n).padStart(2, '0');
 
-const findCurrentShow = (date, schedule) => {
-  const minute = getMinuteOfDay(date);
-  const sorted = [...schedule].sort((a, b) => a.startMinute - b.startMinute);
-  if (sorted.length === 0) return null;
-
-  let current = null;
-  for (const show of sorted) {
-    if (show.startMinute <= minute) {
-      current = show;
-    }
-  }
-
-  if (current) return current;
-  return sorted[sorted.length - 1];
+const toYmd = (d) => {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
 };
 
-const getSortedSchedule = (schedule) =>
-  [...schedule].sort((a, b) => a.startMinute - b.startMinute);
-
-const getNextShow = (current, schedule) => {
-  const sorted = getSortedSchedule(schedule);
-  if (sorted.length === 0 || !current) return null;
-  const index = sorted.findIndex((s) => s.id === current.id);
-  if (index === -1) return sorted[0] || null;
-  const nextIndex = (index + 1) % sorted.length;
-  return sorted[nextIndex];
+const toDateTimeLocalValue = (dateLike) => {
+  const dt = new Date(dateLike);
+  if (Number.isNaN(dt.getTime())) return '';
+  return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
 };
 
-const formatMinutesRange = (startMinute, durationMinutes) => {
-  const pad = (n) => String(n).padStart(2, '0');
-  const startHour = Math.floor(startMinute / 60);
-  const startMin = startMinute % 60;
-  const endTotal = startMinute + durationMinutes;
-  const endHour = Math.floor((endTotal % (24 * 60)) / 60);
-  const endMin = endTotal % 60;
-  return `${pad(startHour)}:${pad(startMin)} - ${pad(endHour)}:${pad(endMin)}`;
+const getProgramEnd = (program) => {
+  const start = new Date(program.scheduledFor);
+  const durationSeconds = Number(program.durationSeconds) || 300;
+  return new Date(start.getTime() + durationSeconds * 1000);
+};
+
+const withComputedOffset = (program, now) => {
+  if (!program) return program;
+  const durationSeconds = Number(program.durationSeconds) || 300;
+  const startMs = new Date(program.scheduledFor).getTime();
+  const offset = Number.isFinite(startMs) ? (now.getTime() - startMs) / 1000 : 0;
+  const currentOffset = Math.max(0, Math.min(durationSeconds, offset));
+  return { ...program, currentOffset };
+};
+
+const formatTimeRange = (program) => {
+  const start = new Date(program.scheduledFor);
+  const end = getProgramEnd(program);
+  const fmt = (dt) => `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+  return `${fmt(start)} - ${fmt(end)}`;
+};
+
+const sortPrograms = (programs) =>
+  [...programs].sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
+
+const WORDS_PER_SECOND = 2.5;
+const TTS_WORDS_PER_CHUNK = 80;
+const AUDIO_EXT_RE = /\.(mp3|wav|ogg|m4a)(\?|#|$)/i;
+
+const inferFileType = (program) => {
+  if (!program) return '';
+  if (program.fileType) return program.fileType;
+  if (program.fileUrl && AUDIO_EXT_RE.test(program.fileUrl)) return 'AUDIO';
+  if (program.fileUrl) return 'FILE';
+  if (program.content) return 'TEXT';
+  return 'TEXT';
 };
 
 export default function ELearning() {
@@ -49,21 +60,30 @@ export default function ELearning() {
   const [now, setNow] = useState(() => new Date());
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentProgramId, setCurrentProgramId] = useState(null);
+  const [currentProgram, setCurrentProgram] = useState(null);
+  const [livePrograms, setLivePrograms] = useState([]);
+  const [selectedLiveProgramId, setSelectedLiveProgramId] = useState('');
   const [programs, setPrograms] = useState([]);
   const [loadingPrograms, setLoadingPrograms] = useState(false);
   const [savingProgram, setSavingProgram] = useState(false);
   const [editingProgram, setEditingProgram] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(() => toYmd(new Date()));
   const [form, setForm] = useState({
     title: '',
     description: '',
-    text: '',
-    startMinute: 0,
-    durationMinutes: 60,
+    scheduledFor: toDateTimeLocalValue(new Date()),
+    durationSeconds: 300,
+    content: '',
+    file: null,
   });
   const [error, setError] = useState('');
+  const [radioPlaybackError, setRadioPlaybackError] = useState('');
   const utteranceRef = useRef(null);
   const stoppedManuallyRef = useRef(false);
+  const audioRef = useRef(null);
+  const playbackProgramIdRef = useRef(null);
+  const ttsStateRef = useRef({ words: [], index: 0, programId: null });
+  const selectedLiveProgramIdRef = useRef('');
 
   const [currentUserRole, setCurrentUserRole] = useState(null);
   const [isRadioDeptStaff, setIsRadioDeptStaff] = useState(false);
@@ -111,7 +131,7 @@ export default function ELearning() {
       setLoadingPrograms(true);
       setError('');
       try {
-        const { data } = await api.get('/radio/programs');
+        const { data } = await api.get('/radio/programs', { params: { date: selectedDate } });
         setPrograms(Array.isArray(data) ? data : []);
       } catch (e) {
         setError('Failed to load radio programs');
@@ -120,90 +140,349 @@ export default function ELearning() {
       }
     };
     fetchPrograms();
+  }, [selectedDate]);
+
+  useEffect(() => {
+    const fetchLive = async () => {
+      try {
+        const { data } = await api.get('/radio/live');
+        const live = Array.isArray(data) ? data : [];
+        if (live.length > 0) {
+          const preferredId = selectedLiveProgramIdRef.current;
+          const nextId =
+            preferredId && live.some((p) => p.id === preferredId)
+              ? preferredId
+              : live[0].id;
+
+          setLivePrograms(live);
+          setSelectedLiveProgramId(nextId);
+          setCurrentProgram(live.find((p) => p.id === nextId) || null);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+
+      setLivePrograms([]);
+      setSelectedLiveProgramId('');
+      try {
+        const { data } = await api.get('/radio/current');
+        setCurrentProgram(data || null);
+      } catch {
+        setCurrentProgram(null);
+      }
+    };
+
+    fetchLive();
+    const id = setInterval(fetchLive, 15000);
+    return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    selectedLiveProgramIdRef.current = selectedLiveProgramId;
+  }, [selectedLiveProgramId]);
 
   useEffect(() => {
     const id = setInterval(() => {
       setNow(new Date());
-    }, 30000);
+    }, 15000);
     return () => clearInterval(id);
   }, []);
 
   const hasSchedule = programs.length > 0;
-  const currentShow = hasSchedule ? findCurrentShow(now, programs) : null;
-  const fullSchedule = getSortedSchedule(programs);
-
-  const activeShow =
-    currentProgramId && hasSchedule
-      ? programs.find((s) => s.id === currentProgramId) || currentShow
-      : currentShow;
+  const fullSchedule = sortPrograms(programs);
 
   const ttsAvailable =
     typeof window !== 'undefined' &&
     window.speechSynthesis &&
     typeof window.SpeechSynthesisUtterance !== 'undefined';
 
-  const playShow = (show) => {
-    if (!ttsAvailable || !show) return;
-    stoppedManuallyRef.current = false;
+  const stopTts = () => {
+    if (!ttsAvailable) return;
     window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(
-      `${show.title}. ${show.text || ''}`
-    );
-    utter.onend = () => {
-      utteranceRef.current = null;
-      if (stoppedManuallyRef.current) {
-        stoppedManuallyRef.current = false;
-        setIsPlaying(false);
-        setIsPaused(false);
-        setCurrentProgramId(null);
-        return;
-      }
-      const nextShow = getNextShow(show, programs);
-      if (nextShow) {
-        setCurrentProgramId(nextShow.id);
-        playShow(nextShow);
-      } else {
-        setIsPlaying(false);
-        setIsPaused(false);
-        setCurrentProgramId(null);
-      }
-    };
-    utteranceRef.current = utter;
-    setCurrentProgramId(show.id);
-    window.speechSynthesis.speak(utter);
-    setIsPlaying(true);
+    utteranceRef.current = null;
+    ttsStateRef.current = { words: [], index: 0, programId: null };
+  };
+
+  const stopAudio = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+  };
+
+  const stopRadio = () => {
+    stoppedManuallyRef.current = true;
+    stopTts();
+    stopAudio();
+    playbackProgramIdRef.current = null;
+    setIsPlaying(false);
     setIsPaused(false);
   };
 
-  const startRadio = () => {
-    if (!ttsAvailable) return;
-    const baseShow = activeShow || currentShow;
-    if (!baseShow) return;
-    playShow(baseShow);
+  const selectLiveProgram = (programId) => {
+    setSelectedLiveProgramId(programId);
+    const picked = livePrograms.find((p) => p.id === programId) || null;
+    setCurrentProgram(picked);
+    setRadioPlaybackError('');
+  };
+
+  const speakNextChunk = () => {
+    const state = ttsStateRef.current;
+    if (stoppedManuallyRef.current) return;
+    if (!state.programId || state.index >= state.words.length) {
+      utteranceRef.current = null;
+      setIsPlaying(false);
+      setIsPaused(false);
+      playbackProgramIdRef.current = null;
+      return;
+    }
+
+    const chunk = state.words.slice(state.index, state.index + TTS_WORDS_PER_CHUNK).join(' ');
+    if (!chunk.trim()) {
+      state.index = state.words.length;
+      speakNextChunk();
+      return;
+    }
+
+    const utter = new SpeechSynthesisUtterance(chunk);
+    utter.onstart = () => {
+      setRadioPlaybackError('');
+    };
+    utter.onend = () => {
+      utteranceRef.current = null;
+      state.index += TTS_WORDS_PER_CHUNK;
+      if (!stoppedManuallyRef.current) {
+        speakNextChunk();
+      }
+    };
+    utter.onerror = () => {
+      utteranceRef.current = null;
+      setIsPlaying(false);
+      setIsPaused(false);
+      playbackProgramIdRef.current = null;
+      setRadioPlaybackError('Text-to-speech failed to play.');
+    };
+
+    utteranceRef.current = utter;
+    try {
+      window.speechSynthesis.resume();
+    } catch {
+      // ignore
+    }
+    setTimeout(() => {
+      if (!stoppedManuallyRef.current) {
+        try {
+          window.speechSynthesis.speak(utter);
+        } catch {
+          utteranceRef.current = null;
+          setIsPlaying(false);
+          setIsPaused(false);
+          playbackProgramIdRef.current = null;
+          setRadioPlaybackError('Text-to-speech failed to start.');
+        }
+      }
+    }, 50);
+  };
+
+  const startTts = (program) => {
+    if (!ttsAvailable || !program) return;
+    const text = `${program.title || ''}. ${program.content || ''}`.trim();
+    if (!text) return;
+
+    stoppedManuallyRef.current = false;
+    stopAudio();
+    stopTts();
+
+    const words = text.split(/\s+/).filter(Boolean);
+    const offsetSeconds = Number(program.currentOffset) || 0;
+    const estimatedSeconds = words.length > 0 ? words.length / WORDS_PER_SECOND : 0;
+    const startIndex =
+      estimatedSeconds > 0 && offsetSeconds > estimatedSeconds
+        ? 0
+        : Math.max(0, Math.floor(offsetSeconds * WORDS_PER_SECOND));
+
+    playbackProgramIdRef.current = program.id;
+    ttsStateRef.current = { words, index: startIndex, programId: program.id };
+
+    setIsPlaying(true);
+    setIsPaused(false);
+    speakNextChunk();
+  };
+
+  const startAudio = async (program) => {
+    if (!program?.fileUrl) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    stoppedManuallyRef.current = false;
+    stopTts();
+
+    playbackProgramIdRef.current = program.id;
+    audio.src = program.fileUrl;
+
+    const offsetSeconds = Math.max(0, Number(program.currentOffset) || 0);
+
+    const seekAndPlay = async () => {
+      try {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          audio.currentTime = Math.min(offsetSeconds, Math.max(0, audio.duration - 0.5));
+        } else {
+          audio.currentTime = offsetSeconds;
+        }
+      } catch {
+        audio.currentTime = 0;
+      }
+
+      try {
+        await audio.play();
+        setIsPlaying(true);
+        setIsPaused(false);
+        setRadioPlaybackError('');
+      } catch {
+        setIsPlaying(false);
+        setIsPaused(false);
+        setRadioPlaybackError('Audio playback was blocked by the browser.');
+      }
+    };
+
+    if (audio.readyState >= 1) {
+      await seekAndPlay();
+      return;
+    }
+
+    const onLoaded = async () => {
+      audio.removeEventListener('loadedmetadata', onLoaded);
+      await seekAndPlay();
+    };
+    audio.addEventListener('loadedmetadata', onLoaded);
+    audio.load();
+  };
+
+  const startRadio = async () => {
+    setRadioPlaybackError('');
+
+    let program = currentProgram;
+    try {
+      const { data } = await api.get('/radio/live');
+      const live = Array.isArray(data) ? data : [];
+      if (live.length > 0) {
+        const preferredId = selectedLiveProgramIdRef.current;
+        const nextId =
+          preferredId && live.some((p) => p.id === preferredId)
+            ? preferredId
+            : live[0].id;
+
+        setLivePrograms(live);
+        setSelectedLiveProgramId(nextId);
+        program = live.find((p) => p.id === nextId) || live[0];
+        setCurrentProgram(program);
+      } else {
+        setLivePrograms([]);
+        setSelectedLiveProgramId('');
+        const res = await api.get('/radio/current');
+        if (res.data) {
+          program = res.data;
+          setCurrentProgram(res.data);
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    if (!program) {
+      setRadioPlaybackError('No live program is scheduled right now.');
+      return;
+    }
+
+    const programWithOffset =
+      program.currentOffset !== undefined && program.currentOffset !== null
+        ? program
+        : withComputedOffset(program, new Date());
+
+    const effectiveType = inferFileType(programWithOffset);
+    if (effectiveType === 'AUDIO') {
+      await startAudio(programWithOffset);
+      return;
+    }
+    if (!ttsAvailable) {
+      setRadioPlaybackError('Text-to-speech is not supported in this browser.');
+      return;
+    }
+    if (!String(programWithOffset.title || '').trim() && !String(programWithOffset.content || '').trim()) {
+      setRadioPlaybackError('This program has no readable text.');
+      return;
+    }
+    startTts(programWithOffset);
   };
 
   const pauseRadio = () => {
+    if (playbackProgramIdRef.current && audioRef.current?.src) {
+      audioRef.current.pause();
+      setIsPaused(true);
+      return;
+    }
     if (!ttsAvailable) return;
     window.speechSynthesis.pause();
     setIsPaused(true);
   };
 
   const resumeRadio = () => {
+    if (playbackProgramIdRef.current && audioRef.current?.src) {
+      audioRef.current.play();
+      setIsPaused(false);
+      return;
+    }
     if (!ttsAvailable) return;
     window.speechSynthesis.resume();
     setIsPaused(false);
   };
 
-  const stopRadio = () => {
-    if (!ttsAvailable) return;
-    stoppedManuallyRef.current = true;
-    window.speechSynthesis.cancel();
-    utteranceRef.current = null;
-    setIsPlaying(false);
-    setIsPaused(false);
-    setCurrentProgramId(null);
-  };
+  useEffect(() => {
+    if (!isPlaying) return;
+    const playingId = playbackProgramIdRef.current;
+    if (!playingId) return;
+    if (!currentProgram) {
+      stopRadio();
+      return;
+    }
+    if (currentProgram.id !== playingId) {
+      if (currentProgram.fileType === 'AUDIO') {
+        startAudio(currentProgram);
+      } else if (ttsAvailable) {
+        startTts(currentProgram);
+      } else {
+        stopRadio();
+      }
+    }
+  }, [currentProgram, isPlaying, ttsAvailable]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onEnded = () => {
+      playbackProgramIdRef.current = null;
+      setIsPlaying(false);
+      setIsPaused(false);
+    };
+    const onError = () => {
+      playbackProgramIdRef.current = null;
+      setIsPlaying(false);
+      setIsPaused(false);
+      setRadioPlaybackError('Audio failed to load or play.');
+    };
+
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('error', onError);
+
+    return () => {
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('error', onError);
+      stopRadio();
+    };
+  }, []);
 
   const isRadioManager =
     currentUserRole === 'school_admin' ||
@@ -214,9 +493,10 @@ export default function ELearning() {
     setForm({
       title: '',
       description: '',
-      text: '',
-      startMinute: 0,
-      durationMinutes: 60,
+      scheduledFor: toDateTimeLocalValue(new Date()),
+      durationSeconds: 300,
+      content: '',
+      file: null,
     });
     setEditingProgram(null);
   };
@@ -226,9 +506,10 @@ export default function ELearning() {
     setForm({
       title: program.title || '',
       description: program.description || '',
-      text: program.text || '',
-      startMinute: program.startMinute ?? 0,
-      durationMinutes: program.durationMinutes ?? 60,
+      scheduledFor: toDateTimeLocalValue(program.scheduledFor),
+      durationSeconds: program.durationSeconds ?? 300,
+      content: program.content || '',
+      file: null,
     });
   };
 
@@ -247,17 +528,24 @@ export default function ELearning() {
     setSavingProgram(true);
     setError('');
     try {
-      const payload = {
-        ...form,
-        startMinute: Number(form.startMinute),
-        durationMinutes: Number(form.durationMinutes),
-      };
+      const fd = new FormData();
+      fd.append('title', form.title);
+      if (form.description) fd.append('description', form.description);
+      fd.append('scheduledFor', form.scheduledFor);
+      fd.append('durationSeconds', String(form.durationSeconds));
+      if (form.content) fd.append('content', form.content);
+      if (form.file) fd.append('file', form.file);
+
       if (editingProgram) {
-        const { data } = await api.put(`/radio/programs/${editingProgram.id}`, payload);
+        const { data } = await api.put(`/radio/programs/${editingProgram.id}`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
         setPrograms((prev) => prev.map((p) => (p.id === data.id ? data : p)));
       } else {
-        const { data } = await api.post('/radio/programs', payload);
-        setPrograms((prev) => [...prev, data]);
+        const { data } = await api.post('/radio/programs', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setPrograms((prev) => sortPrograms([...prev, data]));
       }
       resetForm();
     } catch (e) {
@@ -299,7 +587,7 @@ export default function ELearning() {
             <div>
               <h3 className="text-lg font-semibold text-slate-800">24/7 E-Learning Radio</h3>
               <p className="text-xs text-slate-500">
-                Tune in any time to listen to scheduled readings from sample Word documents.
+                Tune in to listen to scheduled PDF readings (TTS) and audio uploads.
               </p>
             </div>
           </div>
@@ -317,7 +605,39 @@ export default function ELearning() {
 
         <div className="space-y-4">
           <div className="space-y-3">
-            {hasSchedule && activeShow && (
+            {livePrograms.length > 1 && (
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-semibold text-slate-700 mb-2">Choose a live program</div>
+                <div className="space-y-2">
+                  {livePrograms.map((program) => (
+                    <label
+                      key={program.id}
+                      className="flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="liveProgram"
+                        value={program.id}
+                        checked={(selectedLiveProgramId || currentProgram?.id) === program.id}
+                        onChange={() => selectLiveProgram(program.id)}
+                        className="mt-0.5"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-xs font-semibold text-slate-800 truncate">{program.title}</div>
+                          <div className="text-[10px] text-slate-500 shrink-0">{formatTimeRange(program)}</div>
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                          <FileText size={11} />
+                          <span>{program.fileType || inferFileType(program) || 'PROGRAM'}</span>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            {currentProgram && (
               <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-4">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
@@ -325,23 +645,28 @@ export default function ELearning() {
                       LIVE
                     </span>
                     <span className="text-xs font-medium text-slate-700">
-                      {formatMinutesRange(activeShow.startMinute, activeShow.durationMinutes)}
+                      {formatTimeRange(currentProgram)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-[11px] text-slate-600">
                     <FileText size={12} />
-                    <span>{activeShow.fileName}</span>
+                    <span>{currentProgram.fileType || 'PROGRAM'}</span>
                   </div>
                 </div>
-                <h4 className="font-semibold text-slate-800 mb-1">{activeShow.title}</h4>
-                <p className="text-xs text-slate-600 mb-3">{activeShow.description}</p>
+                <h4 className="font-semibold text-slate-800 mb-1">{currentProgram.title}</h4>
+                <p className="text-xs text-slate-600 mb-3">{currentProgram.description}</p>
+                {radioPlaybackError && (
+                  <div className="mb-2 text-[11px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                    {radioPlaybackError}
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
-                  {!ttsAvailable && (
+                  {currentProgram.fileType !== 'AUDIO' && !ttsAvailable && (
                     <span className="text-[11px] text-red-600 bg-red-50 border border-red-100 rounded-full px-3 py-1">
                       Text-to-speech is not supported in this browser.
                     </span>
                   )}
-                  {ttsAvailable && !isPlaying && (
+                  {((inferFileType(currentProgram) === 'AUDIO') || ttsAvailable) && !isPlaying && (
                     <button
                       type="button"
                       onClick={startRadio}
@@ -351,7 +676,7 @@ export default function ELearning() {
                       Play now
                     </button>
                   )}
-                  {ttsAvailable && isPlaying && !isPaused && (
+                  {isPlaying && !isPaused && (
                     <button
                       type="button"
                       onClick={pauseRadio}
@@ -361,7 +686,7 @@ export default function ELearning() {
                       Pause
                     </button>
                   )}
-                  {ttsAvailable && isPlaying && isPaused && (
+                  {isPlaying && isPaused && (
                     <button
                       type="button"
                       onClick={resumeRadio}
@@ -371,7 +696,7 @@ export default function ELearning() {
                       Resume
                     </button>
                   )}
-                  {ttsAvailable && isPlaying && (
+                  {isPlaying && (
                     <button
                       type="button"
                       onClick={stopRadio}
@@ -381,12 +706,23 @@ export default function ELearning() {
                       Stop
                     </button>
                   )}
+                  {currentProgram.fileUrl && (
+                    <a
+                      href={currentProgram.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                    >
+                      <FileText size={14} />
+                      Open file
+                    </a>
+                  )}
                 </div>
               </div>
             )}
-            {!hasSchedule && (
+            {!currentProgram && (
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600">
-                No radio programs are configured yet.
+                No radio program is scheduled for the current time.
               </div>
             )}
           </div>
@@ -394,6 +730,17 @@ export default function ELearning() {
           <div className="space-y-2">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Daily program schedule
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center gap-2">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full md:w-auto border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              {loadingPrograms && (
+                <span className="text-xs text-slate-500">Loading…</span>
+              )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {fullSchedule.map((show) => (
@@ -404,13 +751,13 @@ export default function ELearning() {
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-semibold">{show.title}</span>
                     <span className="text-[10px] text-slate-500">
-                      {formatMinutesRange(show.startMinute, show.durationMinutes)}
+                      {formatTimeRange(show)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-1 text-[10px] text-slate-500">
                     <div className="flex items-center gap-1">
                       <FileText size={11} />
-                      <span>{show.description}</span>
+                      <span>{show.fileType || 'PROGRAM'}</span>
                     </div>
                     {isRadioManager && (
                       <button
@@ -474,34 +821,41 @@ export default function ELearning() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-600">Start time (minutes from midnight)</label>
+                <label className="text-xs font-medium text-slate-600">Scheduled date & time</label>
                 <input
-                  type="number"
-                  min="0"
-                  max={24 * 60 - 1}
-                  value={form.startMinute}
-                  onChange={(e) => setForm({ ...form, startMinute: e.target.value })}
+                  type="datetime-local"
+                  value={form.scheduledFor}
+                  onChange={(e) => setForm({ ...form, scheduledFor: e.target.value })}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   required
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-600">Duration (minutes)</label>
+                <label className="text-xs font-medium text-slate-600">Duration (seconds)</label>
                 <input
                   type="number"
                   min="1"
-                  value={form.durationMinutes}
-                  onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })}
+                  value={form.durationSeconds}
+                  onChange={(e) => setForm({ ...form, durationSeconds: e.target.value })}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   required
                 />
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-600">Content to be read (text)</label>
+              <label className="text-xs font-medium text-slate-600">PDF/audio upload (optional)</label>
+              <input
+                type="file"
+                accept=".pdf,audio/*"
+                onChange={(e) => setForm({ ...form, file: e.target.files?.[0] || null })}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-600">Text content (optional, used for TTS)</label>
               <textarea
-                value={form.text}
-                onChange={(e) => setForm({ ...form, text: e.target.value })}
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
                 rows={4}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
@@ -573,6 +927,8 @@ export default function ELearning() {
           </div>
         )}
       </div>
+
+      <audio ref={audioRef} className="hidden" />
     </div>
   );
 }

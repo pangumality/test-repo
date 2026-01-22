@@ -20,8 +20,8 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   // Accept images and documents (pdf, doc, docx, xls, xlsx, ppt, pptx)
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|pdf|doc|docx|xls|xlsx|ppt|pptx)$/i)) {
-    return cb(new Error('Only images and document files (pdf, doc, docx, xls, xlsx, ppt, pptx) are allowed!'), false);
+  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|pdf|doc|docx|xls|xlsx|ppt|pptx|mp3|wav|ogg|m4a)$/i)) {
+    return cb(new Error('Only images, document , and audio files (pdf, doc, docx, xls, xlsx, ppt, pptx) are allowed!'), false);
   }
   cb(null, true);
 };
@@ -30,6 +30,6 @@ export const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 50 * 1024 * 1024 // 50MB limit for audio/PDFs
   }
 });
