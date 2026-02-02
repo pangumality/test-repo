@@ -9,9 +9,14 @@ export const getCalendarEvents = async (req, res) => {
       return res.json([]);
     }
 
+    const { month, year } = req.query;
     const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    const targetYear = year ? parseInt(year) : now.getFullYear();
+    const targetMonth = month !== undefined ? parseInt(month) : now.getMonth();
+
+    const monthStart = new Date(targetYear, targetMonth, 1);
+    const monthEnd = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999);
 
     const [sportEvents, groupStudies, dateSheets, activities, notices, calendarEvents] = await Promise.all([
       prisma.sportEvent.findMany({

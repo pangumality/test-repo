@@ -2352,6 +2352,7 @@ app.get('/api/subjects', authenticate, async (req, res) => {
             select: { subjectId: true }
         });
         
+        /*
         // AUTO-FIX: If no subjects assigned, try to assign some for demo purposes
         if (assigned.length === 0) {
             console.log('Teacher has no subjects. Attempting auto-assignment for demo...');
@@ -2376,6 +2377,12 @@ app.get('/api/subjects', authenticate, async (req, res) => {
              const subjectIds = assigned.map(a => a.subjectId);
              where.id = { in: subjectIds };
         }
+        */
+        if (assigned.length === 0) {
+            return res.json([]);
+        }
+        const subjectIds = assigned.map(a => a.subjectId);
+        where.id = { in: subjectIds };
     } else if (role === 'student') {
         const student = await prisma.student.findUnique({ where: { userId } });
         if (!student || !student.classId) return res.json([]);
@@ -2394,7 +2401,8 @@ app.get('/api/subjects', authenticate, async (req, res) => {
     });
     res.json(subjects);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch subjects' });
+    console.error('Error in GET /api/subjects:', error);
+    res.status(500).json({ error: 'Failed to fetch subjects', details: error.message });
   }
 });
 app.get('/api/subjects/:id/details', authenticate, requirePermission(PERMISSIONS.SUBJECT_MANAGE), async (req, res) => {

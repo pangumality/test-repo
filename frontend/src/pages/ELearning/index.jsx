@@ -581,7 +581,7 @@ export default function ELearning() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md"
-                 style={{ backgroundImage: 'linear-gradient(to bottom right, #f97316, #ea580c)' }}>
+                 style={{ backgroundImage: 'linear-gradient(to bottom right, var(--ui-accent-strong), var(--ui-accent))' }}>
               <Radio size={22} />
             </div>
             <div>
@@ -884,8 +884,8 @@ export default function ELearning() {
 
       <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-soft p-6">
         {subjects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 mb-4"
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 mb-4"
                  style={{ backgroundImage: 'linear-gradient(to bottom right, var(--ui-accent-strong), var(--ui-accent))' }}>
               <span className="text-2xl">📚</span>
             </div>

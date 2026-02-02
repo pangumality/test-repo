@@ -47,15 +47,20 @@ const CURRENCY_OPTIONS = [
   { code: 'ZMW', label: 'Zambian Kwacha', symbol: 'ZMW', rateFromZMW: 1 },
 ];
 
-const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) => {
-  const activeClasses =
-    'bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-500 text-white shadow-lg shadow-indigo-500/40 scale-[1.02]';
+const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed, theme, isDarkMode }) => {
+  const activeClasses = clsx(
+    'bg-gradient-to-r text-white shadow-lg scale-[1.02]',
+    theme?.active || 'from-indigo-500 via-sky-500 to-emerald-500 shadow-indigo-500/40'
+  );
 
-  const inactiveClasses =
-    'bg-transparent text-slate-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:via-sky-50 hover:to-emerald-50 hover:shadow-md hover:shadow-indigo-100 hover:text-slate-900 hover:translate-x-1';
-
-  const inactiveIconClasses =
-    'bg-gradient-to-br from-slate-100 via-sky-100 to-indigo-100 text-indigo-500 group-hover:from-indigo-100 group-hover:via-sky-100 group-hover:to-emerald-100 group-hover:text-indigo-700';
+  const inactiveClasses = theme?.inactive 
+    ? clsx('transition-colors duration-300 hover:translate-x-1', theme.inactive)
+    : clsx(
+        'bg-transparent hover:shadow-md hover:translate-x-1 transition-colors duration-300',
+        isDarkMode 
+          ? 'text-slate-100 hover:bg-white/10 hover:text-white' 
+          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      );
 
   return (
     <Link
@@ -76,47 +81,319 @@ const SidebarItem = ({ icon: Icon, label, to, active, onClick, isCollapsed }) =>
           'flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 shadow-sm',
           active 
             ? 'bg-white/20 text-white backdrop-blur-sm' 
-            : inactiveIconClasses
+            : clsx(
+                (theme?.inactive || isDarkMode) ? 'bg-white/5' : 'bg-slate-100', 
+                theme?.icon || (isDarkMode ? 'text-indigo-300' : 'text-indigo-600')
+              )
         )}
       >
         <Icon size={18} />
       </div>
       {!isCollapsed && <span className="font-medium whitespace-nowrap overflow-hidden tracking-wide">{label}</span>}
       {!isCollapsed && !active && (
-         <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 text-brand-300 group-hover:translate-x-1" />
+         <ChevronRight size={14} className={clsx("ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-1", theme?.icon || (isDarkMode ? 'text-indigo-300' : 'text-indigo-600'))} />
       )}
     </Link>
   );
 };
 
 const MENU_ITEMS = [
-  { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
-  { icon: Calendar, label: 'Attendance', to: '/dashboard/attendance', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: MessageSquare, label: 'Messages', to: '/dashboard/messages', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: Bell, label: 'Notice Board', to: '/dashboard/notices', allowedRoles: ['student','teacher','school_admin','parent'] },
-  { icon: Newspaper, label: 'Newsletters', to: '/dashboard/newsletters', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: ImageIcon, label: 'Gallery', to: '/dashboard/gallery', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: FileCheck, label: 'Leaves', to: '/dashboard/leaves', allowedRoles: ['student','parent','admin','school_admin','teacher'] },
-  { icon: Clock, label: 'Time Table', to: '/dashboard/timetable', allowedRoles: ['student','teacher','admin','school_admin','parent'] },
-  { icon: Award, label: 'Certificates', to: '/dashboard/certificates', allowedRoles: ['student','parent','admin','school_admin'] },
-  { icon: Users, label: 'Teachers', to: '/dashboard/teachers', excludedRoles: ['student','teacher','parent'] },
-  { icon: GraduationCap, label: 'Students', to: '/dashboard/students', allowedRoles: ['admin','school_admin'] },
-  { icon: Home, label: 'Classes', to: '/dashboard/classes', allowedRoles: ['teacher','admin','school_admin'] },
-  { icon: SchoolIcon, label: 'Schools', to: '/dashboard/schools', allowedRoles: ['admin'] },
-  { icon: BookOpen, label: 'Exams', to: '/dashboard/exams', excludedRoles: ['student','parent'] },
-  { icon: FileText, label: 'My Exams', to: '/dashboard/student/exams', allowedRoles: ['student'] },
-  { icon: CreditCard, label: 'Finance', to: '/dashboard/finance', excludedRoles: ['student','teacher','parent'] },
-  { icon: Library, label: 'Library', to: '/dashboard/library', departmentKey: 'library' },
-  { icon: Home, label: 'Hostel', to: '/dashboard/hostel', departmentKey: 'hostel' },
-  { icon: Bus, label: 'Transport', to: '/dashboard/transport', departmentKey: 'transport' },
-  { icon: Radio, label: 'E-Learning', to: '/dashboard/e-learning', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: Radio, label: 'Radio', to: '/dashboard/radio', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: BookOpen, label: 'Subjects', to: '/dashboard/subjects', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: Trophy, label: 'Sports', to: '/dashboard/sports', excludedRoles: ['student','teacher','parent'] },
-  { icon: Users, label: 'Group Studies', to: '/dashboard/group-studies', allowedRoles: ['student','teacher','admin','school_admin'] },
-  { icon: Package, label: 'Inventory', to: '/dashboard/inventory', departmentKey: 'inventory' },
-  { icon: BookOpen, label: 'Academic', to: '/dashboard/academic', allowedRoles: ['student', 'teacher', 'school_admin', 'admin'] },
-  { icon: Shield, label: 'Departments', to: '/dashboard/departments', allowedRoles: ['school_admin'] },
+  { 
+    icon: LayoutDashboard, 
+    label: 'Dashboard', 
+    to: '/dashboard',
+    theme: { 
+      active: 'from-blue-500 to-blue-600 shadow-blue-500/40', 
+      icon: 'text-blue-300',
+      inactive: 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Calendar, 
+    label: 'Attendance', 
+    to: '/dashboard/attendance', 
+    allowedRoles: ['student','teacher','admin','school_admin'],
+    theme: { 
+      active: 'from-green-500 to-emerald-600 shadow-green-500/40', 
+      icon: 'text-green-300',
+      inactive: 'bg-green-600 hover:bg-green-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: MessageSquare, 
+    label: 'Messages', 
+    to: '/dashboard/messages', 
+    allowedRoles: ['student','teacher','admin','school_admin','parent'],
+    theme: { 
+      active: 'from-yellow-400 to-orange-500 shadow-yellow-500/40', 
+      icon: 'text-yellow-300',
+      inactive: 'bg-yellow-600 hover:bg-yellow-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Bell, 
+    label: 'Notice Board', 
+    to: '/dashboard/notices', 
+    allowedRoles: ['student','teacher','school_admin','parent'],
+    theme: { 
+      active: 'from-orange-400 to-red-500 shadow-orange-500/40', 
+      icon: 'text-orange-300',
+      inactive: 'bg-orange-600 hover:bg-orange-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Newspaper, 
+    label: 'Newsletters', 
+    to: '/dashboard/newsletters', 
+    allowedRoles: ['student','teacher','admin','school_admin','parent'],
+    theme: { 
+      active: 'from-purple-500 to-indigo-600 shadow-purple-500/40', 
+      icon: 'text-purple-300',
+      inactive: 'bg-purple-600 hover:bg-purple-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: ImageIcon, 
+    label: 'Gallery', 
+    to: '/dashboard/gallery', 
+    allowedRoles: ['student','teacher','admin','school_admin','parent'],
+    theme: { 
+      active: 'from-pink-500 to-rose-600 shadow-pink-500/40', 
+      icon: 'text-pink-300',
+      inactive: 'bg-pink-600 hover:bg-pink-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: FileCheck, 
+    label: 'Leaves', 
+    to: '/dashboard/leaves', 
+    allowedRoles: ['student','parent','admin','school_admin','teacher'],
+    theme: { 
+      active: 'from-red-500 to-red-700 shadow-red-500/40', 
+      icon: 'text-red-300',
+      inactive: 'bg-red-600 hover:bg-red-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Clock, 
+    label: 'Time Table', 
+    to: '/dashboard/timetable', 
+    allowedRoles: ['student','teacher','admin','school_admin','parent'],
+    theme: { 
+      active: 'from-cyan-400 to-blue-500 shadow-cyan-500/40', 
+      icon: 'text-cyan-300',
+      inactive: 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Award, 
+    label: 'Certificates', 
+    to: '/dashboard/certificates', 
+    allowedRoles: ['student','parent','admin','school_admin'],
+    theme: { 
+      active: 'from-teal-400 to-teal-600 shadow-teal-500/40', 
+      icon: 'text-teal-300',
+      inactive: 'bg-teal-600 hover:bg-teal-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Users, 
+    label: 'Teachers', 
+    to: '/dashboard/teachers', 
+    excludedRoles: ['student','teacher','parent'],
+    theme: { 
+      active: 'from-indigo-500 to-violet-600 shadow-indigo-500/40', 
+      icon: 'text-indigo-300',
+      inactive: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: GraduationCap, 
+    label: 'Students', 
+    to: '/dashboard/students', 
+    allowedRoles: ['admin','school_admin'],
+    theme: { 
+      active: 'from-emerald-400 to-green-600 shadow-emerald-500/40', 
+      icon: 'text-emerald-300',
+      inactive: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Home, 
+    label: 'Classes', 
+    to: '/dashboard/classes', 
+    allowedRoles: ['teacher','admin','school_admin'],
+    theme: { 
+      active: 'from-lime-400 to-green-500 shadow-lime-500/40', 
+      icon: 'text-lime-300',
+      inactive: 'bg-lime-600 hover:bg-lime-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: SchoolIcon, 
+    label: 'Schools', 
+    to: '/dashboard/schools', 
+    allowedRoles: ['admin'],
+    theme: { 
+      active: 'from-amber-400 to-yellow-500 shadow-amber-500/40', 
+      icon: 'text-amber-300',
+      inactive: 'bg-amber-600 hover:bg-amber-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: BookOpen, 
+    label: 'Exams', 
+    to: '/dashboard/exams', 
+    excludedRoles: ['student','parent'],
+    theme: { 
+      active: 'from-violet-500 to-purple-600 shadow-violet-500/40', 
+      icon: 'text-violet-300',
+      inactive: 'bg-violet-600 hover:bg-violet-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: FileText, 
+    label: 'My Exams', 
+    to: '/dashboard/student/exams', 
+    allowedRoles: ['student'],
+    theme: { 
+      active: 'from-fuchsia-400 to-pink-600 shadow-fuchsia-500/40', 
+      icon: 'text-fuchsia-300',
+      inactive: 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: CreditCard, 
+    label: 'Finance', 
+    to: '/dashboard/finance', 
+    excludedRoles: ['student','teacher','parent'],
+    theme: { 
+      active: 'from-rose-400 to-red-600 shadow-rose-500/40', 
+      icon: 'text-rose-300',
+      inactive: 'bg-rose-600 hover:bg-rose-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Library, 
+    label: 'Library', 
+    to: '/dashboard/library', 
+    departmentKey: 'library',
+    theme: { 
+      active: 'from-sky-400 to-blue-500 shadow-sky-500/40', 
+      icon: 'text-sky-300',
+      inactive: 'bg-sky-600 hover:bg-sky-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Home, 
+    label: 'Hostel', 
+    to: '/dashboard/hostel', 
+    departmentKey: 'hostel',
+    theme: { 
+      active: 'from-teal-500 to-emerald-600 shadow-teal-500/40', 
+      icon: 'text-teal-200',
+      inactive: 'bg-teal-600 hover:bg-teal-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Bus, 
+    label: 'Transport', 
+    to: '/dashboard/transport', 
+    departmentKey: 'transport',
+    theme: { 
+      active: 'from-yellow-500 to-amber-600 shadow-yellow-500/40', 
+      icon: 'text-yellow-200',
+      inactive: 'bg-yellow-600 hover:bg-yellow-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Radio, 
+    label: 'E-Learning', 
+    to: '/dashboard/e-learning', 
+    allowedRoles: ['student','teacher','admin','school_admin'],
+    theme: { 
+      active: 'from-blue-600 to-indigo-700 shadow-blue-500/40', 
+      icon: 'text-blue-200',
+      inactive: 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Radio, 
+    label: 'Radio', 
+    to: '/dashboard/radio', 
+    allowedRoles: ['student','teacher','admin','school_admin'],
+    theme: { 
+      active: 'from-red-600 to-rose-700 shadow-red-500/40', 
+      icon: 'text-red-200',
+      inactive: 'bg-red-600 hover:bg-red-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: BookOpen, 
+    label: 'Subjects', 
+    to: '/dashboard/subjects', 
+    allowedRoles: ['student','teacher','admin','school_admin'],
+    theme: { 
+      active: 'from-orange-600 to-red-600 shadow-orange-500/40', 
+      icon: 'text-orange-200',
+      inactive: 'bg-orange-600 hover:bg-orange-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Trophy, 
+    label: 'Sports', 
+    to: '/dashboard/sports', 
+    excludedRoles: ['student','teacher','parent'],
+    theme: { 
+      active: 'from-emerald-600 to-green-700 shadow-emerald-500/40', 
+      icon: 'text-emerald-200',
+      inactive: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Users, 
+    label: 'Group Studies', 
+    to: '/dashboard/group-studies', 
+    allowedRoles: ['student','teacher','admin','school_admin'],
+    theme: { 
+      active: 'from-violet-600 to-purple-700 shadow-violet-500/40', 
+      icon: 'text-violet-200',
+      inactive: 'bg-violet-600 hover:bg-violet-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Package, 
+    label: 'Inventory', 
+    to: '/dashboard/inventory', 
+    departmentKey: 'inventory',
+    theme: { 
+      active: 'from-slate-400 to-gray-500 shadow-slate-500/40', 
+      icon: 'text-slate-300',
+      inactive: 'bg-slate-600 hover:bg-slate-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: BookOpen, 
+    label: 'Academic', 
+    to: '/dashboard/academic', 
+    allowedRoles: ['student', 'teacher', 'school_admin', 'admin'],
+    theme: { 
+      active: 'from-indigo-600 to-blue-700 shadow-indigo-500/40', 
+      icon: 'text-indigo-200',
+      inactive: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm'
+    }
+  },
+  { 
+    icon: Shield, 
+    label: 'Departments', 
+    to: '/dashboard/departments', 
+    allowedRoles: ['school_admin'],
+    theme: { 
+      active: 'from-pink-600 to-rose-700 shadow-pink-500/40', 
+      icon: 'text-pink-200',
+      inactive: 'bg-pink-600 hover:bg-pink-500 text-white shadow-sm'
+    }
+  },
 ];
 
 const DashboardLayout = ({ theme = 'light', setTheme }) => {
@@ -134,6 +411,14 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
   const scrollContainerRef = useRef(null);
   const isMobile = window.innerWidth < 768;
   const logoUrl = import.meta.env.VITE_LOGO_URL || '/logo.jpg';
+  
+  const isDarkMode = theme === 'dark';
+  const topBottomBackground = isDarkMode
+    ? 'linear-gradient(90deg, #05081a 0%, #0b1029 100%)'
+    : '#ffffff';
+
+  const appBgClass = 'bg-slate-50';
+  const themeVars = {};
 
   const currencyConfig =
     CURRENCY_OPTIONS.find((c) => c.code === currency) ||
@@ -317,10 +602,22 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
   // Handle Mobile Header
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
+      <div className={clsx(
+        "min-h-screen flex flex-col relative overflow-hidden",
+        isDarkMode ? "bg-slate-950" : "bg-slate-50"
+      )}>
         {/* Mobile Header - Curved */}
-        <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white pt-6 pb-16 px-6 rounded-b-[40px] shadow-xl relative z-10 transition-all duration-300">
-          <div className="absolute inset-0 bg-white/10 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 to-transparent"></div>
+        <div 
+          className={clsx(
+            "pt-6 pb-16 px-6 rounded-b-[40px] shadow-xl relative z-10 transition-all duration-300",
+            isDarkMode ? "text-white" : "text-slate-800"
+          )}
+          style={{ background: topBottomBackground }}
+        >
+          <div className={clsx(
+            "absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] to-transparent",
+            isDarkMode ? "bg-white/10 from-white/20" : "bg-slate-900/5 from-slate-900/10"
+          )}></div>
           <div className="flex items-center justify-between mb-6 relative z-10">
             <div className="flex items-center gap-3">
                <button onClick={() => setMobileMenuOpen(true)}>
@@ -336,11 +633,16 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                </span>
             </div>
             <div className="flex items-center gap-2 text-[11px]">
-              <span className="uppercase tracking-wide text-indigo-100">Currency</span>
+              <span className={clsx("uppercase tracking-wide", isDarkMode ? "text-indigo-100" : "text-slate-500")}>Currency</span>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="bg-white/10 border border-white/40 text-[11px] px-2 py-1 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-white/60"
+                className={clsx(
+                  "border text-[11px] px-2 py-1 rounded-md focus:outline-none focus:ring-1",
+                  isDarkMode 
+                    ? "bg-white/10 border-white/40 text-white focus:ring-white/60" 
+                    : "bg-white/50 border-slate-300 text-slate-800 focus:ring-slate-400"
+                )}
               >
                 {CURRENCY_OPTIONS.map((opt) => (
                   <option key={opt.code} value={opt.code}>
@@ -480,14 +782,23 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
               formatCurrencyFromBase={formatCurrencyFromBase}
             />
           ) : (
-             <div className="bg-white rounded-t-3xl min-h-full p-4 shadow-inner">
+             <div className={clsx(
+               "rounded-t-3xl min-h-full p-4 shadow-inner",
+               isDarkMode ? "bg-slate-900 text-slate-100" : "bg-white text-slate-800"
+             )}>
                <Outlet />
              </div>
           )}
         </main>
 
         {/* Mobile Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-[#0f172a] text-white h-16 flex items-center justify-between px-8 shadow-lg z-50">
+        <div 
+          className={clsx(
+            "fixed bottom-0 left-0 right-0 h-16 flex items-center justify-between px-8 shadow-lg z-50",
+            isDarkMode ? "text-white" : "text-slate-600 bg-white"
+          )}
+          style={{ background: topBottomBackground }}
+        >
           <Link to="/dashboard" className="flex flex-col items-center gap-1 opacity-90 hover:opacity-100">
             <Home size={24} />
           </Link>
@@ -505,29 +816,15 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
     );
   }
 
-  const isSuperAdmin = currentUser?.role === 'admin';
-
-  const appBgClass = 'bg-slate-50';
-
-  const topBottomBackground = isSuperAdmin
-    ? 'linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%)'
-    : 'linear-gradient(90deg, #05081a 0%, #0b1029 100%)';
-
-  const themeVars = isSuperAdmin
-    ? {
-        '--ui-accent-strong': '#1d4ed8',
-        '--ui-accent': '#3b82f6',
-        '--ui-accent-soft': '#dbeafe',
-        '--ui-accent-secondary': '#ffffff',
-      }
-    : {};
-
   return (
     <div className={clsx('h-screen flex flex-col font-sans', appBgClass)} style={themeVars}>
       {/* Top Navigation Bar */}
       <header
-        className="h-16 flex items-center justify-between px-6 shadow-md z-20 sticky top-0 text-white"
-        style={{ backgroundImage: topBottomBackground }}
+        className={clsx(
+          "h-16 flex items-center justify-between px-6 shadow-md z-20 sticky top-0 transition-colors duration-300",
+          isDarkMode ? "text-white" : "text-slate-800 bg-white"
+        )}
+        style={{ background: topBottomBackground }}
       >
         <div className="flex items-center gap-4">
            {currentUser?.school?.logo ? (
@@ -541,35 +838,58 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
            )}
            <div className="flex flex-col">
              {currentUser?.school?.name ? (
-               <>
-                 <h1 className="text-lg font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400 leading-tight">
-                   {currentUser.school.name}
-                 </h1>
-                 <span className="text-[10px] text-indigo-300 font-medium tracking-wider">
-                   POWERED BY doonITes ERP
-                 </span>
-               </>
-             ) : (
-               <h1 className="text-lg font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
-                 doonITes weBBed serVIces ERP
-               </h1>
-             )}
+              <>
+                <h1 className={clsx(
+                  "text-lg font-bold tracking-wide bg-clip-text text-transparent leading-tight",
+                  isDarkMode 
+                    ? "bg-gradient-to-r from-white via-indigo-200 to-indigo-400"
+                    : "bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-900"
+                )}>
+                  {currentUser.school.name}
+                </h1>
+                <span className={clsx(
+                  "text-[10px] font-medium tracking-wider",
+                  isDarkMode ? "text-indigo-300" : "text-indigo-600"
+                )}>
+                  POWERED BY doonITes ERP
+                </span>
+              </>
+            ) : (
+              <h1 className={clsx(
+                "text-lg font-bold tracking-wide bg-clip-text text-transparent",
+                isDarkMode 
+                  ? "bg-gradient-to-r from-white via-indigo-200 to-indigo-400"
+                  : "bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-900"
+              )}>
+                doonITes weBBed serVIces ERP
+              </h1>
+            )}
            </div>
         </div>
         <div className="flex items-center gap-6 relative">
           <button
             type="button"
             onClick={() => setTheme && setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center"
+            className={clsx(
+              "p-2 rounded-full border flex items-center justify-center transition-colors",
+              isDarkMode 
+                ? "bg-white/10 hover:bg-white/20 border-white/20 text-white" 
+                : "bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-600"
+            )}
           >
             {theme === 'dark' ? '🌙' : '☀️'}
           </button>
           <div className="flex items-center gap-2 text-xs">
-            <span className="uppercase tracking-wide text-indigo-100">Currency</span>
+            <span className={clsx("uppercase tracking-wide", isDarkMode ? "text-indigo-100" : "text-slate-500")}>Currency</span>
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              className="bg-white/10 border border-white/30 text-xs px-2 py-1 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-white/60"
+              className={clsx(
+                "border text-xs px-2 py-1 rounded-md focus:outline-none focus:ring-1",
+                isDarkMode
+                  ? "bg-white/10 border-white/30 text-white focus:ring-white/60"
+                  : "bg-slate-50 border-slate-300 text-slate-700 focus:ring-slate-400"
+              )}
             >
               {CURRENCY_OPTIONS.map((opt) => (
                 <option key={opt.code} value={opt.code}>
@@ -645,16 +965,19 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
              )}
            </div>
 
-           <Link to="/profile" className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors">
+           <Link to="/profile" className={clsx(
+             "flex items-center gap-2 px-2 py-1 rounded-lg transition-colors",
+             isDarkMode ? "hover:bg-white/10" : "hover:bg-slate-100"
+           )}>
              <User
                size={20}
-               className="text-indigo-300"
+               className={isDarkMode ? "text-indigo-300" : "text-indigo-600"}
              />
              <span className="text-sm font-medium">
                {currentUser ? `${currentUser.firstName} (${currentUser.role})` : 'Loading...'}
              </span>
            </Link>
-           <Link to="/messages" className="flex items-center gap-1 hover:text-gray-300">
+           <Link to="/messages" className={clsx("flex items-center gap-1 transition-colors", isDarkMode ? "hover:text-gray-300" : "hover:text-indigo-600")}>
              <MessageSquare size={20} />
              <span className="text-sm">Messages</span>
            </Link>
@@ -665,23 +988,32 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className={clsx(
-            "bg-white border-r border-indigo-50/50 overflow-y-auto flex-shrink-0 pb-10 transition-all duration-300 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative",
-            isCollapsed ? "w-20" : "w-72"
-        )}>
-          <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-indigo-50/60 to-transparent pointer-events-none" />
+        <aside 
+            className={clsx(
+                "border-r overflow-y-auto flex-shrink-0 pb-10 transition-all duration-300 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative",
+                isCollapsed ? "w-20" : "w-72",
+                isDarkMode ? "border-white/10" : "border-slate-200"
+            )}
+            style={{ background: topBottomBackground }}
+        >
           
           <div className={clsx("px-4 pt-5 pb-3 flex items-center relative z-10", isCollapsed ? "justify-center" : "justify-between")}>
             {!isCollapsed && (
               <div className="flex flex-col">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-900/60">
+                <span className={clsx(
+                  "text-xs font-bold uppercase tracking-wider",
+                  isDarkMode ? "text-indigo-100/60" : "text-slate-500"
+                )}>
                   Menu
                 </span>
               </div>
             )}
              <button 
                 onClick={() => setIsCollapsed(!isCollapsed)} 
-                className="p-1.5 rounded-lg transition-colors text-indigo-400 hover:bg-indigo-50"
+                className={clsx(
+                  "p-1.5 rounded-lg transition-colors",
+                  isDarkMode ? "text-indigo-200 hover:bg-white/10" : "text-slate-400 hover:bg-slate-100"
+                )}
              >
                 {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
              </button>
@@ -707,6 +1039,8 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                    active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))}
                    onClick={() => scrollToTopAll('auto')}
                    isCollapsed={isCollapsed}
+                   theme={item.theme}
+                   isDarkMode={isDarkMode}
                  />
                );
              })}
@@ -732,35 +1066,16 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                />
              </div>
              <footer
-               className="w-full py-4 px-6 text-sm border-t border-slate-900/40 dark:border-slate-700/40 mt-auto"
-               style={{ backgroundImage: topBottomBackground }}
+               className={clsx(
+                 "w-full py-4 px-6 text-sm border-t mt-auto transition-colors",
+                 isDarkMode 
+                   ? "border-slate-900/40 text-slate-200" 
+                   : "border-slate-200 text-slate-600"
+               )}
+               style={{ background: topBottomBackground }}
              >
                <div className="max-w-6xl mx-auto flex flex-col gap-3">
-                 <div className="flex flex-col sm:flex-row gap-3 text-xs text-slate-300 items-center sm:items-start justify-center sm:justify-center">
-                   <div>
-                     <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">Contact us</div>
-                     <div>
-                       Call{' '}
-                       <a href="tel:+919258622022" className="hover:underline">
-                         +919258622022
-                       </a>
-                     </div>
-                     <div>
-                       Write us{' '}
-                       <a href="mailto:erp@geenie.org" className="hover:underline">
-                         erp@geenie.org
-                       </a>
-                     </div>
-                   </div>
-                   <div>
-                     <div className="font-semibold uppercase tracking-wide text-slate-200 mb-1">About us</div>
-                     <div className="max-w-xs">
-                       doonITes ERP is a comprehensive school management solution designed to simplify daily
-                       operations and enhance teaching, learning, and communication across the campus.
-                     </div>
-                   </div>
-                 </div>
-                 <p className="text-slate-200 text-xs sm:text-center">
+                 <p className="text-xs sm:text-center">
                    <a
                      href="https://geenie.org"
                      target="_blank"

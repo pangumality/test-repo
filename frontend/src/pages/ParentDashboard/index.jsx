@@ -148,7 +148,7 @@ const ParentDashboard = () => {
           
           {/* Academic Overview Card */}
           <Link to="/dashboard/subjects" className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-400 opacity-10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-400 opacity-100 rounded-bl-full -mr-6 -mt-6 transition-all duration-500 group-hover:scale-110" />
             
             <div className="flex items-center justify-between mb-6 relative">
               <h3 className="font-bold text-slate-700 flex items-center gap-3">
@@ -182,11 +182,11 @@ const ParentDashboard = () => {
 
           {/* Attendance Card */}
           <Link to="/dashboard/attendance" className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-400 opacity-10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-600 to-lime-400 opacity-40 rounded-bl-full -mr-6 -mt-6 transition-all duration-500 group-hover:scale-110 group-hover:opacity-60" />
             
             <div className="flex items-center justify-between mb-6 relative">
               <h3 className="font-bold text-slate-700 flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-400 rounded-lg text-white shadow-lg shadow-emerald-500/30">
+                <div className="p-2.5 bg-gradient-to-br from-green-600 to-lime-400 rounded-lg text-white shadow-lg shadow-green-500/30">
                   <Calendar size={20} />
                 </div>
                 Attendance
@@ -238,11 +238,11 @@ const ParentDashboard = () => {
 
           {/* Fees Card */}
           <Link to="/finance" className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 opacity-10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-violet-600 to-fuchsia-400 opacity-80 rounded-bl-full -mr-6 -mt-6 transition-all duration-500 group-hover:scale-110 group-hover:opacity-100" />
             
             <div className="flex items-center justify-between mb-6 relative">
               <h3 className="font-bold text-slate-700 flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg text-white shadow-lg shadow-violet-500/30">
+                <div className="p-2.5 bg-gradient-to-br from-violet-600 to-fuchsia-400 rounded-lg text-white shadow-lg shadow-violet-500/30">
                   <CreditCard size={20} />
                 </div>
                 Fees Status
@@ -291,7 +291,7 @@ const ParentDashboard = () => {
           <Link to="/dashboard/exams" className="md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden block">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-bold text-slate-700 flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg text-white shadow-lg shadow-orange-500/30">
+                <div className="p-2.5 bg-gradient-to-br from-orange-600 to-yellow-400 rounded-lg text-white shadow-lg shadow-orange-500/30">
                   <Award size={20} />
                 </div>
                 Recent Results

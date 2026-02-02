@@ -1,13 +1,8 @@
 import dotenv from 'dotenv';
-dotenv.config({ override: true }); // Ensure env vars are loaded and override system defaults
-import prismaClientPkg from '../../node_modules/.prisma/client/index.js';
-const { PrismaClient } = prismaClientPkg;
-import pg from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 
-const { Pool } = pg;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+dotenv.config({ override: true }); // Ensure env vars are loaded and override system defaults
+
+const prisma = new PrismaClient();
 
 export default prisma;

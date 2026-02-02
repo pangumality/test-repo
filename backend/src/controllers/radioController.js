@@ -460,8 +460,8 @@ export const getCurrentProgram = async (req, res) => {
 
     res.json(null);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to get current program' });
+    console.error('getCurrentProgram Error:', error);
+    res.status(500).json({ error: 'Failed to get current program', details: error.message });
   }
 };
 
@@ -511,8 +511,8 @@ export const getLivePrograms = async (req, res) => {
 
     res.json(enriched);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to get live programs' });
+    console.error('getLivePrograms Error:', error);
+    res.status(500).json({ error: 'Failed to get live programs', details: error.message });
   }
 };
 

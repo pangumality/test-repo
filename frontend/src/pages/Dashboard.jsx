@@ -12,6 +12,8 @@ import {
   Activity,
   BookOpen,
   Radio,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import ParentDashboard from './ParentDashboard';
 import api from '../utils/api';
@@ -43,7 +45,7 @@ const StatCard = ({
   const content = (
     <>
       <div
-        className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colorFrom} ${colorTo} opacity-40 rounded-bl-[100px] -mr-8 -mt-8 transition-all duration-500 group-hover:scale-110 group-hover:opacity-60`}
+        className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colorFrom} ${colorTo} opacity-100 rounded-bl-[100px] -mr-8 -mt-8 transition-all duration-500 group-hover:scale-110`}
       />
 
       <div className="flex items-start justify-between mb-4 relative z-10">
@@ -54,9 +56,11 @@ const StatCard = ({
         </div>
         {buttonLabel && (
           <span
-            className={`text-[10px] font-bold px-3 py-1 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm group-hover:bg-white dark:group-hover:bg-slate-700 shadow-sm transition-all border border-slate-100/50 dark:border-slate-700/50 bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent uppercase tracking-wider`}
+            className="text-[10px] font-bold px-3 py-1 rounded-full bg-white dark:bg-slate-800 shadow-md transition-all border border-slate-100 dark:border-slate-700 z-20 relative uppercase tracking-wider inline-block"
           >
-            {buttonLabel}
+            <span className={`bg-gradient-to-r ${colorFrom} ${colorTo} bg-clip-text text-transparent`}>
+              {buttonLabel}
+            </span>
           </span>
         )}
       </div>
@@ -143,14 +147,27 @@ const Dashboard = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const response = await api.get('/calendar');
+        const response = await api.get('/calendar', {
+          params: {
+            month: calendarMonth.getMonth(),
+            year: calendarMonth.getFullYear()
+          }
+        });
         setCalendarEvents(response.data || []);
       } catch (error) {
         console.error('Failed to fetch calendar events:', error);
       }
     };
     load();
-  }, []);
+  }, [calendarMonth]);
+
+  const goToPreviousMonth = () => {
+    setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
 
   const calendarYear = calendarMonth.getFullYear();
   const calendarMonthIndex = calendarMonth.getMonth();
@@ -301,9 +318,9 @@ const Dashboard = () => {
             icon={Building2}
             title="Total Schools"
             count={stats.schools}
-            colorFrom="from-brand-500"
-            colorTo="to-brand-400"
-            iconColor="shadow-brand-500/40"
+            colorFrom="from-blue-600"
+            colorTo="to-cyan-400"
+            iconColor="shadow-blue-500/40"
             buttonLabel="Manage"
             link="/dashboard/schools"
           />
@@ -311,9 +328,9 @@ const Dashboard = () => {
             icon={Users}
             title="School Admins"
             count={stats.users}
-            colorFrom="from-secondary-500"
-            colorTo="to-pink-500"
-            iconColor="shadow-secondary-500/40"
+            colorFrom="from-fuchsia-600"
+            colorTo="to-pink-400"
+            iconColor="shadow-fuchsia-500/40"
             buttonLabel="View All"
             link="/dashboard/schools"
           />
@@ -321,9 +338,9 @@ const Dashboard = () => {
             icon={DollarSign}
             title="Total Revenue"
             count={formatCurrency(stats.revenue)}
-            colorFrom="from-emerald-500"
-            colorTo="to-teal-400"
-            iconColor="shadow-emerald-500/40"
+            colorFrom="from-green-600"
+            colorTo="to-lime-400"
+            iconColor="shadow-green-500/40"
             buttonLabel="Finance"
             link="/dashboard/finance"
           />
@@ -331,9 +348,9 @@ const Dashboard = () => {
             icon={MessageSquare}
             title="Total Messages"
             count={stats.messages}
-            colorFrom="from-amber-500"
-            colorTo="to-orange-500"
-            iconColor="shadow-amber-500/40"
+            colorFrom="from-orange-600"
+            colorTo="to-yellow-400"
+            iconColor="shadow-orange-500/40"
             buttonLabel="View Logs"
             link="/dashboard/messages"
           />
@@ -344,9 +361,9 @@ const Dashboard = () => {
             icon={GraduationCap}
             title="My subject"
             count=""
-            colorFrom="from-brand-500"
-            colorTo="to-brand-400"
-            iconColor="shadow-brand-500/40"
+            colorFrom="from-blue-600"
+            colorTo="to-cyan-400"
+            iconColor="shadow-blue-500/40"
             buttonLabel="Open"
             link="/dashboard/subjects"
           />
@@ -354,9 +371,9 @@ const Dashboard = () => {
             icon={Users}
             title="Group studies"
             count=""
-            colorFrom="from-secondary-500"
-            colorTo="to-pink-500"
-            iconColor="shadow-secondary-500/40"
+            colorFrom="from-fuchsia-600"
+            colorTo="to-pink-400"
+            iconColor="shadow-fuchsia-500/40"
             buttonLabel="Open"
             link="/dashboard/group-studies"
           />
@@ -364,9 +381,9 @@ const Dashboard = () => {
             icon={BookOpen}
             title="E-learning"
             count=""
-            colorFrom="from-emerald-500"
-            colorTo="to-teal-400"
-            iconColor="shadow-emerald-500/40"
+            colorFrom="from-green-600"
+            colorTo="to-lime-400"
+            iconColor="shadow-green-500/40"
             buttonLabel="Open"
             link="/dashboard/e-learning"
           />
@@ -374,9 +391,9 @@ const Dashboard = () => {
             icon={Radio}
             title="Radio"
             count=""
-            colorFrom="from-amber-500"
-            colorTo="to-orange-500"
-            iconColor="shadow-amber-500/40"
+            colorFrom="from-orange-600"
+            colorTo="to-yellow-400"
+            iconColor="shadow-orange-500/40"
             buttonLabel="Listen"
             link="/dashboard/radio"
           />
@@ -387,9 +404,9 @@ const Dashboard = () => {
             icon={GraduationCap}
             title="Total Students"
             count={stats.students}
-            colorFrom="from-brand-500"
-            colorTo="to-brand-400"
-            iconColor="shadow-brand-500/40"
+            colorFrom="from-blue-500"
+            colorTo="to-cyan-400"
+            iconColor="shadow-blue-500/40"
             buttonLabel="View All"
             link="/dashboard/students"
           />
@@ -398,9 +415,9 @@ const Dashboard = () => {
               icon={Users}
               title="Total Teachers"
               count={stats.teachers}
-              colorFrom="from-secondary-500"
-              colorTo="to-pink-500"
-              iconColor="shadow-secondary-500/40"
+              colorFrom="from-fuchsia-500"
+              colorTo="to-pink-400"
+              iconColor="shadow-fuchsia-500/40"
               buttonLabel="View All"
               link="/dashboard/teachers"
             />
@@ -409,9 +426,9 @@ const Dashboard = () => {
             icon={Home}
             title="Total Classes"
             count={stats.classes}
-            colorFrom="from-emerald-500"
-            colorTo="to-teal-400"
-            iconColor="shadow-emerald-500/40"
+            colorFrom="from-green-500"
+            colorTo="to-lime-400"
+            iconColor="shadow-green-500/40"
             buttonLabel="View All"
             link="/dashboard/classes"
           />
@@ -421,9 +438,9 @@ const Dashboard = () => {
                 icon={DollarSign}
                 title="Total Revenue"
                 count={formatCurrency(stats.revenue)}
-                colorFrom="from-amber-500"
-                colorTo="to-orange-500"
-                iconColor="shadow-amber-500/40"
+                colorFrom="from-orange-500"
+                colorTo="to-yellow-400"
+                iconColor="shadow-orange-500/40"
                 buttonLabel="Finance"
                 link="/dashboard/finance"
               />
@@ -432,9 +449,9 @@ const Dashboard = () => {
                 icon={CreditCard}
                 title="Total Parents"
                 count={stats.parents}
-                colorFrom="from-amber-500"
-                colorTo="to-orange-500"
-                iconColor="shadow-amber-500/40"
+                colorFrom="from-orange-500"
+                colorTo="to-yellow-400"
+                iconColor="shadow-orange-500/40"
                 buttonLabel="Finance"
                 link="/dashboard/finance"
               />
@@ -445,13 +462,13 @@ const Dashboard = () => {
 
       {currentUser?.role === 'admin' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-3 bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 p-8">
+          <div className="lg:col-span-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 dark:border-slate-800 p-8">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-[var(--ui-accent-soft)] text-[color:var(--ui-accent)]">
                   <BarChart2 size={20} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-700">Statistics Overview</h3>
+                <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200">Statistics Overview</h3>
               </div>
             </div>
             <div className="h-80">
@@ -490,14 +507,14 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 p-6">
-        <div className="flex justify-between items-center mb-6 border-b border-slate-100/50 pb-4">
+      <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-[2rem] shadow-soft border border-white/50 dark:border-slate-800 p-6">
+        <div className="flex justify-between items-center mb-6 border-b border-slate-100/50 dark:border-slate-800/50 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20"
                  style={{ backgroundImage: 'linear-gradient(to bottom right, var(--ui-accent-strong), var(--ui-accent))' }}>
               <span className="text-lg">📅</span>
             </div>
-            <h3 className="font-bold text-slate-700">Events Calendar</h3>
+            <h3 className="font-bold text-slate-700 dark:text-slate-200">Events Calendar</h3>
           </div>
           {canManageCalendar && (
             <button
@@ -510,22 +527,40 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="text-center mb-6">
-          <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
-            {monthLabel}
-          </h3>
-          <p className="text-sm text-slate-400 font-medium">School events for your school</p>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <button
+            onClick={goToPreviousMonth}
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400"
+            aria-label="Previous month"
+          >
+            <ChevronLeft size={24} />
+          </button>
+
+          <div className="text-center">
+            <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400">
+              {monthLabel}
+            </h3>
+            <p className="text-sm text-slate-400 font-medium">School events for your school</p>
+          </div>
+
+          <button
+            onClick={goToNextMonth}
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400"
+            aria-label="Next month"
+          >
+            <ChevronRight size={24} />
+          </button>
         </div>
 
-        <div className="border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm bg-white/40 backdrop-blur-sm">
-          <div className="grid grid-cols-7 bg-slate-50/80 border-b border-slate-200/60">
+        <div className="border border-slate-200/60 dark:border-slate-700/60 rounded-2xl overflow-hidden shadow-sm bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+          <div className="grid grid-cols-7 bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-200/60 dark:border-slate-700/60">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
               const isWeekendHeader = index === 0 || index === 6;
               return (
                 <div
                   key={day}
                   className={`py-3 text-center text-xs font-bold uppercase tracking-wider ${
-                    isWeekendHeader ? 'text-red-500' : 'text-slate-500'
+                    isWeekendHeader ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   {day}
@@ -537,7 +572,7 @@ const Dashboard = () => {
             {Array.from({ length: firstWeekday }).map((_, idx) => (
               <div
                 key={`pad-${idx}`}
-                className="h-24 border-r border-b border-slate-100/60 last:border-r-0 bg-slate-50/20"
+                className="h-24 border-r border-b border-slate-100/60 dark:border-slate-700/60 last:border-r-0 bg-slate-50/20 dark:bg-slate-800/20"
               />
             ))}
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
@@ -668,7 +703,12 @@ const Dashboard = () => {
                     setNewCalendarEvent({ title: '', description: '', date: '' });
                     const refresh = async () => {
                       try {
-                        const response = await api.get('/calendar');
+                        const response = await api.get('/calendar', {
+                          params: {
+                            month: calendarMonth.getMonth(),
+                            year: calendarMonth.getFullYear()
+                          }
+                        });
                         setCalendarEvents(response.data || []);
                       } catch (error) {
                         console.error('Failed to refresh calendar events:', error);
