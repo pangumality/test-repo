@@ -165,7 +165,7 @@ export default function GroupStudies() {
               </div>
               
               <button 
-                onClick={() => navigate(`/group-studies/${study.id}/live`)}
+                onClick={() => navigate(`${study.id}/live`)}
                 className="mt-4 w-full py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
               >
                 <Video size={18} />
