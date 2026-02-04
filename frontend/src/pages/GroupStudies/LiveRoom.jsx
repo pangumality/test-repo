@@ -5,6 +5,7 @@ import Peer from 'simple-peer';
 import api from '../../utils/api';
 import * as process from 'process';
 import { Buffer } from 'buffer';
+import { Mic, MicOff, Video as VideoIcon, VideoOff, Maximize2, Minimize2 } from 'lucide-react';
 
 // Polyfill for simple-peer in Vite
 if (typeof window !== 'undefined') {
@@ -13,19 +14,42 @@ if (typeof window !== 'undefined') {
     window.Buffer = Buffer;
 }
 
-const Video = ({ peer }) => {
+const RemoteTile = ({ peer, name }) => {
     const ref = useRef();
-
+    const [hasStream, setHasStream] = useState(false);
+    const [isFs, setIsFs] = useState(false);
+    const boxRef = useRef();
     useEffect(() => {
-        peer.on('stream', stream => {
-            if (ref.current) {
-                ref.current.srcObject = stream;
-            }
+        peer.on('stream', s => {
+            setHasStream(true);
+            if (ref.current) ref.current.srcObject = s;
         });
     }, [peer]);
-
+    const toggleFs = () => {
+        const el = boxRef.current;
+        if (!el) return;
+        if (!document.fullscreenElement) {
+            el.requestFullscreen?.();
+            setIsFs(true);
+        } else {
+            document.exitFullscreen?.();
+            setIsFs(false);
+        }
+    };
     return (
-        <video playsInline autoPlay ref={ref} className="w-full h-full object-cover rounded-lg bg-gray-900" />
+        <div ref={boxRef} className="relative bg-black rounded-xl overflow-hidden shadow-lg ring-1 ring-gray-800 h-64 md:h-72 lg:h-80">
+            <video playsInline autoPlay ref={ref} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/20 via-transparent to-black/40" />
+            <div className="absolute top-2 left-2 text-xs px-2 py-1 rounded bg-black/60 text-white">{name || 'Participant'}</div>
+            <button onClick={toggleFs} className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded hover:bg-black/70">
+                {isFs ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+            {!hasStream && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-gray-300 text-sm bg-black/50 px-3 py-2 rounded">Connecting...</div>
+                </div>
+            )}
+        </div>
     );
 };
 
@@ -41,135 +65,209 @@ const LiveRoom = () => {
     const [waiting, setWaiting] = useState(true);
     const [stream, setStream] = useState(null);
     const [error, setError] = useState(null);
+    const [roomName, setRoomName] = useState(null);
+    const pollRef = useRef(null);
+    const [approved, setApproved] = useState(false);
+    const [requestSent, setRequestSent] = useState(false);
+    const [pendingRequests, setPendingRequests] = useState([]);
+    const [micOn, setMicOn] = useState(true);
+    const [camOn, setCamOn] = useState(true);
+    const localBoxRef = useRef();
+    const [localFs, setLocalFs] = useState(false);
 
     // Fetch User & Room Status
     useEffect(() => {
+        let cancelled = false;
+
+        const stopPolling = () => {
+            if (pollRef.current) {
+                clearInterval(pollRef.current);
+                pollRef.current = null;
+            }
+        };
+
         const checkStatus = async () => {
             try {
                 const userRes = await api.get('/me');
+                if (cancelled) return;
                 setUser(userRes.data);
 
                 const statusRes = await api.get(`/group-studies/${roomId}/status`);
+                if (cancelled) return;
                 const isCreator = statusRes.data.creatorId === userRes.data.id;
                 setIsHost(isCreator);
+
+                if (statusRes.data.meetingLink) {
+                    setRoomName(statusRes.data.meetingLink);
+                } else if (statusRes.data.isLive) {
+                    setRoomName(roomId);
+                }
 
                 if (isCreator) {
                     // Creator starts the room
                     if (!statusRes.data.isLive) {
-                        await api.post(`/group-studies/${roomId}/live`, { isLive: true });
+                        const started = await api.post(`/group-studies/${roomId}/live`, { isLive: true });
+                        if (!cancelled && started?.data?.roomName) {
+                            setRoomName(started.data.roomName);
+                        } else if (!cancelled) {
+                            setRoomName(roomId);
+                        }
                     }
+                    stopPolling();
                     setWaiting(false);
                 } else {
                     // Guests wait for room to be live
                     if (statusRes.data.isLive) {
+                        stopPolling();
                         setWaiting(false);
                     } else {
                         // Poll for status
-                        const interval = setInterval(async () => {
+                        stopPolling();
+                        pollRef.current = setInterval(async () => {
                             try {
                                 const res = await api.get(`/group-studies/${roomId}/status`);
+                                if (cancelled) return;
+                                if (res.data.meetingLink) {
+                                    setRoomName(res.data.meetingLink);
+                                }
                                 if (res.data.isLive) {
                                     setWaiting(false);
-                                    clearInterval(interval);
+                                    stopPolling();
                                 }
                             } catch (e) { console.error(e); }
                         }, 3000);
-                        return () => clearInterval(interval);
                     }
                 }
             } catch (err) {
                 console.error('Failed to init:', err);
+                stopPolling();
                 setError('Failed to load room configuration.');
             }
         };
         checkStatus();
+
+        return () => {
+            cancelled = true;
+            stopPolling();
+        };
     }, [roomId]);
 
-    // Initialize WebRTC
     useEffect(() => {
         if (waiting || !user) return;
+        if (!roomName) return;
 
-        // Connect to Socket.io (Relative path, handled by Vite Proxy)
-        socketRef.current = io('/', {
-            path: '/socket.io'
-        });
-
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-            setStream(stream);
-            if (userVideo.current) {
-                userVideo.current.srcObject = stream;
-            }
-
-            socketRef.current.emit('join-room', roomId, user.id);
-
-            socketRef.current.on('user-connected', ({ userId, socketId }) => {
-                const peer = createPeer(socketId, socketRef.current.id, stream);
-                peersRef.current.push({
-                    peerID: socketId,
-                    peer,
-                });
-                setPeers(users => [...users, { peerID: socketId, peer }]);
-            });
-
-            socketRef.current.on('user-disconnected', socketId => {
-                const peerObj = peersRef.current.find(p => p.peerID === socketId);
-                if (peerObj) {
-                    peerObj.peer.destroy();
-                }
-                const peers = peersRef.current.filter(p => p.peerID !== socketId);
-                peersRef.current = peers;
-                setPeers(peers);
-            });
-
-            socketRef.current.on('offer', payload => {
-                const item = peersRef.current.find(p => p.peerID === payload.callerID);
-                if (item) {
-                     item.peer.signal(payload.signal);
-                     return;
-                }
-                
-                // If offer comes from someone we don't have a peer for yet (should be rare with this logic but possible)
-                // Actually, the logic below handles 'receiving returned signal'.
-                // Wait, standard simple-peer mesh logic:
-                // 1. A joins.
-                // 2. A gets 'all users'. A initiates to B, C.
-                // 3. B receives signal from A. B adds peer A (non-initiator).
-                
-                // My socket logic in index.js was:
-                // join-room -> emit user-connected.
-                // A joins. Emits join-room.
-                // B receives user-connected(A). B creates Peer(initiator: true) to A.
-                // A receives offer from B. A creates Peer(initiator: false).
-                
-                const peer = addPeer(payload.signal, payload.callerID, stream);
-                peersRef.current.push({
-                    peerID: payload.callerID,
-                    peer,
-                });
-                setPeers(users => [...users, { peerID: payload.callerID, peer }]);
-            });
-
-            socketRef.current.on('answer', payload => {
-                const item = peersRef.current.find(p => p.peerID === payload.id);
-                if(item) {
-                    item.peer.signal(payload.signal);
-                }
-            });
-            
-            socketRef.current.on('ice-candidate', payload => {
-                 const item = peersRef.current.find(p => p.peerID === payload.id);
-                 if(item) {
-                     item.peer.signal(payload.candidate);
-                 }
-            });
-        });
-        
-        return () => {
-             if(socketRef.current) socketRef.current.disconnect();
-             if(stream) stream.getTracks().forEach(track => track.stop());
+        const hostname = window.location.hostname;
+        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+        const isHttps = window.location.protocol === 'https:';
+        if (!isHttps && !isLocalhost) {
+            setError('Camera and microphone require HTTPS when accessed via IP. Use https or localhost.');
+            return;
         }
 
-    }, [waiting, user, roomId]);
+        socketRef.current = io('/', { path: '/socket.io' });
+
+        if (isHost) {
+            socketRef.current.emit('join-room', roomName, user.id);
+            socketRef.current.on('join-request', (req) => {
+                setPendingRequests(prev => [...prev, req]);
+            });
+        } else {
+            socketRef.current.on('join-approved', () => {
+                setApproved(true);
+            });
+            socketRef.current.on('join-rejected', (payload) => {
+                setRequestSent(false);
+                setError(payload?.reason || 'Join request rejected');
+            });
+        }
+
+        return () => {
+            if (socketRef.current) socketRef.current.disconnect();
+        };
+    }, [waiting, user, roomId, roomName, isHost]);
+
+    useEffect(() => {
+        if (waiting || !user) return;
+        if (!roomName) return;
+        if (!isHost && !approved) return;
+
+        (async () => {
+            try {
+                const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                setStream(s);
+                if (userVideo.current) {
+                    userVideo.current.srcObject = s;
+                }
+                if (!isHost) socketRef.current.emit('join-room', roomName, user.id);
+                socketRef.current.on('user-connected', ({ userId, socketId }) => {
+                    const peer = createPeer(socketId, socketRef.current.id, s);
+                    peersRef.current.push({ peerID: socketId, peer });
+                    setPeers(users => [...users, { peerID: socketId, peer }]);
+                });
+                socketRef.current.on('user-disconnected', socketId => {
+                    const peerObj = peersRef.current.find(p => p.peerID === socketId);
+                    if (peerObj) {
+                        peerObj.peer.destroy();
+                    }
+                    const peers = peersRef.current.filter(p => p.peerID !== socketId);
+                    peersRef.current = peers;
+                    setPeers(peers);
+                });
+                socketRef.current.on('offer', payload => {
+                    const item = peersRef.current.find(p => p.peerID === payload.callerID);
+                    if (item) {
+                        item.peer.signal(payload.signal);
+                        return;
+                    }
+                    const peer = addPeer(payload.signal, payload.callerID, s);
+                    peersRef.current.push({ peerID: payload.callerID, peer });
+                    setPeers(users => [...users, { peerID: payload.callerID, peer }]);
+                });
+                socketRef.current.on('answer', payload => {
+                    const item = peersRef.current.find(p => p.peerID === payload.id);
+                    if (item) {
+                        item.peer.signal(payload.signal);
+                    }
+                });
+                socketRef.current.on('ice-candidate', payload => {
+                    const item = peersRef.current.find(p => p.peerID === payload.id);
+                    if (item) {
+                        item.peer.signal(payload.candidate);
+                    }
+                });
+            } catch (e) {
+                setError('Unable to access camera/microphone. Check permissions and HTTPS.');
+            }
+        })();
+
+        return () => {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+        };
+    }, [approved, waiting, user, roomId, roomName, isHost]);
+
+    const sendJoinRequest = () => {
+        if (!socketRef.current || requestSent) return;
+        setError(null);
+        setRequestSent(true);
+        socketRef.current.emit('join-request', {
+            roomName,
+            groupId: roomId,
+            userId: user.id,
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Guest'
+        });
+    };
+
+    const approveReq = (socketId) => {
+        if (!socketRef.current) return;
+        setPendingRequests(prev => prev.filter(r => r.socketId !== socketId));
+        socketRef.current.emit('approve-request', { targetSocketId: socketId, roomName });
+    };
+
+    const rejectReq = (socketId) => {
+        if (!socketRef.current) return;
+        setPendingRequests(prev => prev.filter(r => r.socketId !== socketId));
+        socketRef.current.emit('reject-request', { targetSocketId: socketId, roomName });
+    };
 
     function createPeer(userToSignal, callerID, stream) {
         const peer = new Peer({
@@ -214,46 +312,113 @@ const LiveRoom = () => {
 
     if (waiting) {
         return (
-             <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-                <div className="bg-white p-8 rounded-lg shadow-lg text-center">
-                    <h2 className="text-2xl font-bold mb-4">Waiting for Host</h2>
-                    <p className="text-gray-600">The host has not started the meeting yet.</p>
-                    <p className="text-sm text-gray-500 mt-2">Please wait...</p>
+            <div className="flex items-center justify-center h-screen bg-gray-900">
+                <div className="bg-gray-800 p-8 rounded-xl shadow-lg text-center text-white">
+                    <div className="text-2xl font-semibold mb-2">Waiting for Host</div>
+                    <div className="text-gray-300">The host has not started the meeting yet.</div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-screen bg-gray-900 p-4">
-             {/* Header */}
-             <div className="flex justify-between items-center mb-4 text-white">
-                <h1 className="text-xl font-bold">Live Study Room</h1>
-                <button 
-                    onClick={leaveRoom}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-                >
-                    Leave Room
-                </button>
-             </div>
-
-             {/* Video Grid */}
-             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                 {/* Local User */}
-                <div className="relative bg-black rounded-lg overflow-hidden">
-                    <video muted ref={userVideo} autoPlay playsInline className="w-full h-full object-cover" />
-                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-                        You
+        <div className="flex h-screen bg-gray-900">
+            <div className="flex-1 flex flex-col p-4">
+                <div className="flex justify-between items-center mb-4 text-white">
+                    <div className="flex items-center gap-3">
+                        <div className="text-xl font-bold">Live Study Room</div>
+                        <div className="text-xs px-2 py-1 rounded bg-gray-700">{isHost ? 'Host' : approved ? 'Participant' : 'Requesting'}</div>
                     </div>
+                    <button onClick={leaveRoom} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Leave Room</button>
                 </div>
 
-                {/* Remote Peers */}
-                {peers.map((peer) => (
-                    <div key={peer.peerID} className="relative bg-black rounded-lg overflow-hidden">
-                        <Video peer={peer.peer} />
+                {!isHost && !approved && (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="bg-gray-800 text-white p-8 rounded-xl w-full max-w-md text-center">
+                            <div className="text-lg font-semibold mb-2">Request Access</div>
+                            <div className="text-gray-300 mb-6">Only the host can approve your entry.</div>
+                            <button onClick={sendJoinRequest} disabled={requestSent} className="w-full py-3 rounded bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">
+                                {requestSent ? 'Waiting for approval...' : 'Send Join Request'}
+                            </button>
+                        </div>
                     </div>
-                ))}
-             </div>
+                )}
+
+                {(isHost || approved) && (
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div ref={localBoxRef} className="relative bg-black rounded-xl overflow-hidden shadow-lg ring-1 ring-gray-800 h-64 md:h-72 lg:h-80">
+                            <video muted ref={userVideo} autoPlay playsInline className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/20 via-transparent to-black/40" />
+                            <div className="absolute top-2 left-2 text-xs px-2 py-1 rounded bg-black/60 text-white">You</div>
+                            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                                <div className="flex gap-2">
+                                    <button onClick={() => {
+                                        if (!stream) return;
+                                        const tracks = stream.getAudioTracks();
+                                        const next = !micOn;
+                                        tracks.forEach(t => t.enabled = next);
+                                        setMicOn(next);
+                                    }} className="p-2 rounded bg-black/50 text-white hover:bg-black/70">
+                                        {micOn ? <Mic size={16} /> : <MicOff size={16} />}
+                                    </button>
+                                    <button onClick={() => {
+                                        if (!stream) return;
+                                        const tracks = stream.getVideoTracks();
+                                        const next = !camOn;
+                                        tracks.forEach(t => t.enabled = next);
+                                        setCamOn(next);
+                                    }} className="p-2 rounded bg-black/50 text-white hover:bg-black/70">
+                                        {camOn ? <VideoIcon size={16} /> : <VideoOff size={16} />}
+                                    </button>
+                                </div>
+                                <button onClick={() => {
+                                    const el = localBoxRef.current;
+                                    if (!el) return;
+                                    if (!document.fullscreenElement) {
+                                        el.requestFullscreen?.();
+                                        setLocalFs(true);
+                                    } else {
+                                        document.exitFullscreen?.();
+                                        setLocalFs(false);
+                                    }
+                                }} className="p-2 rounded bg-black/50 text-white hover:bg-black/70">
+                                    {localFs ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                                </button>
+                            </div>
+                        </div>
+                        {peers.map((peer) => (
+                            <RemoteTile key={peer.peerID} peer={peer.peer} name={peer.userId ? String(peer.userId).slice(0,6) : 'Participant'} />
+                        ))}
+                    </div>
+                )}
+            </div>
+            <div className="w-80 border-l border-gray-800 bg-gray-850 p-4 hidden md:block">
+                {isHost ? (
+                    <div>
+                        <div className="text-white font-semibold mb-3">Requests</div>
+                        {pendingRequests.length === 0 ? (
+                            <div className="text-gray-400 text-sm">No requests</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {pendingRequests.map(r => (
+                                    <div key={r.socketId} className="bg-gray-800 text-white p-3 rounded flex items-center justify-between">
+                                        <div className="text-sm">{r.name || r.userId}</div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => approveReq(r.socketId)} className="px-2 py-1 rounded bg-green-600">Approve</button>
+                                            <button onClick={() => rejectReq(r.socketId)} className="px-2 py-1 rounded bg-red-600">Reject</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="text-white">
+                        <div className="font-semibold mb-3">Status</div>
+                        <div className="text-sm text-gray-300">{approved ? 'Approved' : requestSent ? 'Pending approval' : 'Not requested'}</div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

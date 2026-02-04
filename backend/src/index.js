@@ -22,17 +22,54 @@ const io = new Server(server, {
 
 // Socket.io Signaling
 const rooms = {};
+const roomHosts = new Map();
+const roomCreatorMap = new Map();
+
+function parseGroupId(roomName) {
+  if (typeof roomName !== 'string') return null;
+  const m = roomName.match(/^SchoolERP_([^_]+)_/);
+  return m ? m[1] : roomName;
+}
 
 io.on('connection', (socket) => {
-  socket.on('join-room', (roomId, userId) => {
+  socket.on('join-room', async (roomId, userId) => {
+    const gid = parseGroupId(roomId);
+    try {
+      let creatorId = roomCreatorMap.get(roomId);
+      if (!creatorId) {
+        const study = await prisma.groupStudy.findUnique({ where: { id: String(gid) }, select: { creatorId: true } });
+        creatorId = study?.creatorId || null;
+        if (creatorId) roomCreatorMap.set(roomId, creatorId);
+      }
+      if (creatorId && userId === creatorId) {
+        roomHosts.set(roomId, socket.id);
+      }
+    } catch {}
     socket.join(roomId);
-    // Send both userId and socketId so clients can signal to the correct socket
     socket.to(roomId).emit('user-connected', { userId, socketId: socket.id });
-
     socket.on('disconnect', () => {
-      // Send socketId so clients can remove the correct peer
       socket.to(roomId).emit('user-disconnected', socket.id);
+      if (roomHosts.get(roomId) === socket.id) {
+        roomHosts.delete(roomId);
+      }
     });
+  });
+
+  socket.on('join-request', async ({ roomName, groupId, userId, name }) => {
+    const hostSocketId = roomHosts.get(roomName);
+    if (!hostSocketId) {
+      socket.emit('join-rejected', { roomName, reason: 'Host not connected' });
+      return;
+    }
+    io.to(hostSocketId).emit('join-request', { userId, name, socketId: socket.id, roomName });
+  });
+
+  socket.on('approve-request', ({ targetSocketId, roomName }) => {
+    io.to(targetSocketId).emit('join-approved', { roomName });
+  });
+
+  socket.on('reject-request', ({ targetSocketId, roomName, reason }) => {
+    io.to(targetSocketId).emit('join-rejected', { roomName, reason: reason || 'Rejected' });
   });
 
   socket.on('offer', (payload) => {
