@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -53,17 +53,17 @@ model GroupStudy {
 }
 
 model ClassNote {
-  id        String   @id
-  schoolId  String
-  subjectId String
-  classId   String?
-  title     String
-  content   String
+  id          String   @id
+  schoolId    String
+  subjectId   String
+  classId     String?
+  title       String
+  content     String
   attachments Json?
-  createdAt DateTime @default(now())
-  klass     Class?   @relation(fields: [classId], references: [id])
-  school    School   @relation(fields: [schoolId], references: [id])
-  subject   Subject  @relation(fields: [subjectId], references: [id])
+  createdAt   DateTime @default(now())
+  klass       Class?   @relation(fields: [classId], references: [id])
+  school      School   @relation(fields: [schoolId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
 
   @@map("ClassNote")
 }
@@ -227,6 +227,7 @@ model School {
   phone                  String?
   website                String?
   books                  Book[]
+  calendarEvents         CalendarEvent[]
   certificates           Certificate[]
   classes                Class[]
   classNotes             ClassNote[]
@@ -242,18 +243,17 @@ model School {
   leaveRequests          LeaveRequest[]
   newsletters            Newsletter[]
   notices                Notice[]
+  radioPrograms          RadioProgram[]
   sports                 Sport[]
   sportEvents            SportEvent[]
-  radioPrograms          RadioProgram[]
   students               Student[]
   subjects               Subject[]
   activities             SubjectActivity[]
   galleries              SubjectGallery[]
   syllabi                Syllabus[]
   timeTable              TimeTablePeriod[]
-  users                  User[]
   transportBuses         TransportBus[]
-  calendarEvents         CalendarEvent[]
+  users                  User[]
 
   @@map("School")
 }
@@ -276,17 +276,17 @@ model RadioProgram {
 }
 
 model TransportBus {
-  id           String  @id @default(uuid())
-  schoolId     String
-  driverName   String
-  driverPhone  String?
-  numberPlate  String
-  pickupTime   String
-  arrivalTime  String
-  hasStarted   Boolean @default(false)
-  hasArrived   Boolean @default(false)
-  createdAt    DateTime @default(now())
-  school       School  @relation(fields: [schoolId], references: [id])
+  id          String   @id @default(uuid())
+  schoolId    String
+  driverName  String
+  driverPhone String?
+  numberPlate String
+  pickupTime  String
+  arrivalTime String
+  hasStarted  Boolean  @default(false)
+  hasArrived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  school      School   @relation(fields: [schoolId], references: [id])
 
   @@map("TransportBus")
 }
@@ -604,7 +604,7 @@ model Syllabus {
   content   String?
   fileUrl   String?
   term      String?
-  type      String?  @default("SYLLABUS") // SYLLABUS, PAST_PAPER
+  type      String?  @default("SYLLABUS")
   createdAt DateTime @default(now())
   klass     Class?   @relation(fields: [classId], references: [id])
   school    School   @relation(fields: [schoolId], references: [id])

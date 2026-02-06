@@ -41,9 +41,10 @@ const AITutor = ({ embedded = false, context = '' }) => {
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('AI Error:', error);
+      const errorMessage = error.response?.data?.error || 'Sorry, I encountered an error while processing your request. Please try again later.';
       setMessages(prev => [...prev, { 
         role: 'ai', 
-        content: 'Sorry, I encountered an error while processing your request. Please try again later.' 
+        content: errorMessage
       }]);
     } finally {
       setLoading(false);

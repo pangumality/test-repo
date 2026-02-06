@@ -43,7 +43,7 @@ import Contact from './pages/Contact';
 
 function App({ theme, setTheme }) {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/contact" element={<Contact />} />

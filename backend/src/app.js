@@ -2339,7 +2339,13 @@ app.delete('/api/class-notes/:id', authenticate, requirePermission(PERMISSIONS.E
 app.get('/api/subjects', authenticate, async (req, res) => {
   try {
     const { schoolId, role, id: userId } = req.user;
-    let where = { schoolId };
+    let where = {};
+
+    if (schoolId) {
+      where.schoolId = schoolId;
+    } else if (role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied: No school context' });
+    }
 
     if (role === 'teacher') {
         // Find teacher profile
