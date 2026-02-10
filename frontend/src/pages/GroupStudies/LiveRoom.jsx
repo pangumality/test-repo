@@ -54,6 +54,16 @@ const RemoteTile = ({ peer, name }) => {
 };
 
 const LiveRoom = () => {
+    // Debug logging requested by user
+    console.log('authToken:', localStorage.getItem('authToken')); 
+    console.log('token:', localStorage.getItem('token')); 
+    console.log('All localStorage:', {...localStorage});
+
+    console.log('LIVE ROOM DEBUG', {
+        user: localStorage.getItem('user'),
+        currentUser: localStorage.getItem('currentUser'),
+        token: localStorage.getItem('authToken'),
+    });
     const { id: roomId } = useParams();
     const navigate = useNavigate();
     const [peers, setPeers] = useState([]);
@@ -89,8 +99,10 @@ const LiveRoom = () => {
         const checkStatus = async () => {
             try {
                 const userRes = await api.get('/me');
+                console.log('📥 User data received:', userRes.data);
                 if (cancelled) return;
                 setUser(userRes.data);
+                console.log('✅ User state set:', userRes.data);
 
                 const statusRes = await api.get(`/group-studies/${roomId}/status`);
                 if (cancelled) return;
@@ -156,33 +168,42 @@ const LiveRoom = () => {
         if (waiting || !user) return;
         if (!roomName) return;
 
-        const hostname = window.location.hostname;
-        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-        const isHttps = window.location.protocol === 'https:';
-        if (!isHttps && !isLocalhost) {
-            setError('Camera and microphone require HTTPS when accessed via IP. Use https or localhost.');
-            return;
-        }
+        console.log('🔌 Connecting to Socket.IO...', { roomName, userId: user.id, isHost });
 
         socketRef.current = io('/', { path: '/socket.io' });
 
+        socketRef.current.on('connect', () => {
+            console.log('✅ Socket connected:', socketRef.current.id);
+
+            if (isHost) {
+                console.log('👑 Emitting join-room as HOST');
+                socketRef.current.emit('join-room', roomName, user.id);
+            }
+        });
+
         if (isHost) {
-            socketRef.current.emit('join-room', roomName, user.id);
             socketRef.current.on('join-request', (req) => {
+                console.log('📨 Join request received:', req);
                 setPendingRequests(prev => [...prev, req]);
             });
         } else {
+            console.log('👤 Joining as GUEST');
             socketRef.current.on('join-approved', () => {
+                console.log('✅ Join approved!');
                 setApproved(true);
             });
             socketRef.current.on('join-rejected', (payload) => {
+                console.log('❌ Join rejected:', payload);
                 setRequestSent(false);
                 setError(payload?.reason || 'Join request rejected');
             });
         }
 
         return () => {
-            if (socketRef.current) socketRef.current.disconnect();
+            if (socketRef.current) {
+                console.log('🔌 Disconnecting socket');
+                socketRef.current.disconnect();
+            }
         };
     }, [waiting, user, roomId, roomName, isHost]);
 
@@ -246,15 +267,39 @@ const LiveRoom = () => {
     }, [approved, waiting, user, roomId, roomName, isHost]);
 
     const sendJoinRequest = () => {
-        if (!socketRef.current || requestSent) return;
+        console.log('🚀 SENDING JOIN REQUEST', {
+            roomName,
+            groupId: roomId,
+            userId: user?.id,
+            name: user ? `${user.firstName} ${user.lastName}` : null,
+            socketConnected: !!socketRef.current?.connected
+        });
+
+        if (!socketRef.current?.connected) {
+            console.error('❌ Socket not connected!');
+            return;
+        }
+
+        if (!user) {
+            console.error('❌ Cannot send join request: user is null');
+            setError('Unable to identify user. Please re-login and try again.');
+            return;
+        }
+
+        if (requestSent) {
+            console.log('ℹ️ Join request already sent, ignoring duplicate click');
+            return;
+        }
+
         setError(null);
-        setRequestSent(true);
         socketRef.current.emit('join-request', {
             roomName,
             groupId: roomId,
             userId: user.id,
             name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Guest'
         });
+        console.log('✅ Join request emitted');
+        setRequestSent(true);
     };
 
     const approveReq = (socketId) => {
@@ -269,11 +314,38 @@ const LiveRoom = () => {
         socketRef.current.emit('reject-request', { targetSocketId: socketId, roomName });
     };
 
+    const peerConfig = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+            // Public TURN server (Open Relay Project) as fallback for testing
+            {
+                urls: 'turn:openrelay.metered.ca:80',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turn:openrelay.metered.ca:443',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            }
+        ]
+    };
+
     function createPeer(userToSignal, callerID, stream) {
         const peer = new Peer({
             initiator: true,
             trickle: false,
             stream,
+            config: peerConfig
         });
 
         peer.on('signal', signal => {
@@ -288,6 +360,7 @@ const LiveRoom = () => {
             initiator: false,
             trickle: false,
             stream,
+            config: peerConfig
         });
 
         peer.on('signal', signal => {

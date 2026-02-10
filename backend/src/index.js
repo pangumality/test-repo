@@ -32,7 +32,10 @@ function parseGroupId(roomName) {
 }
 
 io.on('connection', (socket) => {
+  console.log('🔌 [socket] Client connected', { socketId: socket.id });
+
   socket.on('join-room', async (roomId, userId) => {
+    console.log('📡 [socket] join-room received', { roomId, userId, socketId: socket.id });
     const gid = parseGroupId(roomId);
     try {
       let creatorId = roomCreatorMap.get(roomId);
@@ -41,10 +44,35 @@ io.on('connection', (socket) => {
         creatorId = study?.creatorId || null;
         if (creatorId) roomCreatorMap.set(roomId, creatorId);
       }
+
+      const hasHostForRoomId = roomHosts.has(roomId);
+      const hasHostForGid = gid ? roomHosts.has(gid) : false;
+
       if (creatorId && userId === creatorId) {
         roomHosts.set(roomId, socket.id);
+        if (gid && gid !== roomId) {
+          roomHosts.set(gid, socket.id);
+        }
+        console.log('👑 [socket] Registered HOST via creatorId match', {
+          roomId,
+          gid,
+          socketId: socket.id
+        });
+      } else if (!hasHostForRoomId && !hasHostForGid) {
+        // Fallback: first user to join the room becomes host
+        roomHosts.set(roomId, socket.id);
+        if (gid && gid !== roomId) {
+          roomHosts.set(gid, socket.id);
+        }
+        console.log('👑 [socket] Registered HOST via fallback (first joiner)', {
+          roomId,
+          gid,
+          socketId: socket.id
+        });
       }
-    } catch {}
+    } catch (err) {
+      console.error('⚠️ [socket] join-room error', err);
+    }
     socket.join(roomId);
     socket.to(roomId).emit('user-connected', { userId, socketId: socket.id });
     socket.on('disconnect', () => {
@@ -56,19 +84,38 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join-request', async ({ roomName, groupId, userId, name }) => {
-    const hostSocketId = roomHosts.get(roomName);
+    console.log('📥 [socket] join-request received', {
+      roomName,
+      groupId,
+      userId,
+      name,
+      from: socket.id
+    });
+    const gid = parseGroupId(roomName);
+    const hostSocketId =
+      roomHosts.get(roomName) ||
+      (groupId ? roomHosts.get(groupId) : null) ||
+      (gid ? roomHosts.get(gid) : null);
     if (!hostSocketId) {
+      console.warn('⚠️ [socket] No host found for room', { roomName });
       socket.emit('join-rejected', { roomName, reason: 'Host not connected' });
       return;
     }
+    console.log('📤 [socket] Forwarding join-request to host', {
+      roomName,
+      hostSocketId,
+      from: socket.id
+    });
     io.to(hostSocketId).emit('join-request', { userId, name, socketId: socket.id, roomName });
   });
 
   socket.on('approve-request', ({ targetSocketId, roomName }) => {
+    console.log('✅ [socket] approve-request', { roomName, targetSocketId, from: socket.id });
     io.to(targetSocketId).emit('join-approved', { roomName });
   });
 
   socket.on('reject-request', ({ targetSocketId, roomName, reason }) => {
+    console.log('⛔ [socket] reject-request', { roomName, targetSocketId, reason, from: socket.id });
     io.to(targetSocketId).emit('join-rejected', { roomName, reason: reason || 'Rejected' });
   });
 

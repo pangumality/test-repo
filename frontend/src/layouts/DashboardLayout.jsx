@@ -747,9 +747,9 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
 
               <div className="p-4 border-t border-slate-800 bg-slate-950/80">
                 <Link 
-                  to="/profile" 
-                  onClick={() => {
-                    setMobileMenuOpen(false);
+                to="/dashboard/profile" 
+                onClick={() => {
+                  setMobileMenuOpen(false);
                     scrollToTopAll('auto');
                   }}
                   className="flex items-center gap-3 mb-4 hover:bg-slate-800 p-2 rounded-lg -mx-2 transition-colors"
@@ -764,6 +764,12 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                     <p className="text-xs text-slate-400 capitalize">{currentUser?.role}</p>
                   </div>
                 </Link>
+
+
+
+
+
+
                 <button className="flex items-center gap-2 text-red-400 w-full p-2 hover:bg-red-900/40 rounded">
                   <LogOut size={18} />
                   <span className="text-sm font-medium">Logout</span>
@@ -851,7 +857,7 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                   "text-[10px] font-medium tracking-wider",
                   isDarkMode ? "text-indigo-300" : "text-indigo-600"
                 )}>
-                  POWERED BY doonITes ERP
+                  POWERED BY doonITes ERP (v1.0.4)
                 </span>
               </>
             ) : (
@@ -861,7 +867,7 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
                   ? "bg-gradient-to-r from-white via-indigo-200 to-indigo-400"
                   : "bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-900"
               )}>
-                doonITes weBBed serVIces ERP
+                doonITes weBBed serVIces ERP (v1.0.4)
               </h1>
             )}
            </div>
@@ -965,22 +971,33 @@ const DashboardLayout = ({ theme = 'light', setTheme }) => {
              )}
            </div>
 
-           <Link to="/profile" className={clsx(
-             "flex items-center gap-2 px-2 py-1 rounded-lg transition-colors",
-             isDarkMode ? "hover:bg-white/10" : "hover:bg-slate-100"
-           )}>
-             <User
-               size={20}
-               className={isDarkMode ? "text-indigo-300" : "text-indigo-600"}
-             />
-             <span className="text-sm font-medium">
-               {currentUser ? `${currentUser.firstName} (${currentUser.role})` : 'Loading...'}
-             </span>
-           </Link>
-           <Link to="/messages" className={clsx("flex items-center gap-1 transition-colors", isDarkMode ? "hover:text-gray-300" : "hover:text-indigo-600")}>
-             <MessageSquare size={20} />
-             <span className="text-sm">Messages</span>
-           </Link>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/profile')}
+            className={clsx(
+              "flex items-center gap-2 px-2 py-1 rounded-lg transition-colors",
+              isDarkMode ? "hover:bg-white/10" : "hover:bg-slate-100"
+            )}
+          >
+            <User
+              size={20}
+              className={isDarkMode ? "text-indigo-300" : "text-indigo-600"}
+            />
+            <span className="text-sm font-medium">
+              {currentUser ? `${currentUser.firstName} (${currentUser.role})` : 'Loading...'}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/messages')}
+            className={clsx(
+              "flex items-center gap-1 transition-colors",
+              isDarkMode ? "hover:text-gray-300" : "hover:text-indigo-600"
+            )}
+          >
+            <MessageSquare size={20} />
+            <span className="text-sm">Messages</span>
+          </button>
            <button onClick={handleLogout} className="flex items-center gap-1 hover:text-red-400">
              <span className="text-sm">Logout</span>
            </button>

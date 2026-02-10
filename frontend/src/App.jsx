@@ -42,6 +42,12 @@ import LandingPage from './pages/LandingPage';
 import Contact from './pages/Contact';
 
 function App({ theme, setTheme }) {
+  // Debug version logging
+  React.useEffect(() => {
+    console.log('App Version: 1.0.3 - Fixed Header Links (Profile/Messages)');
+    console.log('Current Path:', window.location.pathname);
+  }, []);
+
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
@@ -97,7 +103,7 @@ function App({ theme, setTheme }) {
             </RequireRole>
           } />
           <Route path="finance" element={
-            <RequireRole roles={['admin', 'school_admin']}>
+            <RequireRole roles={['admin', 'school_admin', 'parent']}>
               <Finance />
             </RequireRole>
           } />
@@ -146,6 +152,17 @@ function App({ theme, setTheme }) {
           <Route path="group-studies" element={<GroupStudies />} />
           <Route path="group-studies/:id/live" element={<LiveRoom />} />
           <Route path="exams/:examId/setup" element={<ExamSetup />} />
+          
+          {/* Catch-all for dashboard to debug routing issues */}
+          <Route path="*" element={
+            <div className="p-10 text-center">
+              <h2 className="text-xl font-bold text-red-600">Dashboard Route Not Found</h2>
+              <p className="mt-2">The path <code>{window.location.pathname}</code> does not match any dashboard route.</p>
+              <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">
+                Reload Page
+              </button>
+            </div>
+          } />
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />

@@ -26,12 +26,22 @@ export default function GroupStudies() {
 
   const fetchData = async () => {
     try {
-      const [studiesRes, subjectsRes] = await Promise.all([
-        api.get('/group-studies'),
-        api.get('/subjects')
-      ]);
-      setStudies(studiesRes.data);
-      setSubjects(subjectsRes.data);
+      // Fetch studies independent of subjects to avoid cascading failures
+      try {
+        const studiesRes = await api.get('/group-studies');
+        setStudies(studiesRes.data);
+      } catch (e) {
+        console.error('Failed to fetch group studies:', e);
+      }
+
+      try {
+        const subjectsRes = await api.get('/subjects');
+        setSubjects(subjectsRes.data);
+      } catch (e) {
+        console.error('Failed to fetch subjects:', e);
+        // Don't block the UI if subjects fail
+        setSubjects([]);
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -91,7 +101,8 @@ export default function GroupStudies() {
     }
   };
 
-  const canManage = currentUser?.role === 'teacher' || currentUser?.role === 'student';
+  const role = currentUser?.role?.toLowerCase() || '';
+  const canManage = role === 'teacher' || role === 'student';
   const isReadOnly = !canManage;
 
   if (loading) return <div>Loading...</div>;
@@ -164,8 +175,8 @@ export default function GroupStudies() {
                 </div>
               </div>
               
-              <button 
-                onClick={() => navigate(`${study.id}/live`)}
+              <button
+                onClick={() => navigate(`/dashboard/group-studies/${study.id}/live`)}
                 className="mt-4 w-full py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
               >
                 <Video size={18} />

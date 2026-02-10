@@ -237,7 +237,7 @@ const ParentDashboard = () => {
           </Link>
 
           {/* Fees Card */}
-          <Link to="/finance" className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block">
+          <Link to="/dashboard/finance" className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 block">
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-violet-600 to-fuchsia-400 opacity-80 rounded-bl-full -mr-6 -mt-6 transition-all duration-500 group-hover:scale-110 group-hover:opacity-100" />
             
             <div className="flex items-center justify-between mb-6 relative">

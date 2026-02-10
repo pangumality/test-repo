@@ -12,7 +12,7 @@ export const requirePermission = (permission) => {
       }
 
       // Check if user has the role (using existing Enum role from User model)
-      const userRole = user.role; // e.g., 'admin', 'teacher'
+      const userRole = (user.role || '').toLowerCase(); // Normalize to lowercase
       const permissions = ROLE_PERMISSIONS[userRole] || [];
 
       if (!permissions.includes(permission)) {

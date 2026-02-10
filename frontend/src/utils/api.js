@@ -23,6 +23,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      console.warn('API 401 Unauthorized - Redirecting to Login', { url: error.config.url });
       // Token is invalid or expired
       localStorage.removeItem('authToken');
       localStorage.removeItem('currentUser');
